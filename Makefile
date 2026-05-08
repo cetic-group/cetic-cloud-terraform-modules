@@ -7,8 +7,12 @@ TF ?= terraform
 TFLINT ?= tflint
 TERRAFORM_DOCS ?= terraform-docs
 
-# Find every dir that has a *.tf file (modules, landing-zones, examples)
-MODULE_DIRS := $(shell find modules landing-zones examples -type f -name '*.tf' -exec dirname {} \; 2>/dev/null | sort -u)
+# Reusable modules + landing-zones — these must validate without external
+# inputs (no `file()` calls to non-existent paths, no live API hits).
+# Examples live under `examples/` and may reference local files (SSH keys etc.)
+# that don't exist in CI — we don't validate them here, they're starter kits
+# meant to be copied locally and adjusted.
+MODULE_DIRS := $(shell find modules landing-zones -type f -name '*.tf' -exec dirname {} \; 2>/dev/null | sort -u)
 
 .DEFAULT_GOAL := help
 
@@ -35,8 +39,12 @@ validate:  ## terraform init + validate sur tous les modules
 lint:  ## tflint sur tous les modules
 	@set -e; for d in $(MODULE_DIRS); do \
 		echo "==> tflint $$d"; \
-		( cd $$d && $(TFLINT) --recursive=false ) || exit 1; \
+		( cd $$d && $(TFLINT) ) || exit 1; \
 	done
+
+.PHONY: fmt-examples
+fmt-examples:  ## terraform fmt -check sur les examples (pas de validate — refs locales)
+	@$(TF) fmt -check -recursive examples/
 
 .PHONY: test
 test:  ## terraform test (plan-only, pas d'apply réel — provider mocké)

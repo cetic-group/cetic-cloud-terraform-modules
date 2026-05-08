@@ -50,7 +50,4 @@ output "ip_reservations" {
   }
 }
 
-output "peering_ids" {
-  description = "Map keyed par accepter_vpc_id → UUID du peering."
-  value       = { for k, v in ccp_vpc_peering.this : k => v.id }
-}
+# `peering_ids` retiré en v0.3.0 — voir `modules/network/vnet-peering`.

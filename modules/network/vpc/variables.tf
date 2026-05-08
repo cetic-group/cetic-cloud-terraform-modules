@@ -71,8 +71,6 @@ variable "vnets" {
   }
 }
 
-variable "peering_accepter_vpc_ids" {
-  type        = list(string)
-  default     = []
-  description = "Liste de VPC IDs avec lesquels établir un peering. Le module crée les peerings depuis ce VPC (requester) vers chacun (accepter)."
-}
+# `peering_accepter_vpc_ids` retiré en v0.3.0 — le concept VPC-level peering
+# n'existe pas backend. Utiliser `modules/network/vnet-peering` directement
+# pour peer 2 VNets (intra-VPC ou inter-VPC).

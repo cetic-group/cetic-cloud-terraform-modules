@@ -41,12 +41,6 @@ mock_provider "ccp" {
     }
   }
 
-  mock_resource "ccp_vpc_peering" {
-    defaults = {
-      id     = "00000000-0000-0000-0000-000000000040"
-      status = "active"
-    }
-  }
 }
 
 # ── 1. VPC vide (sans VNet) ───────────────────────────────────────────────────
@@ -271,26 +265,4 @@ run "outputs_are_indexed_by_logical_key" {
   }
 }
 
-# ── 8. VPC peering depuis ce VPC vers un accepter externe ─────────────────────
-run "vpc_peering_with_accepters" {
-  command = plan
-
-  variables {
-    name   = "peering-test"
-    region = "RNN"
-    peering_accepter_vpc_ids = [
-      "11111111-1111-1111-1111-111111111111",
-      "22222222-2222-2222-2222-222222222222",
-    ]
-  }
-
-  assert {
-    condition     = length(ccp_vpc_peering.this) == 2
-    error_message = "Deux peerings doivent être créés."
-  }
-
-  assert {
-    condition     = ccp_vpc_peering.this["11111111-1111-1111-1111-111111111111"].accepter_vpc_id == "11111111-1111-1111-1111-111111111111"
-    error_message = "Le peering doit pointer vers le bon accepter."
-  }
-}
+# ── 8. (retiré en v0.3.0) — peering est maintenant via `modules/network/vnet-peering` ─

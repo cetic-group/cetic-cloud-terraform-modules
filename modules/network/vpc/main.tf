@@ -64,9 +64,7 @@ resource "ccp_vnet_firewall_rule" "this" {
   comment     = each.value.description
 }
 
-resource "ccp_vpc_peering" "this" {
-  for_each = toset(var.peering_accepter_vpc_ids)
-
-  requester_vpc_id = ccp_vpc.this.id
-  accepter_vpc_id  = each.value
-}
+## Peering : a été retiré du module en v0.3.0 (provider v0.9.0 a supprimé
+## ccp_vpc_peering, l'endpoint backend n'a jamais existé). Pour peer ce
+## VPC avec d'autres, utiliser `modules/network/vnet-peering` couple par
+## couple — le backend accepte les peerings intra-VPC ET inter-VPC.

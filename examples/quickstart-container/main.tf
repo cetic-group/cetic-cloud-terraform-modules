@@ -6,7 +6,7 @@ terraform {
   required_providers {
     ccp = {
       source  = "cetic-group/cetic-cloud-platform"
-      version = ">= 0.8.1"
+      version = ">= 0.9.0"
     }
   }
 }

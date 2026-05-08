@@ -23,12 +23,14 @@ output "endpoint" {
   value       = "${ccp_db_valkey_instance.this.endpoint_vnet_ip}:${ccp_db_valkey_instance.this.endpoint_port}"
 }
 
-output "admin_username" {
-  value = ccp_db_valkey_instance.this.admin_username
+output "cpu_millicores" {
+  description = "CPU effectif (millicores) attribué à chaque replica."
+  value       = ccp_db_valkey_instance.this.cpu_millicores
 }
 
-output "admin_database" {
-  value = ccp_db_valkey_instance.this.admin_database
+output "memory_mb" {
+  description = "RAM effective (MB) par replica."
+  value       = ccp_db_valkey_instance.this.memory_mb
 }
 
 output "status" {

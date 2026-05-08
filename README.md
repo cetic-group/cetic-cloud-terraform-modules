@@ -61,7 +61,7 @@ terraform {
   required_providers {
     ccp = {
       source  = "cetic-group/cetic-cloud-platform"
-      version = ">= 0.5.3"
+      version = ">= 0.8.0"
     }
   }
 }
@@ -72,7 +72,7 @@ provider "ccp" {
 }
 
 module "vpc" {
-  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/network/vpc?ref=v0.1.0"
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/network/vpc?ref=v0.2.0"
 
   name   = "production"
   region = "RNN"
@@ -88,7 +88,7 @@ Ou plus simple : `landing-zones/basic-web-app` qui compose tout :
 
 ```hcl
 module "web_app" {
-  source = "github.com/cetic-group/cetic-cloud-terraform-modules//landing-zones/basic-web-app?ref=v0.1.0"
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//landing-zones/basic-web-app?ref=v0.2.0"
 
   org_prefix    = "acme"
   region        = "RNN"

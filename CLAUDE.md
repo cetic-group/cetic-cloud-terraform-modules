@@ -22,7 +22,7 @@
    ```
    Une commande pour bump tout :
    ```bash
-   sed -i 's|version = ">= 0.8.0"|version = ">= 0.8.0"|g' \
+   sed -i 's|version = ">= 0.8.1"|version = ">= 0.8.1"|g' \
      $(grep -rl "0.7.1" --include="*.tf" --include="*.md" .)
    ```
 
@@ -41,7 +41,7 @@
 ```bash
 # 1. Une fois le provider tagué v0.8.0 (et publié sur Registry, ~5 min après tag)
 git checkout -b chore/bump-provider-v0.8.0
-sed -i 's|version = ">= 0.8.0"|version = ">= 0.8.0"|g' $(grep -rl "0.7.1" --include="*.tf" --include="*.md" .)
+sed -i 's|version = ">= 0.8.1"|version = ">= 0.8.1"|g' $(grep -rl "0.7.1" --include="*.tf" --include="*.md" .)
 
 # 2. Ajouter aux modules les nouveaux champs / datasources si pertinent
 # (ssh_key_ids dans container-scale-set, datasource ccp_db_pg_credentials

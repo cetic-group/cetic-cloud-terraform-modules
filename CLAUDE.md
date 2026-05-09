@@ -110,6 +110,10 @@ Quelques détails d'infrastructure que la plateforme gère automatiquement et qu
 
 Toute notation d'infra sous-jacente (HAProxy, VRRP, CNPG, LXC, MASQUERADE, etc.) doit rester hors des descriptions/docs des modules — les consumers n'ont pas à connaître l'implémentation. Cilium peut rester quand le ingress controller K8s est documenté (le client le sait, c'est exposé via `ingress_controller_class`).
 
+## Pièges API connus
+
+- **`ccp_vnet_firewall_rule.direction`** : le backend valide `^(in|out|forward)$` (**lowercase**). Si tu wrappes ce champ dans un module, normalise avec `lower(...)`, **jamais** `upper(...)`. Le `action` reste uppercase (`^(ACCEPT|DROP|REJECT)$`).
+
 ---
 
 ## Conventions par module

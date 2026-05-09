@@ -7,11 +7,12 @@ resource "ccp_vpc" "this" {
 resource "ccp_vnet" "this" {
   for_each = var.vnets
 
-  vpc_id = ccp_vpc.this.id
-  name   = coalesce(each.value.name, each.key)
-  cidr   = each.value.cidr
-  snat   = each.value.snat
-  tags   = each.value.tags
+  vpc_id   = ccp_vpc.this.id
+  name     = coalesce(each.value.name, each.key)
+  cidr     = each.value.cidr
+  snat     = each.value.snat
+  isolated = each.value.isolated
+  tags     = each.value.tags
 }
 
 # ── IP reservations (par VNet) ────────────────────────────────────────────────

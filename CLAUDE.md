@@ -102,6 +102,16 @@ examples/                   # usage simples (≤ 30 lignes)
 
 ---
 
+## Notes plateforme — abstractions invisibles côté Terraform
+
+Quelques détails d'infrastructure que la plateforme gère automatiquement et qui n'ont **pas** à être pilotés depuis les modules :
+
+- **NAT Gateway** : provisionné automatiquement à la 1ère VNet du VPC (lazy). Aucune action requise côté Terraform.
+
+Toute notation d'infra sous-jacente (HAProxy, VRRP, CNPG, LXC, MASQUERADE, etc.) doit rester hors des descriptions/docs des modules — les consumers n'ont pas à connaître l'implémentation. Cilium peut rester quand le ingress controller K8s est documenté (le client le sait, c'est exposé via `ingress_controller_class`).
+
+---
+
 ## Conventions par module
 
 ### Layout standard d'un module

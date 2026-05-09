@@ -32,23 +32,22 @@ variable "vnets" {
     - `cidr` : bloc CIDR (`10.0.1.0/24`). Immutable.
     - `name` : nom affiché côté CETIC Cloud (par défaut = clé de la map).
     - `snat` : si `true`, SNAT/MASQUERADE outbound activé. Défaut `true`.
+    - `isolated` : si `true`, le firewall global du VNet est ON (DROP par
+      défaut sur le trafic inter-VNet). Sans isolation, les
+      `firewall_rules` sont définies mais inactives. Défaut `false`.
     - `tags` : tags VNet.
     - `ip_reservations` : map de réservations IP (clé = nom logique, valeur = { ip, range_end?, description? }).
     - `firewall_rules` : liste de règles firewall ACCEPT (positions auto = 10, 20, 30…).
-
-    Note : l'isolation (`isolated=true`) est posée via la console / l'API
-    CETIC Cloud séparément — le provider Terraform expose `isolated` en
-    lecture seule. Sans isolation activée, les `firewall_rules` ne sont
-    pas appliquées (le toggle d'isolation est le switch global).
 
     Voir `examples/quickstart-container/` pour un exemple minimal.
   EOT
 
   type = map(object({
-    cidr = string
-    name = optional(string)
-    snat = optional(bool, true)
-    tags = optional(list(string), [])
+    cidr     = string
+    name     = optional(string)
+    snat     = optional(bool, true)
+    isolated = optional(bool, false)
+    tags     = optional(list(string), [])
     ip_reservations = optional(map(object({
       ip          = string
       range_end   = optional(string)

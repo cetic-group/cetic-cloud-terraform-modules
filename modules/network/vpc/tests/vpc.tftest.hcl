@@ -152,8 +152,8 @@ run "vnet_with_firewall_rules_auto_position" {
   }
 
   assert {
-    condition     = ccp_vnet_firewall_rule.this["web:0"].direction == "IN"
-    error_message = "La direction doit être uppercased à `IN`."
+    condition     = ccp_vnet_firewall_rule.this["web:0"].direction == "in"
+    error_message = "La direction doit être lowercased à `in` (le backend valide ^(in|out|forward)$)."
   }
 
   assert {

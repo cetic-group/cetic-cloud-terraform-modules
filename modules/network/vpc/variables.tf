@@ -31,7 +31,7 @@ variable "vnets" {
     Champs par VNet :
     - `cidr` : bloc CIDR (`10.0.1.0/24`). Immutable.
     - `name` : nom affiché côté CETIC Cloud (par défaut = clé de la map).
-    - `snat` : si `true`, SNAT/MASQUERADE outbound activé. Défaut `true`.
+    - `snat` : si `true`, sortie internet activée pour ce VNet (NAT vers IP publique de la NAT GW du VPC). Défaut `true`.
     - `isolated` : si `true`, le firewall global du VNet est ON (DROP par
       défaut sur le trafic inter-VNet). Sans isolation, les
       `firewall_rules` sont définies mais inactives. Défaut `false`.

@@ -2,32 +2,29 @@
 
 Provisionne une plateforme Kubernetes complète prête à l'emploi :
 
-```
-                           Internet
-                              │
-                              ▼ (si expose_apiserver_publicly=true)
-                   ┌─────────────────────┐
-                   │ Apiserver public IP │
-                   └──────────┬──────────┘
-                              │
-              ┌───────────────▼───────────────┐
-              │  Managed K8s control plane    │  ← contrôle plane HA, autoscaler activé
-              └───────────────┬───────────────┘
-                              │
-                   ┌──────────▼──────────┐
-                   │  Worker pools       │  ← VNet workers (10.20.1.0/24)
-                   │  (initial + N add.) │     auto-scaling via min/max
-                   └──────────┬──────────┘
-                              │
-                   ┌──────────▼──────────┐
-                   │ Ingress controller  │  ← incluster (Cilium L2 announce)
-                   │ scope: external     │     IP publique attachée auto
-                   └─────────────────────┘
+```mermaid
+flowchart TD
+    net((Internet))
+    apipip[Apiserver public IP<br/>optionnel]
+    cp[Managed K8s control plane<br/>HA · autoscaler]
+    pools[Worker pools<br/>initial + N additionnels<br/>autoscaling min/max]
+    ing[Ingress controller<br/>Cilium L2 · scope external]
+    db[(PostgreSQL managé<br/>optionnel · 1 ou 3 replicas)]
 
-                   ┌─────────────────────┐
-                   │  PostgreSQL managé  │  ← VNet data (10.20.2.0/24)
-                   │  (optionnel)        │     replicas=1 (dev) ou 3 (prod)
-                   └─────────────────────┘
+    net -.-> apipip -.-> cp
+    cp --> pools --> ing
+    pools -. accède .-> db
+
+    subgraph workers [VNet workers · 10.20.1.0/24]
+      pools
+      ing
+    end
+    subgraph data [VNet data · 10.20.2.0/24]
+      db
+    end
+
+    classDef vnet fill:#f5f7fa,stroke:#94a3b8,stroke-dasharray:4 4,color:#334155
+    class workers,data vnet
 ```
 
 Composants :

@@ -4,7 +4,7 @@ output "id" {
 }
 
 output "template_type" {
-  description = "Type : `lxc` ou `vm`, dérivé de la source."
+  description = "Type de template (container ou VM), dérivé de la source."
   value       = ccp_custom_template.this.template_type
 }
 

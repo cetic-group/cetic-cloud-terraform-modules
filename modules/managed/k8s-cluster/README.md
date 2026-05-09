@@ -68,7 +68,7 @@ output "kubeconfig_url" {
 | `autoscaler_scale_down_unneeded_time` | string | `"10m"` | |
 | `ingress_controller_enabled` | bool | `true` | |
 | `ingress_controller_scope` | string | `"external"` | `external` / `internal`. |
-| `ingress_controller_class` | string | `"incluster"` | `incluster` (Cilium L2) / `managed` (LB CCP). |
+| `ingress_controller_class` | string | `"incluster"` | `incluster` (Cilium L2) / `managed` (LB dédié). |
 | `ingress_public_ip_id` | string | `null` | IP pré-allouée. |
 | `ingress_internal_ip` | string | `null` | IP privée fixe. |
 | `apiserver_public_ip_id` | string | `null` | Si fourni, kubeconfig public. |
@@ -92,5 +92,5 @@ output "kubeconfig_url" {
 - **`initial_pool` immutable** : pour le supprimer ou le redimensionner différemment, recréer le cluster.
 - **Pools additionnels avec `min_size`/`max_size`** : le cluster autoscaler propage automatiquement les annotations sur la MachineDeployment et scale up/down selon la charge.
 - **Ingress en mode `incluster`** : HA inter-worker via Cilium L2 announce, failover ~22s.
-- **Ingress en mode `managed`** : LB CCP LXC dédié devant l'ingress controller — meilleur pour des bursts de connexions externes mais coûte un LB additionnel.
+- **Ingress en mode `managed`** : LB dédié devant l'ingress controller — meilleur pour des bursts de connexions externes mais coûte un LB additionnel.
 - Le **kubeconfig** est récupérable via `cetic k8s kubeconfig <id>` (CLI) ou `GET /v1/k8s/clusters/{id}/kubeconfig`. Pas exposé par le provider TF (matière à être ajouté en datasource v0.9+).

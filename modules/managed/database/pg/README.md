@@ -1,6 +1,6 @@
 # Module `managed/database/pg`
 
-Wrapper minimal autour de `ccp_db_pg_instance` (PostgreSQL managé via CNPG sur cluster K8s régional partagé).
+Wrapper minimal autour de `ccp_db_pg_instance` (PostgreSQL managé, multi-replica).
 
 ## Exemple
 

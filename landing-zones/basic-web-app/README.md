@@ -2,30 +2,26 @@
 
 Compose une stack 3-tier complète prête à servir une application web :
 
-```
-                        Internet
-                           │
-                           ▼
-                  ┌─────────────────┐
-                  │  Public IP      │
-                  │  (Orange pool)  │
-                  └────────┬────────┘
-                           │
-                  ┌────────▼────────┐
-                  │  Load Balancer  │  ← VNet web (10.0.1.0/24)
-                  │  HAProxy + VRRP │     firewall: HTTP/443 public
-                  └────────┬────────┘
-                           │
-                  ┌────────▼────────┐
-                  │ Container scale │
-                  │ set (N replicas)│
-                  │ port :8080      │
-                  └────────┬────────┘
-                           │ 5432
-                  ┌────────▼────────┐
-                  │ PostgreSQL HCP  │  ← VNet data (10.0.2.0/24)
-                  │ (CNPG, isolated)│     firewall: PG depuis web only
-                  └─────────────────┘
+```mermaid
+flowchart TD
+    net((Internet))
+    pip[Public IP]
+    lb[Load balancer<br/>HA · public]
+    cs[Container scale set<br/>N replicas · :8080]
+    db[(PostgreSQL managé<br/>isolated)]
+
+    net --> pip --> lb --> cs --> db
+
+    subgraph web [VNet web · 10.0.1.0/24]
+      lb
+      cs
+    end
+    subgraph data [VNet data · 10.0.2.0/24 · isolated]
+      db
+    end
+
+    classDef vnet fill:#f5f7fa,stroke:#94a3b8,stroke-dasharray:4 4,color:#334155
+    class web,data vnet
 ```
 
 Composants créés :
@@ -102,4 +98,4 @@ output "db_uri" {
 
 - **CIDRs hardcodés** (`10.0.1.0/24` web, `10.0.2.0/24` data). Pour les modifier, copier la landing zone localement et l'ajuster — ces CIDRs sont volontairement opinionnated pour garder le composant démarrable en quelques lignes. Pour des topologies custom, utiliser directement le module `network/vpc`.
 - **`db_tier` immutable** : pour upgrader `dev → prod`, snapshot + nouvelle instance + restore. Pas de migration in-place.
-- **Le LB pointe sur le scale set** via `backend.scale_set_id` : les replicas qui scalent sont automatiquement ajoutés/retirés des backends côté HAProxy (reconcile beat task CETIC Cloud).
+- **Le LB pointe sur le scale set** via `backend.scale_set_id` : les replicas qui scalent sont automatiquement ajoutés/retirés des backends, sans intervention Terraform.

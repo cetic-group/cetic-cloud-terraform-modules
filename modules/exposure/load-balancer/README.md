@@ -85,6 +85,6 @@ Exactement un de `container_id` / `vm_instance_id` est requis.
 
 ## Notes
 
-- HA inter-node automatique sur VPC en zone VXLAN (par défaut).
+- HA inter-node automatique (par défaut).
 - `scale_set_id` comme backend pas encore exposé par le provider (cf. backlog v0.8.0).
-- Les backends sont fully reconciled à chaque apply : un backend retiré du HCL = retrait HAProxy + reload sans downtime.
+- Les backends sont fully reconciled à chaque apply : un backend retiré du HCL = retrait sans downtime.

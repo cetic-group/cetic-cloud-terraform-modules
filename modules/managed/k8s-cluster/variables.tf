@@ -110,7 +110,7 @@ variable "ingress_controller_scope" {
 variable "ingress_controller_class" {
   type        = string
   default     = "incluster"
-  description = "`incluster` (Cilium L2 announce, HA) ou `managed` (LB CCP LXC dédié)."
+  description = "`incluster` (Cilium L2 announce, HA) ou `managed` (LB dédié géré par la plateforme)."
   validation {
     condition     = contains(["incluster", "managed"], var.ingress_controller_class)
     error_message = "ingress_controller_class doit être incluster ou managed."

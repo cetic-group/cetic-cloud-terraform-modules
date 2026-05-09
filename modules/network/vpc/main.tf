@@ -54,7 +54,7 @@ resource "ccp_vnet_firewall_rule" "this" {
   for_each = local.firewall_rules_flat
 
   vnet_id     = ccp_vnet.this[each.value.vnet_key].id
-  direction   = upper(each.value.direction)
+  direction   = lower(each.value.direction)
   action      = "ACCEPT"
   proto       = each.value.protocol
   source_cidr = each.value.source_cidr

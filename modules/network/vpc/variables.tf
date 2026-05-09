@@ -54,7 +54,7 @@ variable "vnets" {
       description = optional(string)
     })), {})
     firewall_rules = optional(list(object({
-      direction   = string                  # "in" | "out"
+      direction   = string                  # "in" | "out" | "forward" (case-insensitive)
       protocol    = optional(string, "tcp") # "tcp" | "udp" | "icmp"
       source_cidr = optional(string)
       dest_cidr   = optional(string)

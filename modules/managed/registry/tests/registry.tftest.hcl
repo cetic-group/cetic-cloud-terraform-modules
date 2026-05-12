@@ -1,12 +1,12 @@
 mock_provider "ccp" {
   mock_resource "ccp_registry" {
     defaults = {
-      id              = "00000000-0000-0000-0000-000000000001"
-      slug            = "test"
-      url             = "https://test-aabbccdd.registry-rnn.cloud.cetic-group.com"
-      status          = "active"
-      admin_username  = "admin"
-      admin_password  = "secret"
+      id               = "00000000-0000-0000-0000-000000000001"
+      slug             = "test"
+      url              = "https://test-aabbccdd.registry-rnn.cloud.cetic-group.com"
+      status           = "active"
+      admin_username   = "admin"
+      admin_password   = "secret"
       gc_schedule_cron = "0 3 * * 0"
     }
   }

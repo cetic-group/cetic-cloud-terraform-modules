@@ -21,7 +21,10 @@ Modules Terraform officiels pour orchestrer **[CETIC Cloud Platform](https://clo
 │   │   ├── api-key/
 │   │   ├── org-member/
 │   │   ├── custom-template/
-│   │   └── ipaas-pool/
+│   │   ├── ipaas-pool/
+│   │   ├── iam-role/
+│   │   ├── iam-role-assignment/
+│   │   └── service-account/
 │   ├── network/              # VPC, peering, IP publique
 │   │   ├── vpc/              # VPC + VNets + IP reservations + firewall rules
 │   │   ├── vpc-peering/
@@ -38,11 +41,14 @@ Modules Terraform officiels pour orchestrer **[CETIC Cloud Platform](https://clo
 │   │   └── load-balancer/    # Multi-listener, backends explicites ou par tag
 │   └── managed/              # Services managés CETIC Cloud
 │       ├── database/         # Sous-modules pg / valkey / mysql / ferretdb
-│       └── k8s-cluster/      # CCKS + node pools + ingress
+│       ├── k8s-cluster/      # CCKS + node pools + ingress
+│       ├── registry/         # CETIC Container Registry (CCR)
+│       └── iam-role/         # IAM role custom (Roles v1) avec composition statements/conditions
 │
 ├── landing-zones/            # Compositions prêtes à l'emploi
 │   ├── basic-web-app/        # VPC + LB + scale set + DB PG (3-tier)
 │   ├── k8s-platform/         # VPC + CCKS + ingress + DB
+│   ├── iam-team-segregation/ # Roles + SAs ségrégués dev/staging/prod (Roles v1)
 │   └── multi-region-ha/      # 3 régions + LB cross-region
 │
 ├── examples/                 # Recettes d'utilisation simples
@@ -61,7 +67,7 @@ terraform {
   required_providers {
     ccp = {
       source  = "cetic-group/cetic-cloud-platform"
-      version = ">= 0.10.0"
+      version = ">= 0.11.1"
     }
   }
 }
@@ -72,7 +78,7 @@ provider "ccp" {
 }
 
 module "vpc" {
-  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/network/vpc?ref=v0.2.0"
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/network/vpc?ref=v0.5.0"
 
   name   = "production"
   region = "RNN"
@@ -88,7 +94,7 @@ Ou plus simple : `landing-zones/basic-web-app` qui compose tout :
 
 ```hcl
 module "web_app" {
-  source = "github.com/cetic-group/cetic-cloud-terraform-modules//landing-zones/basic-web-app?ref=v0.2.0"
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//landing-zones/basic-web-app?ref=v0.5.0"
 
   org_prefix    = "acme"
   region        = "RNN"
@@ -102,10 +108,53 @@ output "url" {
 }
 ```
 
+### IAM Roles v1 (depuis v0.5.0)
+
+```hcl
+# Crée un rôle custom + un service account CI + l'assignment
+module "registry_deployer" {
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/managed/iam-role?ref=v0.5.0"
+
+  name        = "RegistryDeployer-prod"
+  description = "Push autorisé sur registry/prod-* uniquement"
+  statements = [
+    {
+      effect    = "Allow"
+      actions   = ["registry:Push", "registry:Pull"]
+      resources = ["arn:ccp:registry:rnn:${var.tenant_id}:registry/prod-*"]
+    },
+  ]
+}
+
+module "ci_prod" {
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/atomic/service-account?ref=v0.5.0"
+
+  name       = "ci-prod"
+  expires_at = "2027-05-12T00:00:00Z"
+}
+
+module "ci_prod_can_deploy" {
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/atomic/iam-role-assignment?ref=v0.5.0"
+
+  role_id        = module.registry_deployer.role_id
+  principal_type = "service_account"
+  principal_id   = module.ci_prod.id
+}
+
+output "ci_prod_token" {
+  value     = module.ci_prod.token   # ccp_sa_*** — affiché une seule fois
+  sensitive = true
+}
+```
+
+Ou utilise la landing-zone **`iam-team-segregation`** qui compose ce pattern × 3 environnements (dev / staging / prod) + un rôle transverse `BillingViewer`.
+
 ## Versionnage
 
 Suit le provider `cetic-group/cetic-cloud-platform`. Tag SemVer :
 - `v0.1.x` : compatible provider `>= 0.5.0`
+- `v0.4.x` : compatible provider `>= 0.10.0`
+- `v0.5.x` : compatible provider `>= 0.11.0` — ajoute les modules IAM (Roles v1) + landing-zone `iam-team-segregation`
 - bump majeur (`v1.0.0`) quand le provider stabilise son API
 
 ## Tests

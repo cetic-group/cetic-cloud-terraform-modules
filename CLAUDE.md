@@ -233,4 +233,6 @@ le binaire local — pratique pour itérer sur des modifs schema avant release.
 SemVer aligné conceptuellement avec le provider :
 - `v0.1.x` : compatible provider `>= 0.7.1`
 - `v0.2.x` : compatible provider `>= 0.8.0` (nouveaux champs scale-set / DB credentials)
+- `v0.4.x` : compatible provider `>= 0.10.0` (ajoute `managed/registry` — CCR Phase 6)
+- `v0.5.x` : compatible provider `>= 0.11.1` (ajoute `managed/iam-role` + 3 atomic IAM + landing-zone `iam-team-segregation` — IAM Roles v1)
 - bump majeur `v1.0.0` quand le provider stabilise son API à `v1.x`

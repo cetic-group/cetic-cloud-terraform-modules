@@ -23,6 +23,16 @@ variable "ssh_public_key" {
   description = "Contenu de la clé publique SSH OpenSSH (utilise `file(\"~/.ssh/id_ed25519.pub\")`)."
 }
 
+variable "app_root_password" {
+  type        = string
+  sensitive   = true
+  description = "Mot de passe root injecté sur chaque container d'app à la création (8–128 caractères)."
+  validation {
+    condition     = length(var.app_root_password) >= 8 && length(var.app_root_password) <= 128
+    error_message = "`app_root_password` doit faire entre 8 et 128 caractères."
+  }
+}
+
 # ─── Application web ──────────────────────────────────────────────────────────
 variable "app_plan" {
   type        = string

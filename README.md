@@ -67,7 +67,7 @@ terraform {
   required_providers {
     ccp = {
       source  = "cetic-group/cetic-cloud-platform"
-      version = ">= 0.11.1"
+      version = ">= 0.12.0"
     }
   }
 }
@@ -155,6 +155,7 @@ Suit le provider `cetic-group/cetic-cloud-platform`. Tag SemVer :
 - `v0.1.x` : compatible provider `>= 0.5.0`
 - `v0.4.x` : compatible provider `>= 0.10.0`
 - `v0.5.x` : compatible provider `>= 0.11.0` — ajoute les modules IAM (Roles v1) + landing-zone `iam-team-segregation`
+- `v0.6.x` : compatible provider `>= 0.12.0` — `root_password` désormais obligatoire sur `compute/vm`, `compute/container`, `compute/vm-scale-set`, `compute/container-scale-set` (breaking)
 - bump majeur (`v1.0.0`) quand le provider stabilise son API
 
 ## Tests

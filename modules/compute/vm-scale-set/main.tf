@@ -8,5 +8,6 @@ resource "ccp_vm_scale_set" "this" {
   max_instances     = var.max_instances
   desired_instances = var.desired_instances
   auto_repair       = var.auto_repair
+  root_password     = var.root_password
   tags              = var.tags
 }

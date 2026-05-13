@@ -60,13 +60,14 @@ module "vpc" {
 resource "ccp_container_instance" "app" {
   for_each = toset(local.app_instance_names)
 
-  name        = each.value
-  region      = var.region
-  plan        = var.app_plan
-  template    = var.app_template
-  vnet_id     = module.vpc.vnet_ids.web
-  ssh_key_ids = [module.ssh_key.id]
-  tags        = concat(["app:web"], local.base_tags)
+  name          = each.value
+  region        = var.region
+  plan          = var.app_plan
+  template      = var.app_template
+  vnet_id       = module.vpc.vnet_ids.web
+  ssh_key_ids   = [module.ssh_key.id]
+  root_password = var.app_root_password
+  tags          = concat(["app:web"], local.base_tags)
 }
 
 # ─── Exposition (IP publique + load balancer) ─────────────────────────────────

@@ -6,7 +6,7 @@ terraform {
   required_providers {
     ccp = {
       source  = "cetic-group/cetic-cloud-platform"
-      version = ">= 0.11.1"
+      version = ">= 0.12.0"
     }
   }
 }
@@ -19,6 +19,12 @@ provider "ccp" {
 variable "ccp_api_key" {
   type      = string
   sensitive = true
+}
+
+variable "root_password" {
+  type        = string
+  sensitive   = true
+  description = "Mot de passe root (8–128 caractères). Passer via TF_VAR_root_password ou un secret backend."
 }
 
 module "ssh_key" {
@@ -47,13 +53,14 @@ resource "ccp_public_ip" "this" {
 }
 
 resource "ccp_container_instance" "hello" {
-  name         = "hello-world"
-  region       = "RNN"
-  plan         = "nano"
-  template     = "ubuntu-24.04"
-  vnet_id      = module.vpc.vnet_ids.main
-  ssh_key_ids  = [module.ssh_key.id]
-  public_ip_id = ccp_public_ip.this.id
+  name          = "hello-world"
+  region        = "RNN"
+  plan          = "nano"
+  template      = "ubuntu-24.04"
+  vnet_id       = module.vpc.vnet_ids.main
+  ssh_key_ids   = [module.ssh_key.id]
+  public_ip_id  = ccp_public_ip.this.id
+  root_password = var.root_password
 }
 
 output "ssh_command" {

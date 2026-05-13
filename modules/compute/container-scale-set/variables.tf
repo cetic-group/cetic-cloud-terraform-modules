@@ -53,6 +53,16 @@ variable "auto_repair" {
   description = "Recrée automatiquement les instances en erreur ou stoppées."
 }
 
+variable "root_password" {
+  type        = string
+  sensitive   = true
+  description = "Mot de passe root injecté à la création sur chaque container du scale set (8–128 caractères)."
+  validation {
+    condition     = length(var.root_password) >= 8 && length(var.root_password) <= 128
+    error_message = "root_password doit faire entre 8 et 128 caractères."
+  }
+}
+
 variable "tags" {
   type    = list(string)
   default = []

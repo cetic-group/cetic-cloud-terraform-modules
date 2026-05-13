@@ -44,9 +44,13 @@ variable "public_ip_id" {
 }
 
 variable "root_password" {
-  type      = string
-  default   = null
-  sensitive = true
+  type        = string
+  sensitive   = true
+  description = "Mot de passe root injecté via cloud-init (8–128 caractères)."
+  validation {
+    condition     = length(var.root_password) >= 8 && length(var.root_password) <= 128
+    error_message = "root_password doit faire entre 8 et 128 caractères."
+  }
 }
 
 variable "tags" {

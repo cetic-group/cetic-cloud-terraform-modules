@@ -53,9 +53,12 @@ variable "public_ip_id" {
 
 variable "root_password" {
   type        = string
-  default     = null
   sensitive   = true
-  description = "Mot de passe root explicite. `null` = généré côté serveur."
+  description = "Mot de passe root injecté à la création (8–128 caractères)."
+  validation {
+    condition     = length(var.root_password) >= 8 && length(var.root_password) <= 128
+    error_message = "root_password doit faire entre 8 et 128 caractères."
+  }
 }
 
 variable "tags" {

@@ -24,7 +24,8 @@ Modules Terraform officiels pour orchestrer **[CETIC Cloud Platform](https://clo
 │   │   ├── ipaas-pool/
 │   │   ├── iam-role/
 │   │   ├── iam-role-assignment/
-│   │   └── service-account/
+│   │   ├── service-account/
+│   │   └── secret/
 │   ├── network/              # VPC, peering, IP publique
 │   │   ├── vpc/              # VPC + VNets + IP reservations + firewall rules
 │   │   ├── vpc-peering/
@@ -67,7 +68,7 @@ terraform {
   required_providers {
     ccp = {
       source  = "cetic-group/cetic-cloud-platform"
-      version = ">= 0.12.0"
+      version = ">= 0.13.0"
     }
   }
 }
@@ -78,7 +79,7 @@ provider "ccp" {
 }
 
 module "vpc" {
-  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/network/vpc?ref=v0.5.0"
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/network/vpc?ref=v0.7.0"
 
   name   = "production"
   region = "RNN"
@@ -94,7 +95,7 @@ Ou plus simple : `landing-zones/basic-web-app` qui compose tout :
 
 ```hcl
 module "web_app" {
-  source = "github.com/cetic-group/cetic-cloud-terraform-modules//landing-zones/basic-web-app?ref=v0.5.0"
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//landing-zones/basic-web-app?ref=v0.7.0"
 
   org_prefix    = "acme"
   region        = "RNN"
@@ -113,7 +114,7 @@ output "url" {
 ```hcl
 # Crée un rôle custom + un service account CI + l'assignment
 module "registry_deployer" {
-  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/managed/iam-role?ref=v0.5.0"
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/managed/iam-role?ref=v0.7.0"
 
   name        = "RegistryDeployer-prod"
   description = "Push autorisé sur registry/prod-* uniquement"
@@ -127,14 +128,14 @@ module "registry_deployer" {
 }
 
 module "ci_prod" {
-  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/atomic/service-account?ref=v0.5.0"
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/atomic/service-account?ref=v0.7.0"
 
   name       = "ci-prod"
   expires_at = "2027-05-12T00:00:00Z"
 }
 
 module "ci_prod_can_deploy" {
-  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/atomic/iam-role-assignment?ref=v0.5.0"
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/atomic/iam-role-assignment?ref=v0.7.0"
 
   role_id        = module.registry_deployer.role_id
   principal_type = "service_account"
@@ -156,6 +157,7 @@ Suit le provider `cetic-group/cetic-cloud-platform`. Tag SemVer :
 - `v0.4.x` : compatible provider `>= 0.10.0`
 - `v0.5.x` : compatible provider `>= 0.11.0` — ajoute les modules IAM (Roles v1) + landing-zone `iam-team-segregation`
 - `v0.6.x` : compatible provider `>= 0.12.0` — `root_password` désormais obligatoire sur `compute/vm`, `compute/container`, `compute/vm-scale-set`, `compute/container-scale-set` (breaking)
+- `v0.7.x` : compatible provider `>= 0.13.0` — ajoute `atomic/secret` (Secret Manager v1) avec rotation server-side + projection K8s via CRD `CCPSecret`
 - bump majeur (`v1.0.0`) quand le provider stabilise son API
 
 ## Tests

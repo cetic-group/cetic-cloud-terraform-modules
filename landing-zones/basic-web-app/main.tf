@@ -70,16 +70,20 @@ resource "ccp_container_instance" "app" {
   tags          = concat(["app:web"], local.base_tags)
 }
 
-# ─── Exposition (IP publique + load balancer) ─────────────────────────────────
-resource "ccp_public_ip" "lb" {
+# ─── Exposition publique ──────────────────────────────────────────────────────
+# Une seule IP publique, partagée entre les deux modes d'exposition.
+resource "ccp_public_ip" "exposure" {
   region = var.region
 }
 
+# Mode "lb" — Load Balancer L4 (rétrocompat)
 resource "ccp_load_balancer" "this" {
+  count = var.exposure_type == "lb" ? 1 : 0
+
   name         = "${var.org_prefix}-${lower(var.region)}-lb"
   region       = var.region
   vnet_id      = module.vpc.vnet_ids.web
-  public_ip_id = ccp_public_ip.lb.id
+  public_ip_id = ccp_public_ip.exposure.id
   tags         = local.base_tags
 
   listener {
@@ -115,6 +119,61 @@ resource "ccp_load_balancer" "this" {
       }
     }
   }
+}
+
+# Mode "appgw" — Application Gateway L7
+locals {
+  appgw_hostname_effective = var.appgw_hostname != null ? var.appgw_hostname : "${var.org_prefix}-${lower(var.region)}.app.cloud.cetic-group.com"
+}
+
+module "appgw" {
+  count = var.exposure_type == "appgw" ? 1 : 0
+
+  source = "../../modules/exposure/web-app-with-appgw"
+
+  name         = "${var.org_prefix}-${lower(var.region)}-appgw"
+  region       = var.region
+  plan         = var.appgw_plan
+  vpc_id       = module.vpc.vpc_id
+  vnet_id      = module.vpc.vnet_ids.web
+  public_ip_id = ccp_public_ip.exposure.id
+  tags         = local.base_tags
+
+  hostnames     = [local.appgw_hostname_effective]
+  custom_domain = var.appgw_custom_domain
+
+  force_https               = true
+  hsts_enabled              = var.appgw_hsts_enabled
+  global_rate_limit_per_sec = var.appgw_rate_limit_per_sec
+
+  target_groups = {
+    default = {
+      algorithm = "roundrobin"
+      health_check = {
+        protocol      = "http"
+        path          = "/"
+        expect_status = 200
+        interval_sec  = 5
+      }
+      members = {
+        for k, v in ccp_container_instance.app : k => {
+          container_id = v.id
+          port         = var.app_listen_port
+          weight       = 100
+        }
+      }
+    }
+  }
+
+  routes = [
+    {
+      listener_index   = 0
+      target_group_key = "default"
+      priority         = 100
+      path_match       = "/"
+      path_match_type  = "prefix"
+    },
+  ]
 }
 
 # ─── Base de données managée (PostgreSQL) ─────────────────────────────────────

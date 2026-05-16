@@ -4,7 +4,24 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] — Application Gateway v1 complétion
+## [Unreleased] — Billing v2
+
+### Added
+
+- **`modules/managed/billing-budget`** — module composé qui combine
+  `ccp_budget` + optionnel `ccp_commit`. Cap mensuel en euros (converti
+  en cents), alertes 50/80/100% configurables, hard-stop à 100%, et
+  engagement `monthly` (-10%) / `yearly` (-20%) activable en une variable.
+  Compatible provider ≥ 0.16.0.
+
+### Changed
+
+- **Bump global provider** : tous les `versions.tf` passent à `>= 0.16.0`
+  (auparavant `>= 0.14.0` / `>= 0.15.0`). Couvre les nouvelles resources
+  / datasources billing v2 : `ccp_pricing`, `ccp_promo_codes_available`,
+  `ccp_budget`, `ccp_commit`.
+
+## [Unreleased précédent] — Application Gateway v1 complétion
 
 ### Added
 

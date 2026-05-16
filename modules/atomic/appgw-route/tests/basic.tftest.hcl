@@ -1,7 +1,8 @@
 mock_provider "ccp" {
   mock_resource "ccp_appgw_route" {
     defaults = {
-      id = "00000000-0000-0000-0000-00000000b001"
+      id                    = "00000000-0000-0000-0000-00000000b001"
+      basic_auth_secret_ref = null
     }
   }
 }
@@ -24,6 +25,10 @@ run "creates_default_route" {
   assert {
     condition     = ccp_appgw_route.this.waf_preset == "off"
     error_message = "default waf_preset should be off"
+  }
+  assert {
+    condition     = length(ccp_appgw_route.this.basic_auth_user) == 0
+    error_message = "no basic_auth_user blocks expected by default"
   }
 }
 
@@ -54,6 +59,23 @@ run "creates_full_policies_route" {
   assert {
     condition     = ccp_appgw_route.this.waf_preset == "strict"
     error_message = "waf_preset should be strict"
+  }
+}
+
+run "creates_route_with_basic_auth" {
+  command = plan
+  variables {
+    appgw_id        = "00000000-0000-0000-0000-00000000a001"
+    listener_id     = "00000000-0000-0000-0000-00000000c001"
+    target_group_id = "00000000-0000-0000-0000-00000000d001"
+    basic_auth_users = [
+      { user = "alice", password = "s3cret!" },
+      { user = "bob", password = "h3y-bob" },
+    ]
+  }
+  assert {
+    condition     = length(ccp_appgw_route.this.basic_auth_user) == 2
+    error_message = "should create 2 basic_auth_user blocks"
   }
 }
 
@@ -108,5 +130,20 @@ run "rejects_invalid_cidr" {
   }
   expect_failures = [
     var.allow_cidrs,
+  ]
+}
+
+run "rejects_empty_user_in_basic_auth" {
+  command = plan
+  variables {
+    appgw_id        = "00000000-0000-0000-0000-00000000a001"
+    listener_id     = "00000000-0000-0000-0000-00000000c001"
+    target_group_id = "00000000-0000-0000-0000-00000000d001"
+    basic_auth_users = [
+      { user = "", password = "s3cret" },
+    ]
+  }
+  expect_failures = [
+    var.basic_auth_users,
   ]
 }

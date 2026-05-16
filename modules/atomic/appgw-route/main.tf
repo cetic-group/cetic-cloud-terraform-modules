@@ -19,17 +19,28 @@ resource "ccp_appgw_route" "this" {
   method_match = var.method_match
 
   # Policies
-  rate_limit_per_sec    = var.rate_limit_per_sec
-  allow_cidrs           = var.allow_cidrs
-  deny_cidrs            = var.deny_cidrs
-  request_headers       = var.request_headers
-  response_headers      = var.response_headers
-  cors_enabled          = var.cors_enabled
-  cors_origins          = var.cors_origins
-  cors_methods          = var.cors_methods
-  cors_credentials      = var.cors_credentials
-  basic_auth_secret_ref = var.basic_auth_secret_ref
-  waf_preset            = var.waf_preset
+  rate_limit_per_sec = var.rate_limit_per_sec
+  allow_cidrs        = var.allow_cidrs
+  deny_cidrs         = var.deny_cidrs
+  request_headers    = var.request_headers
+  response_headers   = var.response_headers
+  cors_enabled       = var.cors_enabled
+  cors_origins       = var.cors_origins
+  cors_methods       = var.cors_methods
+  cors_credentials   = var.cors_credentials
+  waf_preset         = var.waf_preset
+
+  # Basic auth: each block becomes one credential pair on the route.
+  # Plaintext passwords are persisted in the Terraform state and hashed
+  # server-side into a Secret Manager entry exposed via the computed
+  # `basic_auth_secret_ref` attribute (output below).
+  dynamic "basic_auth_user" {
+    for_each = var.basic_auth_users == null ? [] : var.basic_auth_users
+    content {
+      username = basic_auth_user.value.user
+      password = basic_auth_user.value.password
+    }
+  }
 
   lifecycle {
     precondition {

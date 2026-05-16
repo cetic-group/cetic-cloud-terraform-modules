@@ -1,8 +1,9 @@
 locals {
+  # Indexer les hostnames par leur position (les routes les référencent par index).
   hostnames_indexed = { for i, h in var.hostnames : tostring(i) => h }
 }
 
-# ── 1. Gateway ────────────────────────────────────────────────────────────────
+# ── 1. Gateway ──────────────────────────────────────────────────────────────
 module "gateway" {
   source = "../../atomic/application-gateway"
 
@@ -19,12 +20,14 @@ module "gateway" {
   global_rate_limit_per_sec = var.global_rate_limit_per_sec
   global_allow_cidrs        = var.global_allow_cidrs
   global_deny_cidrs         = var.global_deny_cidrs
+  trust_proxy_headers       = var.trust_proxy_headers
 
   tags = var.tags
 }
 
-# ── 2. Listeners (un par hostname) ───────────────────────────────────────────
-resource "ccp_appgw_listener" "this" {
+# ── 2. Listeners (1 par hostname, via atomic/appgw-listener) ────────────────
+module "listeners" {
+  source   = "../../atomic/appgw-listener"
   for_each = local.hostnames_indexed
 
   appgw_id      = module.gateway.id
@@ -32,7 +35,7 @@ resource "ccp_appgw_listener" "this" {
   custom_domain = var.custom_domain
 }
 
-# ── 3. Target groups (avec leurs members) ────────────────────────────────────
+# ── 3. Target groups (members in-place via atomic/appgw-target-group) ───────
 module "target_groups" {
   source   = "../../atomic/appgw-target-group"
   for_each = var.target_groups
@@ -47,13 +50,13 @@ module "target_groups" {
   members            = each.value.members
 }
 
-# ── 4. Routes ────────────────────────────────────────────────────────────────
+# ── 4. Routes (1 par entrée, via atomic/appgw-route) ────────────────────────
 module "routes" {
   source = "../../atomic/appgw-route"
   count  = length(var.routes)
 
   appgw_id        = module.gateway.id
-  listener_id     = ccp_appgw_listener.this[tostring(var.routes[count.index].listener_index)].id
+  listener_id     = module.listeners[tostring(var.routes[count.index].listener_index)].id
   target_group_id = module.target_groups[var.routes[count.index].target_group_key].id
 
   priority        = var.routes[count.index].priority

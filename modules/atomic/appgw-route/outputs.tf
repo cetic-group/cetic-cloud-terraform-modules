@@ -22,3 +22,13 @@ output "priority" {
   description = "Priorité effective."
   value       = ccp_appgw_route.this.priority
 }
+
+output "basic_auth_secret_ref" {
+  description = <<-EOT
+    Référence opaque du Secret Manager backing les credentials basic auth (ou `null` si
+    `basic_auth_users` est vide). Ce n'est pas un mot de passe — c'est un identifiant interne,
+    non exploitable seul, donc non sensitive.
+  EOT
+  value       = ccp_appgw_route.this.basic_auth_secret_ref
+  sensitive   = false
+}

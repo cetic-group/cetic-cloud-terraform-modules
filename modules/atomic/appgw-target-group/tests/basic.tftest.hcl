@@ -34,8 +34,8 @@ run "creates_with_defaults" {
 run "creates_with_container_members" {
   command = plan
   variables {
-    appgw_id = "00000000-0000-0000-0000-00000000a001"
-    name     = "api-pool"
+    appgw_id  = "00000000-0000-0000-0000-00000000a001"
+    name      = "api-pool"
     algorithm = "leastconn"
     health_check = {
       protocol      = "http"
@@ -63,7 +63,7 @@ run "creates_with_mixed_members" {
     appgw_id = "00000000-0000-0000-0000-00000000a001"
     name     = "mixed-pool"
     members = {
-      vm  = { vm_instance_id = "00000000-0000-0000-0000-00000000c003", port = 80 }
+      vm   = { vm_instance_id = "00000000-0000-0000-0000-00000000c003", port = 80 }
       bare = { target_ip = "10.0.1.42", port = 80 }
     }
   }

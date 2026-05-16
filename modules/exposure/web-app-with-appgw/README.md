@@ -69,14 +69,16 @@ module "web" {
       }
     },
     {
-      listener_index   = 1           # admin.example.com
+      listener_index   = 1 # admin.example.com
       target_group_key = "admin"
       priority         = 10
       path_match       = "/"
       policies = {
-        allow_cidrs    = ["203.0.113.0/24"]
-        basic_auth_secret_ref = ccp_secret.admin_htpasswd.name
-        waf_preset     = "strict"
+        allow_cidrs = ["203.0.113.0/24"]
+        basic_auth_users = [
+          { user = "alice", password = var.alice_password },
+        ]
+        waf_preset = "strict"
       }
     },
   ]

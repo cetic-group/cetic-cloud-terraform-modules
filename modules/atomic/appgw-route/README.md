@@ -2,7 +2,7 @@
 
 Wrapper 1-1 autour de `ccp_appgw_route`. Une route lie un **listener** (hostname) + un **path** (avec optionnellement headers + méthode) à un **target group**. Les policies route-level (rate limit, IP allow/deny, CORS, headers, basic auth, WAF) sont déclarées ici.
 
-Pré-requis : une AppGW déjà créée (`atomic/application-gateway`) + un listener (`ccp_appgw_listener`) + un target group (`atomic/appgw-target-group`).
+Pré-requis : une AppGW déjà créée (`atomic/application-gateway`) + un listener (`atomic/appgw-listener`) + un target group (`atomic/appgw-target-group`).
 
 > **🇬🇧** 1-1 wrapper around `ccp_appgw_route`. Connects a listener (hostname) + a path to a target group, with optional route-level policies (rate limit, IP allow/deny, CORS, headers, basic auth, WAF).
 
@@ -13,7 +13,7 @@ module "route_root" {
   source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/atomic/appgw-route?ref=v0.8.0"
 
   appgw_id        = module.appgw.id
-  listener_id     = ccp_appgw_listener.api.id
+  listener_id     = module.listener_api.id
   target_group_id = module.tg_api.id
 
   path_match      = "/"
@@ -28,7 +28,7 @@ module "route_api_v1" {
   source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/atomic/appgw-route?ref=v0.8.0"
 
   appgw_id        = module.appgw.id
-  listener_id     = ccp_appgw_listener.api.id
+  listener_id     = module.listener_api.id
   target_group_id = module.tg_api.id
 
   priority        = 10
@@ -38,9 +38,9 @@ module "route_api_v1" {
   rate_limit_per_sec = 100
   allow_cidrs        = ["203.0.113.0/24", "198.51.100.0/24"]
 
-  cors_enabled  = true
-  cors_origins  = ["https://app.example.com"]
-  cors_methods  = ["GET", "POST"]
+  cors_enabled     = true
+  cors_origins     = ["https://app.example.com"]
+  cors_methods     = ["GET", "POST"]
   cors_credentials = true
 
   request_headers = {
@@ -62,14 +62,22 @@ module "route_admin" {
   source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/atomic/appgw-route?ref=v0.8.0"
 
   appgw_id        = module.appgw.id
-  listener_id     = ccp_appgw_listener.admin.id
+  listener_id     = module.listener_admin.id
   target_group_id = module.tg_admin.id
 
   priority   = 50
   path_match = "/"
 
-  basic_auth_secret_ref = ccp_secret.admin_htpasswd.name  # {users: [{user, password_hash}]}
-  waf_preset            = "strict"
+  basic_auth_users = [
+    { user = "alice", password = var.alice_password },
+    { user = "bob",   password = var.bob_password },
+  ]
+
+  waf_preset = "strict"
+}
+
+output "admin_secret_ref" {
+  value = module.route_admin.basic_auth_secret_ref  # référence opaque du Secret Manager
 }
 ```
 
@@ -94,7 +102,7 @@ module "route_admin" {
 | `cors_origins` | list(string) | no | `[]` | Origins autorisées. |
 | `cors_methods` | list(string) | no | `["GET","POST","PUT","DELETE","OPTIONS"]` | Méthodes CORS. |
 | `cors_credentials` | bool | no | `false` | `Access-Control-Allow-Credentials`. |
-| `basic_auth_secret_ref` | string (sensitive) | no | `null` | Référence CCP Secret htpasswd-style. |
+| `basic_auth_users` | list(object) (sensitive) | no | `null` | Liste `{user, password}` pour activer le HTTP Basic Auth (voir Notes). |
 | `waf_preset` | string | no | `"off"` | `off` / `permissive` / `strict`. |
 
 ### Schéma `header_matches[*]`
@@ -105,19 +113,28 @@ module "route_admin" {
 | `value` | string | required | Valeur à matcher. |
 | `op` | string | `"eq"` | `eq` / `ne` / `regex` / `prefix` / `suffix`. |
 
+### Schéma `basic_auth_users[*]`
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `user` | string | required | Username (1-64 chars). |
+| `password` | string | required | Mot de passe en clair (1-256 chars). **Persisté dans le state Terraform.** |
+
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| `id` | UUID de la route. |
-| `appgw_id` | UUID de la gateway parente. |
-| `listener_id` | UUID du listener associé. |
-| `target_group_id` | UUID du target group cible. |
-| `priority` | Priorité effective. |
+| Name | Sensitive | Description |
+|------|-----------|-------------|
+| `id` | no | UUID de la route. |
+| `appgw_id` | no | UUID de la gateway parente. |
+| `listener_id` | no | UUID du listener associé. |
+| `target_group_id` | no | UUID du target group cible. |
+| `priority` | no | Priorité effective. |
+| `basic_auth_secret_ref` | no | Référence opaque du Secret Manager backing les credentials. `null` si pas d'auth. |
 
 ## Notes
 
 - **Priorité unique par AppGW** — deux routes avec la même priorité = erreur API.
 - **CORS `credentials` + `origins=["*"]`** : refusé par tous les navigateurs (et donc bloqué côté module via `precondition`).
 - **`waf_preset=strict`** : peut bloquer des requêtes légitimes contenant `<script>`, `union select`, etc. Tester en `permissive` d'abord.
-- **`basic_auth_secret_ref`** : le contenu du secret doit être un JSON `{users: [{user, password_hash}]}` avec un hash bcrypt. Le worker AppGW projette ce secret en `userlist` HAProxy au reload.
+- **`basic_auth_users` — sensibilité du state** : les mots de passe sont **persistés en clair dans le state Terraform**. Utiliser un backend chiffré (S3+KMS, Vault, Terraform Cloud). La plateforme ne retourne jamais les mots de passe en clair — au `terraform import`, le bloc `basic_auth_user` est vide et un `apply` ultérieur le re-synchronise.
+- **`basic_auth_secret_ref`** : référence opaque générée par la plateforme — ce n'est pas un secret en soi (impossible de l'utiliser hors plateforme) donc l'output est `sensitive=false`. Pratique pour cross-référencer la route dans une `ccp_secret` data source d'inventaire.

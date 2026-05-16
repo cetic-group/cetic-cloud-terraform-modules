@@ -146,11 +146,34 @@ variable "cors_credentials" {
   description = "Si `true`, `Access-Control-Allow-Credentials: true`. Incompatible avec `cors_origins=[\"*\"]`."
 }
 
-variable "basic_auth_secret_ref" {
-  type        = string
+variable "basic_auth_users" {
+  type = list(object({
+    user     = string
+    password = string
+  }))
   default     = null
-  description = "Référence CCP Secret contenant `{users: [{user, password_hash}]}` (htpasswd-style). `null` = pas d'auth."
   sensitive   = true
+  description = <<-EOT
+    Liste d'identifiants `{user, password}` pour activer le HTTP Basic Auth sur la route.
+    `null` ou `[]` désactive l'auth. Les mots de passe sont persistés **en clair** dans le state Terraform
+    (et donc dans tout backend de state) — utiliser un backend chiffré (S3+KMS, Vault, etc.).
+    Côté plateforme, ils sont hashés et stockés dans une entrée Secret Manager dont la référence opaque
+    est exposée via l'output `basic_auth_secret_ref`.
+  EOT
+
+  validation {
+    condition = var.basic_auth_users == null || alltrue([
+      for u in var.basic_auth_users : length(u.user) >= 1 && length(u.user) <= 64
+    ])
+    error_message = "Chaque `user` doit faire entre 1 et 64 caractères."
+  }
+
+  validation {
+    condition = var.basic_auth_users == null || alltrue([
+      for u in var.basic_auth_users : length(u.password) >= 1 && length(u.password) <= 256
+    ])
+    error_message = "Chaque `password` doit faire entre 1 et 256 caractères."
+  }
 }
 
 variable "waf_preset" {

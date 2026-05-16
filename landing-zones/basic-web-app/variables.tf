@@ -105,10 +105,63 @@ variable "db_storage_gb" {
 }
 
 # ─── Exposition publique ──────────────────────────────────────────────────────
+variable "exposure_type" {
+  type        = string
+  default     = "lb"
+  description = <<-EOT
+    Mode d'exposition publique de l'app :
+    - `"lb"` (défaut, rétrocompat) : Load Balancer L4 (TCP) — HTTP sur :80, optionnellement HTTPS sur :443 (TLS terminé côté app).
+    - `"appgw"` : Application Gateway L7 (HTTP/HTTPS) — TLS terminé côté gateway (cert Let's Encrypt auto), routing path-based, policies, HSTS, rate limit, WAF.
+
+    Si `"appgw"`, configurer aussi `appgw_hostname` (et `appgw_plan` si autre que `small`).
+  EOT
+
+  validation {
+    condition     = contains(["lb", "appgw"], var.exposure_type)
+    error_message = "`exposure_type` doit être `lb` ou `appgw`."
+  }
+}
+
 variable "expose_https" {
   type        = bool
   default     = false
-  description = "Si `true`, ajoute un listener TCP/443 (TLS terminé côté app)."
+  description = "Si `true` et `exposure_type=\"lb\"`, ajoute un listener TCP/443 (TLS terminé côté app). Ignoré quand `exposure_type=\"appgw\"` (l'AppGW termine HTTPS nativement)."
+}
+
+# ── Configuration AppGW (utilisée si exposure_type = "appgw") ──
+variable "appgw_hostname" {
+  type        = string
+  default     = null
+  description = "Hostname exposé par l'AppGW (FQDN). Si `null` et `exposure_type=\"appgw\"`, l'API génère un sous-domaine auto `.app.cloud.cetic-group.com`."
+}
+
+variable "appgw_plan" {
+  type        = string
+  default     = "small"
+  description = "Plan de l'AppGW : `small` / `medium` / `large`."
+
+  validation {
+    condition     = contains(["small", "medium", "large"], var.appgw_plan)
+    error_message = "`appgw_plan` doit être `small`, `medium` ou `large`."
+  }
+}
+
+variable "appgw_custom_domain" {
+  type        = bool
+  default     = false
+  description = "Si `true`, `appgw_hostname` est un domaine client (CNAME requis avant apply). Sinon sous-domaine auto."
+}
+
+variable "appgw_hsts_enabled" {
+  type        = bool
+  default     = true
+  description = "Active HSTS sur l'AppGW (recommandé en prod)."
+}
+
+variable "appgw_rate_limit_per_sec" {
+  type        = number
+  default     = null
+  description = "Rate limit global par IP en req/s (`null` = pas de limite)."
 }
 
 variable "tags_extra" {

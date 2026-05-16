@@ -1,23 +1,54 @@
+locals {
+  public_url = (
+    var.exposure_type == "appgw"
+    ? "https://${local.appgw_hostname_effective}"
+    : "http://${ccp_public_ip.exposure.ip_address}"
+  )
+}
+
 output "public_url" {
-  description = "URL publique de l'app, basée sur l'IP du load balancer."
-  value       = "http://${ccp_public_ip.lb.ip_address}"
+  description = "URL publique de l'app. HTTPS si `exposure_type=\"appgw\"`, HTTP via IP sinon."
+  value       = local.public_url
 }
 
 output "public_ip" {
-  description = "IP publique attachée au load balancer."
-  value       = ccp_public_ip.lb.ip_address
+  description = "IP publique attachée (LB ou AppGW selon `exposure_type`)."
+  value       = ccp_public_ip.exposure.ip_address
 }
 
+output "exposure_type" {
+  description = "Mode d'exposition retenu : `lb` ou `appgw`."
+  value       = var.exposure_type
+}
+
+# ── LB outputs (null si exposure_type=appgw) ─────────────────────────────────
 output "lb_id" {
-  description = "UUID du load balancer."
-  value       = ccp_load_balancer.this.id
+  description = "UUID du load balancer. `null` si `exposure_type=\"appgw\"`."
+  value       = var.exposure_type == "lb" ? ccp_load_balancer.this[0].id : null
 }
 
 output "lb_vip_address" {
-  description = "VIP privée du load balancer (dans le VNet web)."
-  value       = ccp_load_balancer.this.vip_address
+  description = "VIP privée du load balancer dans le VNet web. `null` si `exposure_type=\"appgw\"`."
+  value       = var.exposure_type == "lb" ? ccp_load_balancer.this[0].vip_address : null
 }
 
+# ── AppGW outputs (null si exposure_type=lb) ─────────────────────────────────
+output "appgw_id" {
+  description = "UUID de l'Application Gateway. `null` si `exposure_type=\"lb\"`."
+  value       = var.exposure_type == "appgw" ? module.appgw[0].appgw_id : null
+}
+
+output "appgw_hostname" {
+  description = "Hostname effectif de l'AppGW. `null` si `exposure_type=\"lb\"`."
+  value       = var.exposure_type == "appgw" ? local.appgw_hostname_effective : null
+}
+
+output "appgw_vip_address" {
+  description = "VIP privée de l'AppGW dans le VNet web. `null` si `exposure_type=\"lb\"`."
+  value       = var.exposure_type == "appgw" ? module.appgw[0].vip_address : null
+}
+
+# ── Communs ──────────────────────────────────────────────────────────────────
 output "vpc_id" {
   description = "UUID du VPC créé."
   value       = module.vpc.vpc_id

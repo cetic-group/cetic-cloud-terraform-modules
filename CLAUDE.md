@@ -235,4 +235,6 @@ SemVer aligné conceptuellement avec le provider :
 - `v0.2.x` : compatible provider `>= 0.8.0` (nouveaux champs scale-set / DB credentials)
 - `v0.4.x` : compatible provider `>= 0.10.0` (ajoute `managed/registry` — CCR Phase 6)
 - `v0.5.x` : compatible provider `>= 0.11.1` (ajoute `managed/iam-role` + 3 atomic IAM + landing-zone `iam-team-segregation` — IAM Roles v1)
+- `v0.7.x` : compatible provider `>= 0.13.0` (ajoute `atomic/secret` — Secret Manager v1)
+- `v0.8.x` : compatible provider `>= 0.14.0` (ajoute Application Gateway v1 : 3 atomic + 1 composable + option appgw dans `basic-web-app`)
 - bump majeur `v1.0.0` quand le provider stabilise son API à `v1.x`

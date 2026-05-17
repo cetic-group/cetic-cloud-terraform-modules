@@ -37,7 +37,7 @@ resource "ccp_appgw_route" "this" {
   dynamic "basic_auth_user" {
     for_each = var.basic_auth_users == null ? [] : var.basic_auth_users
     content {
-      username = basic_auth_user.value.user
+      user     = basic_auth_user.value.user
       password = basic_auth_user.value.password
     }
   }

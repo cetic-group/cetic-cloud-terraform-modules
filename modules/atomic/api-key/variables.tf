@@ -23,7 +23,7 @@ variable "expires_in_days" {
   default     = null
   description = "Expiration en jours (1-3650). `null` = pas d'expiration."
   validation {
-    condition     = var.expires_in_days == null || (var.expires_in_days >= 1 && var.expires_in_days <= 3650)
+    condition     = var.expires_in_days == null || try(var.expires_in_days >= 1 && var.expires_in_days <= 3650, false)
     error_message = "`expires_in_days` doit être entre 1 et 3650, ou null."
   }
 }

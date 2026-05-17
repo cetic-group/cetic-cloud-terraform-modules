@@ -79,7 +79,9 @@ variable "rate_limit_per_sec" {
   description = "Rate limit route-level par IP source en req/s. `null` = hérite du global de la gateway."
 
   validation {
-    condition     = var.rate_limit_per_sec == null || (var.rate_limit_per_sec > 0 && var.rate_limit_per_sec <= 100000)
+    # try() évite l'évaluation eager de la 2e clause quand var est null
+    # (Terraform 1.x n'a pas de short-circuit garanti sur null > N).
+    condition     = var.rate_limit_per_sec == null || try(var.rate_limit_per_sec > 0 && var.rate_limit_per_sec <= 100000, false)
     error_message = "`rate_limit_per_sec` doit être > 0 et <= 100000, ou `null`."
   }
 }
@@ -162,15 +164,17 @@ variable "basic_auth_users" {
   EOT
 
   validation {
-    condition = var.basic_auth_users == null || alltrue([
-      for u in var.basic_auth_users : length(u.user) >= 1 && length(u.user) <= 64
+    # coalesce(..., []) protège l'itération quand var est null
+    # (Terraform 1.x évalue les 2 clauses de `||` même si la 1ère est true).
+    condition = alltrue([
+      for u in coalesce(var.basic_auth_users, []) : length(u.user) >= 1 && length(u.user) <= 64
     ])
     error_message = "Chaque `user` doit faire entre 1 et 64 caractères."
   }
 
   validation {
-    condition = var.basic_auth_users == null || alltrue([
-      for u in var.basic_auth_users : length(u.password) >= 1 && length(u.password) <= 256
+    condition = alltrue([
+      for u in coalesce(var.basic_auth_users, []) : length(u.password) >= 1 && length(u.password) <= 256
     ])
     error_message = "Chaque `password` doit faire entre 1 et 256 caractères."
   }

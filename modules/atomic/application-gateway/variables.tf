@@ -74,7 +74,8 @@ variable "global_rate_limit_per_sec" {
   description = "Rate limit global par IP source en requêtes/seconde (`null` = pas de limite globale). Borné par le plan."
 
   validation {
-    condition     = var.global_rate_limit_per_sec == null || (var.global_rate_limit_per_sec > 0 && var.global_rate_limit_per_sec <= 100000)
+    # try() évite l'évaluation eager de la 2e clause quand var est null.
+    condition     = var.global_rate_limit_per_sec == null || try(var.global_rate_limit_per_sec > 0 && var.global_rate_limit_per_sec <= 100000, false)
     error_message = "`global_rate_limit_per_sec` doit être > 0 et <= 100000, ou `null`."
   }
 }

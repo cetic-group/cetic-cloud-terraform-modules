@@ -26,6 +26,7 @@ resource "ccp_appgw_target_group" "this" {
 resource "ccp_appgw_target_group_member" "members" {
   for_each = var.members
 
+  appgw_id        = var.appgw_id
   target_group_id = ccp_appgw_target_group.this.id
 
   container_id   = each.value.container_id

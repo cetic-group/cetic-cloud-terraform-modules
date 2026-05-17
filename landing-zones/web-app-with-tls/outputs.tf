@@ -39,8 +39,9 @@ output "container_id" {
 }
 
 output "basic_auth_secret_ref" {
-  description = "Référence opaque Secret Manager backing les credentials basic auth (`null` si pas d'auth)."
+  description = "Référence opaque Secret Manager backing les credentials basic auth (`null` si pas d'auth). Sensitive (propage la marque du module appgw — Terraform refuse l'output non-sensitive sinon)."
   value       = module.appgw.route_basic_auth_secret_refs[0]
+  sensitive   = true
 }
 
 output "ssh_key_id" {

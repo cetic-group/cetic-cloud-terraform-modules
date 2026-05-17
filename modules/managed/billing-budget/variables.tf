@@ -30,7 +30,7 @@ variable "commit_type" {
   type        = string
   default     = null
   validation {
-    condition     = var.commit_type == null || contains(["monthly", "yearly"], var.commit_type)
+    condition     = var.commit_type == null || try(contains(["monthly", "yearly"], var.commit_type), false)
     error_message = "commit_type must be null, monthly, or yearly."
   }
 }

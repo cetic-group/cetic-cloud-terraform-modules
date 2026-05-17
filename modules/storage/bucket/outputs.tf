@@ -12,9 +12,9 @@ output "endpoint_url" {
 }
 
 output "access_key" {
-  description = "Master access key (visible côté admin / utilisable dans boto3, etc)."
+  description = "Master access key (visible côté admin / utilisable dans boto3, etc). Sensitive (le provider marque le champ Sensitive)."
   value       = ccp_object_bucket.this.access_key
-  sensitive   = false
+  sensitive   = true
 }
 
 output "scoped_keys" {

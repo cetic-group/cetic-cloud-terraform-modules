@@ -61,11 +61,11 @@ output "route_ids" {
 output "route_basic_auth_secret_refs" {
   description = <<-EOT
     Liste des références opaques Secret Manager backing les credentials basic auth de chaque route
-    (`null` pour les routes sans auth), dans l'ordre déclaré. Ces refs ne sont pas des secrets en soi
-    (impossible de les utiliser hors plateforme) donc non sensitive.
+    (`null` pour les routes sans auth), dans l'ordre déclaré. Sensitive (propage la marque du
+    sub-module appgw-route qui suit le provider — Terraform refuse l'output non-sensitive sinon).
   EOT
   value       = [for r in module.routes : r.basic_auth_secret_ref]
-  sensitive   = false
+  sensitive   = true
 }
 
 output "url" {

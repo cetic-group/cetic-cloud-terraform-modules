@@ -26,9 +26,11 @@ output "priority" {
 output "basic_auth_secret_ref" {
   description = <<-EOT
     Référence opaque du Secret Manager backing les credentials basic auth (ou `null` si
-    `basic_auth_users` est vide). Ce n'est pas un mot de passe — c'est un identifiant interne,
-    non exploitable seul, donc non sensitive.
+    `basic_auth_users` est vide). Le provider marque ce champ Sensitive, donc l'output
+    DOIT l'être aussi (Terraform refuse "Output refers to sensitive values" sinon).
+    L'identifiant interne n'est pas un mot de passe, mais propage la marque sensitive
+    pour respecter le contrat provider et passer terraform test.
   EOT
   value       = ccp_appgw_route.this.basic_auth_secret_ref
-  sensitive   = false
+  sensitive   = true
 }

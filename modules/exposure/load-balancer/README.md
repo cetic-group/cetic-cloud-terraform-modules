@@ -11,10 +11,11 @@ module "lb_public_ip" {
 }
 
 module "lb" {
-  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/exposure/load-balancer?ref=v0.1.0"
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/exposure/load-balancer?ref=v0.12.0"
 
   name         = "web-lb"
   region       = "RNN"
+  plan         = "medium" # small (défaut) | medium | large
   vnet_id      = module.vpc.vnet_ids.web
   public_ip_id = module.lb_public_ip.id
   tags         = ["web", "env:prod"]
@@ -50,6 +51,7 @@ module "lb" {
 | `name` | string | yes | — | Nom du LB. |
 | `region` | string | yes | — | `RNN` / `PAR` / `ABJ`. |
 | `vnet_id` | string | yes | — | VNet hébergeant la VIP. |
+| `plan` | string | no | `"small"` | Plan de capacité : `small` (1 vCPU/512 Mo, 4,99 €), `medium` (2 vCPU/1 Go, 11,99 €), `large` (4 vCPU/2 Go, 27,99 €). **Immuable** — `RequiresReplace` côté provider. |
 | `public_ip_id` | string | no | `null` | IP publique à attacher. |
 | `tags` | list(string) | no | `[]` | |
 | `listeners` | map(object) | no | `{}` | Voir schéma ci-dessous. |

@@ -1,6 +1,7 @@
 resource "ccp_load_balancer" "this" {
   name         = var.name
   region       = var.region
+  plan         = var.plan
   vnet_id      = var.vnet_id
   public_ip_id = var.public_ip_id
   tags         = var.tags

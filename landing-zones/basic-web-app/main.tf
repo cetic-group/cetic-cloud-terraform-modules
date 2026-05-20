@@ -82,6 +82,7 @@ resource "ccp_load_balancer" "this" {
 
   name         = "${var.org_prefix}-${lower(var.region)}-lb"
   region       = var.region
+  plan         = var.lb_plan
   vnet_id      = module.vpc.vnet_ids.web
   public_ip_id = ccp_public_ip.exposure.id
   tags         = local.base_tags

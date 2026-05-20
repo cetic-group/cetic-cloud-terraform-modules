@@ -16,6 +16,26 @@ variable "vnet_id" {
   description = "UUID du VNet où héberger la VIP. Les backends doivent être joignables depuis ce VNet."
 }
 
+variable "plan" {
+  type        = string
+  default     = "small"
+  description = <<-EOT
+    Plan de capacité du LB. Détermine la taille de la paire d'instances LB :
+    - `small`  (défaut) — 1 vCPU / 512 Mo —  4,99 €/mois.
+    - `medium`          — 2 vCPU /   1 Go — 11,99 €/mois.
+    - `large`           — 4 vCPU /   2 Go — 27,99 €/mois.
+
+    **Immuable** : changer de plan plus tard force un remplacement du LB
+    (le provider porte `RequiresReplace` sur cet attribut — pas de
+    redimensionnement en place).
+  EOT
+
+  validation {
+    condition     = contains(["small", "medium", "large"], var.plan)
+    error_message = "`plan` doit être l'un de : small, medium, large."
+  }
+}
+
 variable "public_ip_id" {
   type        = string
   default     = null

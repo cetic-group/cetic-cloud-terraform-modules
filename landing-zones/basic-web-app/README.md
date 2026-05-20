@@ -100,6 +100,7 @@ output "url" {
 | `app_replicas` | number | `2` | Nombre de containers (1-20). |
 | `app_listen_port` | number | `8080` | Port d'écoute de l'app sur le container. |
 | `exposure_type` | string | `"lb"` | `"lb"` (L4) ou `"appgw"` (L7). |
+| `lb_plan` | string | `"small"` | Mode `lb` : capacité du LB (`small` / `medium` / `large`). Immuable. |
 | `expose_https` | bool | `false` | Mode `lb` uniquement : listener TCP/443 supplémentaire. |
 | `appgw_hostname` | string | `null` | Mode `appgw` : FQDN exposé (auto si null). |
 | `appgw_plan` | string | `"small"` | Mode `appgw` : `small` / `medium` / `large`. |

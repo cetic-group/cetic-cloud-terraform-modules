@@ -4,6 +4,34 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] — 2026-05-20
+
+### Added — Load Balancer plan tiers
+
+- **`modules/exposure/load-balancer`** : nouvelle variable `plan`
+  (string, défaut `"small"`, validation `OneOf small/medium/large`),
+  propagée vers le resource provider `ccp_load_balancer.plan`
+  (provider ≥ 0.18.0). Compatible rétro : sans bump explicite côté
+  consommateur, le LB conserve le tier `small` par défaut.
+- **`landing-zones/basic-web-app`** : nouvelle variable `lb_plan`
+  (string, défaut `"small"`) exposée en surface pour piloter la
+  capacité du LB quand `exposure_type = "lb"`. README mis à jour.
+
+### Changed
+
+- **Bump global provider** : tous les `versions.tf` / providers.tf /
+  examples / README (41 fichiers au total) passent de `>= 0.16.0` ou
+  `>= 0.17.0` à `>= 0.18.0`. Couvre le nouvel attribut
+  `ccp_load_balancer.plan` ainsi que les ajouts cumulés de la v0.17.0
+  (support plans).
+
+### Notes
+
+- `plan` côté provider est `Optional+Computed+Default("small")` avec
+  `RequiresReplace()` — un consommateur qui passe de `small` à `medium`
+  via `terraform apply` verra un destroy+create de la ressource. Aucun
+  redimensionnement en place de la paire LB (limitation plateforme).
+
 ## [Unreleased] — Billing v2
 
 ### Added

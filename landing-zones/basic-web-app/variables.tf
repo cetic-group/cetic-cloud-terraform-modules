@@ -128,6 +128,22 @@ variable "expose_https" {
   description = "Si `true` et `exposure_type=\"lb\"`, ajoute un listener TCP/443 (TLS terminé côté app). Ignoré quand `exposure_type=\"appgw\"` (l'AppGW termine HTTPS nativement)."
 }
 
+variable "lb_plan" {
+  type        = string
+  default     = "small"
+  description = <<-EOT
+    Plan de capacité du Load Balancer (utilisé si `exposure_type=\"lb\"`).
+    `small` (défaut) / `medium` / `large` — cf. module `exposure/load-balancer`
+    pour les specs détaillées. Immuable : changer de plan force le remplacement
+    du LB.
+  EOT
+
+  validation {
+    condition     = contains(["small", "medium", "large"], var.lb_plan)
+    error_message = "`lb_plan` doit être `small`, `medium` ou `large`."
+  }
+}
+
 # ── Configuration AppGW (utilisée si exposure_type = "appgw") ──
 variable "appgw_hostname" {
   type        = string

@@ -55,6 +55,26 @@ module "route_api_v1" {
 }
 ```
 
+## Exemple — route avec `strip_prefix`
+
+Pour exposer une application sous-montée à un préfixe (`/web-app`) alors
+que le backend sert depuis `/`, on demande à la gateway de retirer le
+préfixe avant de forward au backend.
+
+```hcl
+module "route_web_app" {
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/atomic/appgw-route?ref=v0.13.0"
+
+  appgw_id        = module.appgw.id
+  listener_id     = module.listener_public.id
+  target_group_id = module.tg_web.id
+
+  path_match      = "/web-app"
+  path_match_type = "prefix"
+  strip_prefix    = true  # /web-app/foo → /foo côté backend
+}
+```
+
 ## Exemple — route avec basic auth
 
 ```hcl
@@ -104,6 +124,7 @@ output "admin_secret_ref" {
 | `cors_credentials` | bool | no | `false` | `Access-Control-Allow-Credentials`. |
 | `basic_auth_users` | list(object) (sensitive) | no | `null` | Liste `{user, password}` pour activer le HTTP Basic Auth (voir Notes). |
 | `waf_preset` | string | no | `"off"` | `off` / `permissive` / `strict`. |
+| `strip_prefix` | bool | no | `false` | Strippe `path_match` avant forward au backend (prefix/exact uniquement). Voir Notes. |
 
 ### Schéma `header_matches[*]`
 
@@ -138,3 +159,4 @@ output "admin_secret_ref" {
 - **`waf_preset=strict`** : peut bloquer des requêtes légitimes contenant `<script>`, `union select`, etc. Tester en `permissive` d'abord.
 - **`basic_auth_users` — sensibilité du state** : les mots de passe sont **persistés en clair dans le state Terraform**. Utiliser un backend chiffré (S3+KMS, Vault, Terraform Cloud). La plateforme ne retourne jamais les mots de passe en clair — au `terraform import`, le bloc `basic_auth_user` est vide et un `apply` ultérieur le re-synchronise.
 - **`basic_auth_secret_ref`** : référence opaque générée par la plateforme — ce n'est pas un secret en soi (impossible de l'utiliser hors plateforme) donc l'output est `sensitive=false`. Pratique pour cross-référencer la route dans une `ccp_secret` data source d'inventaire.
+- **`strip_prefix`** : utile quand une app est sous-montée à un préfixe (ex. `/web-app`) alors que son backend sert depuis `/`. La gateway retire `path_match` avant de forwarder. Ignoré si `path_match` est vide ou si `path_match_type = "regex"` (impossible de stripper un motif regex). Compatible avec `prefix` et `exact`.

@@ -163,6 +163,7 @@ variable "routes" {
     path_match       = optional(string, "/")
     path_match_type  = optional(string, "prefix")
     method_match     = optional(list(string), [])
+    strip_prefix     = optional(bool, false)
     header_matches = optional(list(object({
       name  = string
       value = string

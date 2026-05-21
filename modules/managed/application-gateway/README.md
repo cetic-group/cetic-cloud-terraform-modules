@@ -126,6 +126,7 @@ output "acme_status" {
 | `path_match` | string | `"/"` | Pattern. |
 | `path_match_type` | string | `"prefix"` | `prefix` / `exact` / `regex`. |
 | `method_match` | list(string) | `[]` | |
+| `strip_prefix` | bool | `false` | Strippe `path_match` avant forward backend (`/web-app/foo` → `/foo`). Mode `prefix`/`exact` uniquement. |
 | `header_matches` | list(object) | `[]` | |
 | `policies` | object | `{}` | Policies route-level (rate limit, CORS, headers, WAF, `basic_auth_users`). |
 

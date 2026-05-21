@@ -190,3 +190,14 @@ variable "waf_preset" {
     error_message = "`waf_preset` doit être `off`, `permissive` ou `strict`."
   }
 }
+
+variable "strip_prefix" {
+  type        = bool
+  default     = false
+  description = <<-EOT
+    Si `true` et `path_match` non vide (mode `prefix`/`exact`), la gateway
+    strippe le préfixe `path_match` de l'URL avant forward au backend
+    (ex. `/web-app/foo` devient `/foo`). Ignoré si `path_match` est vide
+    ou si `path_match_type = "regex"`.
+  EOT
+}

@@ -27,8 +27,28 @@ run "creates_default_route" {
     error_message = "default waf_preset should be off"
   }
   assert {
+    condition     = ccp_appgw_route.this.strip_prefix == false
+    error_message = "default strip_prefix should be false"
+  }
+  assert {
     condition     = length(ccp_appgw_route.this.basic_auth_user) == 0
     error_message = "no basic_auth_user blocks expected by default"
+  }
+}
+
+run "creates_route_with_strip_prefix" {
+  command = plan
+  variables {
+    appgw_id        = "00000000-0000-0000-0000-00000000a001"
+    listener_id     = "00000000-0000-0000-0000-00000000c001"
+    target_group_id = "00000000-0000-0000-0000-00000000d001"
+    path_match      = "/web-app"
+    path_match_type = "prefix"
+    strip_prefix    = true
+  }
+  assert {
+    condition     = ccp_appgw_route.this.strip_prefix == true
+    error_message = "strip_prefix should propagate to the resource"
   }
 }
 

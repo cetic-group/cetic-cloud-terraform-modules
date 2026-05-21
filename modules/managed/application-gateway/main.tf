@@ -63,6 +63,7 @@ module "routes" {
   path_match      = var.routes[count.index].path_match
   path_match_type = var.routes[count.index].path_match_type
   method_match    = var.routes[count.index].method_match
+  strip_prefix    = var.routes[count.index].strip_prefix
   header_matches  = var.routes[count.index].header_matches
 
   rate_limit_per_sec = var.routes[count.index].policies.rate_limit_per_sec

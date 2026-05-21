@@ -4,6 +4,32 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] — 2026-05-21
+
+### Added — AppGW route `strip_prefix`
+
+- **`modules/atomic/appgw-route`** : nouvelle variable `strip_prefix`
+  (bool, défaut `false`), propagée vers `ccp_appgw_route.strip_prefix`
+  (provider ≥ 0.19.0). Quand `true` et `path_match` non vide en mode
+  `prefix`/`exact`, la gateway retire le préfixe de l'URL avant forward
+  au backend (ex. `/web-app/foo` → `/foo`).
+- **`modules/managed/application-gateway`** et
+  **`modules/exposure/web-app-with-appgw`** : ajout de `strip_prefix`
+  (bool, défaut `false`) au schéma `routes[*]`, passthrough vers le
+  sous-module `atomic/appgw-route`.
+
+### Changed
+
+- **Bump global provider** : tous les `versions.tf` / `providers.tf` /
+  examples / README passent de `>= 0.18.0` à `>= 0.19.0`. Couvre le
+  nouvel attribut `ccp_appgw_route.strip_prefix`.
+
+### Notes
+
+- Pas de breaking change : `strip_prefix` est Optional avec default
+  `false` (= comportement legacy). Compatible rétro pour tous les
+  consommateurs existants.
+
 ## [0.12.0] — 2026-05-20
 
 ### Added — Load Balancer plan tiers

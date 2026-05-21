@@ -29,6 +29,7 @@ resource "ccp_appgw_route" "this" {
   cors_methods       = var.cors_methods
   cors_credentials   = var.cors_credentials
   waf_preset         = var.waf_preset
+  strip_prefix       = var.strip_prefix
 
   # Basic auth: each block becomes one credential pair on the route.
   # Plaintext passwords are persisted in the Terraform state and hashed

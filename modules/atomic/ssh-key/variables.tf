@@ -17,3 +17,14 @@ variable "public_key" {
     error_message = "La clé publique doit commencer par un type OpenSSH valide (ssh-rsa, ssh-ed25519, ecdsa-sha2-*, ssh-dss)."
   }
 }
+
+variable "scope" {
+  type        = string
+  default     = "user"
+  description = "Visibilité de la clé : `user` (créateur seul, défaut), `org` (membres de l'organisation active), `tenant` (toutes orgs du compte). Immuable côté provider — recréation forcée si modifié."
+
+  validation {
+    condition     = contains(["user", "org", "tenant"], var.scope)
+    error_message = "Le scope doit être l'un de : user, org, tenant."
+  }
+}

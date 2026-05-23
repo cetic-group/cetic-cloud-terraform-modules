@@ -67,3 +67,61 @@ run "accepts_rsa_key" {
     error_message = "Le module doit accepter une clé RSA."
   }
 }
+
+run "default_scope_is_user" {
+  command = plan
+
+  variables {
+    name       = "test-default-scope"
+    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBQqn0OHfSEwi1FfbxLFz9e3M+B4N/kd0aeGFRfxKlXa user@host"
+  }
+
+  assert {
+    condition     = ccp_ssh_key.this.scope == "user"
+    error_message = "Le scope par défaut doit être `user` (principe du moindre privilège)."
+  }
+}
+
+run "accepts_scope_org" {
+  command = plan
+
+  variables {
+    name       = "test-org-scope"
+    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBQqn0OHfSEwi1FfbxLFz9e3M+B4N/kd0aeGFRfxKlXa user@host"
+    scope      = "org"
+  }
+
+  assert {
+    condition     = ccp_ssh_key.this.scope == "org"
+    error_message = "Le scope `org` doit être propagé à la resource provider."
+  }
+}
+
+run "accepts_scope_tenant" {
+  command = plan
+
+  variables {
+    name       = "test-tenant-scope"
+    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBQqn0OHfSEwi1FfbxLFz9e3M+B4N/kd0aeGFRfxKlXa user@host"
+    scope      = "tenant"
+  }
+
+  assert {
+    condition     = ccp_ssh_key.this.scope == "tenant"
+    error_message = "Le scope `tenant` doit être propagé à la resource provider."
+  }
+}
+
+run "rejects_invalid_scope" {
+  command = plan
+
+  variables {
+    name       = "bad-scope"
+    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBQqn0OHfSEwi1FfbxLFz9e3M+B4N/kd0aeGFRfxKlXa user@host"
+    scope      = "admin"
+  }
+
+  expect_failures = [
+    var.scope,
+  ]
+}

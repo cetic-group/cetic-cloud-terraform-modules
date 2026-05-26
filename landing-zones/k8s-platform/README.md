@@ -79,6 +79,7 @@ output "ingress_url" {
 | `org_prefix` | string | required | Préfixe métier. |
 | `region` | string | required | `RNN`/`PAR`/`ABJ`. |
 | `k8s_version` | string | `"v1.31.4"` | |
+| `k8s_tier` | string | `"dev"` | `dev` (single) ou `prod` (HA actif/passif + VIP flottante). Immuable. |
 | `initial_pool_plan` | string | `"small"` | Plan du pool initial. |
 | `initial_pool_replicas` | number | `2` | |
 | `additional_pools` | map(object) | `{}` | Cf. `managed/k8s-cluster`. |

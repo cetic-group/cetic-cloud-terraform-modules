@@ -28,6 +28,11 @@ output "ingress_internal_ip" {
   value       = module.k8s.ingress_internal_ip
 }
 
+output "cluster_tier" {
+  description = "Niveau de service effectif du cluster (`dev` ou `prod`)."
+  value       = module.k8s.tier
+}
+
 output "vpc_id" {
   value = module.vpc.vpc_id
 }

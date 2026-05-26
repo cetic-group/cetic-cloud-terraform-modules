@@ -46,6 +46,7 @@ module "k8s" {
 
   name        = local.cluster_name
   region      = var.region
+  tier        = var.k8s_tier
   vpc_id      = module.vpc.vpc_id
   vnet_id     = module.vpc.vnet_ids.workers
   k8s_version = var.k8s_version

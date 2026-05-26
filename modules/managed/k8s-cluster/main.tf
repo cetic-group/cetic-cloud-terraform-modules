@@ -2,6 +2,7 @@ resource "ccp_k8s_cluster" "this" {
   name            = var.name
   display_name    = coalesce(var.display_name, var.name)
   region          = var.region
+  tier            = var.tier
   vpc_id          = var.vpc_id
   vnet_id         = var.vnet_id
   k8s_version     = var.k8s_version

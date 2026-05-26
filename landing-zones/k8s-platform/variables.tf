@@ -21,6 +21,22 @@ variable "k8s_version" {
   default = "v1.31.4"
 }
 
+variable "k8s_tier" {
+  type        = string
+  default     = "dev"
+  description = <<-EOT
+    Niveau de service du cluster CCKS — passé tel quel au module
+    `managed/k8s-cluster`. `dev` (défaut) provisionne un frontal
+    d'exposition unique. `prod` active la haute-disponibilité du plan
+    de contrôle (frontaux actif/passif + VIP flottante VNet). Immuable.
+  EOT
+
+  validation {
+    condition     = can(regex("^(dev|prod)$", var.k8s_tier))
+    error_message = "k8s_tier doit être `dev` ou `prod`."
+  }
+}
+
 variable "initial_pool_replicas" {
   type        = number
   default     = 2

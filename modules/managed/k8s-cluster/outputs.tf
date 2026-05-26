@@ -41,3 +41,23 @@ output "additional_pool_ids" {
 output "status" {
   value = ccp_k8s_cluster.this.status
 }
+
+output "tier" {
+  description = "Niveau de service effectif du cluster (`dev` ou `prod`)."
+  value       = ccp_k8s_cluster.this.tier
+}
+
+output "proxy_secondary_vmid" {
+  description = "VMID du frontal d'exposition secondaire (tier `prod`). `null` en tier `dev`."
+  value       = ccp_k8s_cluster.this.proxy_secondary_vmid
+}
+
+output "proxy_secondary_node" {
+  description = "Hôte Proxmox du frontal d'exposition secondaire (tier `prod`). `null` en tier `dev`."
+  value       = ccp_k8s_cluster.this.proxy_secondary_node
+}
+
+output "proxy_vip_vnet" {
+  description = "Adresse de la VIP flottante VNet partagée entre les deux frontaux (tier `prod`). `null` en tier `dev`."
+  value       = ccp_k8s_cluster.this.proxy_vip_vnet
+}

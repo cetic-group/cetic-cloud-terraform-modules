@@ -4,6 +4,39 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] — 2026-05-26
+
+### Added — CCKS tier (HA control-plane exposure)
+
+- **`modules/managed/k8s-cluster`** : nouvelle variable `tier`
+  (string, défaut `"dev"`, validation `OneOf dev/prod`), propagée vers
+  `ccp_k8s_cluster.tier` (provider ≥ 0.21.0). `dev` = frontal d'exposition
+  unique (adapté dev/staging). `prod` = frontaux actif/passif + VIP
+  flottante VNet pour la haute-disponibilité du plan de contrôle.
+  Immuable (`ForceNew`).
+- **`modules/managed/k8s-cluster`** : nouveaux outputs `tier`,
+  `proxy_secondary_vmid`, `proxy_secondary_node`, `proxy_vip_vnet`
+  (les trois derniers sont `null` en tier `dev`).
+- **`landing-zones/k8s-platform`** : nouvelle variable passthrough
+  `k8s_tier` (défaut `"dev"`) et output `cluster_tier`.
+- Tests `terraform test` (4 cas) sur `managed/k8s-cluster` :
+  défaut `dev`, acceptation `prod`, rejet d'un tier invalide, rejet d'une
+  région invalide.
+
+### Changed
+
+- **Bump global provider** : tous les `versions.tf` / `providers.tf` /
+  examples / README passent à `>= 0.21.0`. Couvre le nouvel attribut
+  `ccp_k8s_cluster.tier` et les 3 outputs Computed associés.
+
+### Notes
+
+- Pas de breaking change : `tier` est Optional avec default `"dev"` côté
+  provider et module (= comportement legacy). Compatible rétro pour tous
+  les consommateurs existants.
+- Changement de tier post-création = recréation du cluster
+  (`ForceNew`). Choisir le tier à la création.
+
 ## [0.13.0] — 2026-05-21
 
 ### Added — AppGW route `strip_prefix`

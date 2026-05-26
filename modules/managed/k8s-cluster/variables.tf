@@ -21,6 +21,28 @@ variable "vpc_id" {
   type = string
 }
 
+variable "tier" {
+  type        = string
+  default     = "dev"
+  description = <<-EOT
+    Niveau de service du cluster :
+
+    - `dev` (défaut) : déploiement single-instance du frontal d'exposition de
+      l'apiserver — adapté aux environnements de dev / staging / éphémères.
+    - `prod` : déploiement actif/passif (deux frontaux + VIP flottante)
+      pour la haute-disponibilité du plan de contrôle. Recommandé pour
+      les clusters de production.
+
+    Immuable côté provider (`ForceNew`) — changer la valeur recrée le
+    cluster.
+  EOT
+
+  validation {
+    condition     = can(regex("^(dev|prod)$", var.tier))
+    error_message = "tier doit être `dev` ou `prod`."
+  }
+}
+
 variable "vnet_id" {
   type = string
 }

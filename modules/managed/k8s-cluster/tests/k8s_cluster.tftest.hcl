@@ -96,3 +96,62 @@ run "rejects_invalid_region" {
     var.region,
   ]
 }
+
+run "additional_pool_with_taints" {
+  command = plan
+
+  variables {
+    name            = "test-taints"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    additional_pools = {
+      gpu = {
+        plan     = "xlarge"
+        replicas = 1
+        labels   = { workload = "gpu" }
+        taints = [
+          {
+            key    = "nvidia.com/gpu"
+            value  = "present"
+            effect = "NoSchedule"
+          },
+        ]
+      }
+    }
+  }
+
+  assert {
+    condition     = ccp_k8s_node_pool.additional["gpu"].taints == tolist([{ key = "nvidia.com/gpu", value = "present", effect = "NoSchedule" }])
+    error_message = "Les taints doivent être propagés au node pool."
+  }
+}
+
+run "rejects_invalid_taint_effect" {
+  command = plan
+
+  variables {
+    name            = "test-bad-taint"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    additional_pools = {
+      bad = {
+        plan     = "small"
+        replicas = 1
+        taints = [
+          {
+            key    = "foo"
+            effect = "InvalidEffect"
+          },
+        ]
+      }
+    }
+  }
+
+  expect_failures = [
+    var.additional_pools,
+  ]
+}

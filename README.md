@@ -68,7 +68,7 @@ terraform {
   required_providers {
     ccp = {
       source  = "cetic-group/cetic-cloud-platform"
-      version = ">= 0.21.0"
+      version = ">= 0.23.0"
     }
   }
 }
@@ -160,6 +160,7 @@ Suit le provider `cetic-group/cetic-cloud-platform`. Tag SemVer :
 - `v0.7.x` : compatible provider `>= 0.13.0` — ajoute `atomic/secret` (Secret Manager v1) avec rotation server-side + projection K8s via CRD `CCPSecret`
 - `v0.8.x` : compatible provider `>= 0.14.0` — ajoute les modules Application Gateway v1 (`atomic/application-gateway`, `atomic/appgw-route`, `atomic/appgw-target-group`, `exposure/web-app-with-appgw`) et l'option `exposure_type = "appgw"` dans la landing-zone `basic-web-app`
 - `v0.15.x` : compatible provider `>= 0.21.0` — ajoute la variable `tier` (`dev`/`prod`) à `managed/k8s-cluster` (frontal d'exposition HA actif/passif + VIP flottante en `prod`) et le passthrough `k8s_tier` dans la landing-zone `k8s-platform`
+- `v0.16.x` : compatible provider `>= 0.23.0` — passthrough `taints` sur `managed/k8s-cluster` et la landing-zone `k8s-platform` (champ `taints` dans chaque pool de `additional_pools`)
 - bump majeur (`v1.0.0`) quand le provider stabilise son API
 
 ## Tests

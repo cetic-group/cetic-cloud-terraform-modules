@@ -34,6 +34,13 @@ module "platform" {
       min_size = 0
       max_size = 4
       labels   = { workload = "gpu", nvidia = "true" }
+      taints = [
+        {
+          key    = "nvidia.com/gpu"
+          value  = "present"
+          effect = "NoSchedule"
+        },
+      ]
     }
   }
 
@@ -64,7 +71,7 @@ output "kubeconfig_url" {
 | `pod_cidr` | string | `"10.244.0.0/16"` | |
 | `service_cidr` | string | `"10.96.0.0/12"` | |
 | `initial_pool` | object({name, plan, replicas}) | `{}` | Pool initial (immutable). |
-| `additional_pools` | map(object) | `{}` | Pools additionnels via for_each. |
+| `additional_pools` | map(object) | `{}` | Pools additionnels via for_each. Chaque objet : `plan`, `replicas`, `min_size?`, `max_size?`, `labels?`, `taints?`. |
 | `autoscaler_scale_down_delay_after_add` | string | `"10m"` | |
 | `autoscaler_scale_down_unneeded_time` | string | `"10m"` | |
 | `ingress_controller_enabled` | bool | `true` | |

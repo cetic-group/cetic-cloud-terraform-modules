@@ -42,4 +42,5 @@ resource "ccp_k8s_node_pool" "additional" {
   min_size   = each.value.min_size
   max_size   = each.value.max_size
   labels     = each.value.labels
+  taints     = each.value.taints
 }

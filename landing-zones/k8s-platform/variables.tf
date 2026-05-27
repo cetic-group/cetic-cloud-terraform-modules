@@ -56,8 +56,24 @@ variable "additional_pools" {
     min_size = optional(number)
     max_size = optional(number)
     labels   = optional(map(string), {})
+    taints = optional(list(object({
+      key    = string
+      value  = optional(string)
+      effect = string
+    })), [])
   }))
   default = {}
+
+  validation {
+    condition = alltrue([
+      for pool in values(var.additional_pools) :
+      alltrue([
+        for t in pool.taints :
+        contains(["NoSchedule", "PreferNoSchedule", "NoExecute"], t.effect)
+      ])
+    ])
+    error_message = "Chaque taint.effect doit être l'un de : NoSchedule, PreferNoSchedule, NoExecute."
+  }
 }
 
 variable "expose_apiserver_publicly" {

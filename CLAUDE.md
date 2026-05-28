@@ -113,6 +113,91 @@ Toute notation d'infra sous-jacente (HAProxy, VRRP, CNPG, LXC, MASQUERADE, etc.)
 ## Pièges API connus
 
 - **`ccp_vnet_firewall_rule.direction`** : le backend valide `^(in|out|forward)$` (**lowercase**). Si tu wrappes ce champ dans un module, normalise avec `lower(...)`, **jamais** `upper(...)`. Le `action` reste uppercase (`^(ACCEPT|DROP|REJECT)$`).
+- **`ccp_block_volume.attached_to_type` = `"vm"`, PAS `"vm_instance"`** (depuis provider v0.24+). Le module `modules/storage/block-volume` v0.17.0 valide encore `vm_instance` dans `variables.tf` — bug latent à fixer en v0.17.1. Workaround actuel : utiliser `ccp_block_volume` directement avec `attached_to_type = "vm"`. Voir mémoire `feedback-tf-block-volume-attached-to-type-mismatch`.
+
+## Pattern v1.0+ — `cetic-cloud-platform` local name + `provider = ...` explicite
+
+Depuis v0.17.0 des modules + v1.0.0 du provider, tous les modules déclarent
+le provider avec le local name `cetic-cloud-platform` (matche le snippet
+"Use Provider" du Registry) :
+
+```hcl
+# versions.tf de chaque module
+terraform {
+  required_version = ">= 1.7"
+  required_providers {
+    cetic-cloud-platform = {
+      source  = "cetic-group/cetic-cloud-platform"
+      version = ">= 2.0.0"
+    }
+  }
+}
+```
+
+Comme le local name (`cetic-cloud-platform`) diffère du préfixe des resource
+types (`ccp_*`), Terraform ne fait **plus** l'auto-résolution. Chaque
+`resource "ccp_*"` / `data "ccp_*"` dans les modules DOIT carry un
+`provider = cetic-cloud-platform` explicite :
+
+```hcl
+resource "ccp_vpc" "this" {
+  provider = cetic-cloud-platform   # ← OBLIGATOIRE depuis v0.17.0
+  name     = var.name
+  ...
+}
+```
+
+**Toute nouvelle resource/data dans un module doit suivre ce pattern.**
+Vérification post-edit :
+
+```bash
+grep -rL 'provider = cetic-cloud-platform' \
+  $(grep -rl 'resource "ccp_\|data "ccp_' modules/ landing-zones/ examples/ --include="*.tf")
+```
+
+Côté consommateur (root module), c'est OK d'utiliser soit `cetic-cloud-platform`
+(no `providers = {...}` map nécessaire) soit `ccp` (avec `providers = { cetic-cloud-platform = ccp }`
+sur chaque module call). Recommander le premier dans les README.
+
+## Ordre de destruction — depends_on explicites
+
+L'ordre des destroys CCP est piégé par plusieurs garde-fous backend :
+
+1. **VM/Container DELETE** refuse 409 si un volume bloc est attaché (politique v1.3.0 "détache d'abord")
+2. **VNet DELETE** refuse si une VM/CCKS référence encore la VNet
+3. **VPC DELETE** déclenche le teardown NAT GW — nécessaire au teardown des LXC proxies CCKS et au release des IPs IPaaS
+
+Les références implicites Terraform suffisent en théorie, mais le
+parallélisme + les poll asynchrones côté provider causent des races. Donc
+**dans les exemples + landing-zones, ajouter `depends_on` explicite** :
+
+```hcl
+resource "ccp_public_ip" "vm" {
+  region     = var.region
+  depends_on = [module.vpc]   # release IP IPaaS → NAT GW vivant
+}
+
+module "vm" {
+  source     = ".../compute/vm?ref=v0.17.0"
+  ...
+  depends_on = [module.vpc, module.ssh_key, ccp_public_ip.vm]
+}
+
+module "ccks" {
+  source     = ".../managed/k8s-cluster?ref=v0.17.0"
+  ...
+  depends_on = [module.vpc]   # CCKS détruit avant VPC (NAT GW nécessaire)
+}
+
+resource "ccp_block_volume" "data" {
+  attached_to_id   = module.vm.id
+  attached_to_type = "vm"
+  ...
+  depends_on       = [module.vm]   # volume détach + delete AVANT VM
+}
+```
+
+Voir mémoire `feedback-tf-destroy-order-explicit-depends-on`.
 
 ---
 
@@ -230,11 +315,15 @@ le binaire local — pratique pour itérer sur des modifs schema avant release.
 
 ## Versionnage
 
-SemVer aligné conceptuellement avec le provider :
+SemVer aligné conceptuellement avec le provider. **Latest : `v0.18.0`** (compatible provider `>= 2.0.0`).
+
 - `v0.1.x` : compatible provider `>= 0.7.1`
 - `v0.2.x` : compatible provider `>= 0.8.0` (nouveaux champs scale-set / DB credentials)
 - `v0.4.x` : compatible provider `>= 0.10.0` (ajoute `managed/registry` — CCR Phase 6)
 - `v0.5.x` : compatible provider `>= 0.11.1` (ajoute `managed/iam-role` + 3 atomic IAM + landing-zone `iam-team-segregation` — IAM Roles v1)
 - `v0.7.x` : compatible provider `>= 0.13.0` (ajoute `atomic/secret` — Secret Manager v1)
 - `v0.8.x` : compatible provider `>= 0.14.0` (ajoute Application Gateway v1 : 3 atomic + 1 composable + option appgw dans `basic-web-app`)
-- bump majeur `v1.0.0` quand le provider stabilise son API à `v1.x`
+- `v0.17.x` : compatible provider `>= 1.1.2` (local name canonique `cetic-cloud-platform`, attr `provider = cetic-cloud-platform` obligatoire sur ~85 blocs)
+- `v0.18.0` (2026-05-28) : compatible provider `>= 2.0.0`. **BREAKING amont** — si un consumer utilisait encore `data "ccp_lxc_templates"` ou `data "ccp_qemu_templates"` (retirés en provider v2.0.0), migrer vers `data "ccp_container_templates"` / `data "ccp_vm_templates"`. PR #19 — 46 fichiers patchés.
+
+**Convention** : on bump le provider constraint dès qu'une feature client (matérialisée par un changement de schéma upstream) requiert la nouvelle version. Les patch-only du provider (docs, anti-leak, sub-cent pricing seed) n'imposent pas un bump module sauf si une migration aliase est en jeu (cas v0.18.0 vs provider v2.0.0).

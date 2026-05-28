@@ -1,4 +1,5 @@
 resource "ccp_db_mysql_instance" "this" {
+  provider       = cetic-cloud-platform
   name           = var.name
   region         = var.region
   vpc_id         = var.vpc_id

@@ -14,7 +14,8 @@ locals {
 # Compose the policy document from `statements` when provided. Skipped when
 # the caller passes `policy_document_json` directly.
 data "ccp_iam_policy_document" "this" {
-  count = local.has_statements ? 1 : 0
+  provider = cetic-cloud-platform
+  count    = local.has_statements ? 1 : 0
 
   dynamic "statement" {
     for_each = local.statements_list
@@ -37,6 +38,7 @@ data "ccp_iam_policy_document" "this" {
 }
 
 resource "ccp_iam_role" "this" {
+  provider             = cetic-cloud-platform
   name                 = var.name
   description          = var.description
   policy_document_json = local.policy_json

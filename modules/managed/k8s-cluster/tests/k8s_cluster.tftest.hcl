@@ -1,6 +1,6 @@
 # Tests natifs Terraform pour `managed/k8s-cluster`.
 
-mock_provider "ccp" {
+mock_provider "cetic-cloud-platform" {
   mock_resource "ccp_k8s_cluster" {
     defaults = {
       id                        = "00000000-0000-0000-0000-000000000010"
@@ -123,7 +123,7 @@ run "additional_pool_with_taints" {
   }
 
   assert {
-    condition     = ccp_k8s_node_pool.additional["gpu"].taints == tolist([{ key = "nvidia.com/gpu", value = "present", effect = "NoSchedule" }])
+    condition     = ccp_k8s_node_pool.additional["gpu"].taints == toset([{ key = "nvidia.com/gpu", value = "present", effect = "NoSchedule" }])
     error_message = "Les taints doivent être propagés au node pool."
   }
 }

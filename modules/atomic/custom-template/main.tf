@@ -1,4 +1,5 @@
 resource "ccp_custom_template" "this" {
+  provider            = cetic-cloud-platform
   name                = var.name
   description         = var.description
   source_container_id = var.source_container_id

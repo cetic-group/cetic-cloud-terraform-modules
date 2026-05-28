@@ -58,6 +58,7 @@ module "vpc" {
 
 # ─── Compute (N containers individuels, pour pouvoir les attacher au LB) ──────
 resource "ccp_container_instance" "app" {
+  provider = cetic-cloud-platform
   for_each = toset(local.app_instance_names)
 
   name          = each.value
@@ -73,12 +74,14 @@ resource "ccp_container_instance" "app" {
 # ─── Exposition publique ──────────────────────────────────────────────────────
 # Une seule IP publique, partagée entre les deux modes d'exposition.
 resource "ccp_public_ip" "exposure" {
-  region = var.region
+  provider = cetic-cloud-platform
+  region   = var.region
 }
 
 # Mode "lb" — Load Balancer L4 (rétrocompat)
 resource "ccp_load_balancer" "this" {
-  count = var.exposure_type == "lb" ? 1 : 0
+  provider = cetic-cloud-platform
+  count    = var.exposure_type == "lb" ? 1 : 0
 
   name         = "${var.org_prefix}-${lower(var.region)}-lb"
   region       = var.region
@@ -179,7 +182,8 @@ module "appgw" {
 
 # ─── Base de données managée (PostgreSQL) ─────────────────────────────────────
 resource "ccp_db_pg_instance" "app_db" {
-  count = var.enable_database ? 1 : 0
+  provider = cetic-cloud-platform
+  count    = var.enable_database ? 1 : 0
 
   name           = "${var.org_prefix}-${lower(var.region)}-pg"
   region         = var.region

@@ -1,4 +1,5 @@
 resource "ccp_public_ip" "this" {
-  region  = var.region
-  pool_id = var.pool_id
+  provider = cetic-cloud-platform
+  region   = var.region
+  pool_id  = var.pool_id
 }

@@ -1,4 +1,4 @@
-mock_provider "ccp" {
+mock_provider "cetic-cloud-platform" {
   mock_resource "ccp_application_gateway" {
     defaults = {
       id                = "00000000-0000-0000-0000-00000000a001"

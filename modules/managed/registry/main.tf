@@ -1,4 +1,5 @@
 resource "ccp_registry" "this" {
+  provider       = cetic-cloud-platform
   name           = var.name
   region         = var.region
   expose_public  = var.expose_public

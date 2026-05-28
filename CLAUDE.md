@@ -14,7 +14,7 @@
 1. **`versions.tf` de chaque module / landing-zone / example** :
    ```hcl
    required_providers {
-     ccp = {
+     cetic-cloud-platform = {
        source  = "cetic-group/cetic-cloud-platform"
        version = ">= X.Y.Z"
      }
@@ -155,7 +155,7 @@ Utiliser **`terraform test` natif** (HCL `.tftest.hcl`) avec `mock_provider`.
 Pas d'`apply` réel — la CI tourne sans creds CCP.
 
 ```hcl
-mock_provider "ccp" {
+mock_provider "cetic-cloud-platform" {
   mock_resource "ccp_vpc" {
     defaults = {
       id     = "00000000-0000-0000-0000-000000000001"

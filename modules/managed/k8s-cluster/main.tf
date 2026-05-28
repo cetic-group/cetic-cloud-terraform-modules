@@ -1,4 +1,5 @@
 resource "ccp_k8s_cluster" "this" {
+  provider        = cetic-cloud-platform
   name            = var.name
   display_name    = coalesce(var.display_name, var.name)
   region          = var.region
@@ -33,6 +34,7 @@ resource "ccp_k8s_cluster" "this" {
 
 # ─── Pools additionnels ──────────────────────────────────────────────────────
 resource "ccp_k8s_node_pool" "additional" {
+  provider = cetic-cloud-platform
   for_each = var.additional_pools
 
   cluster_id = ccp_k8s_cluster.this.id

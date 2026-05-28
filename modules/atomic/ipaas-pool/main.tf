@@ -1,4 +1,5 @@
 resource "ccp_ipaas_pool" "this" {
+  provider  = cetic-cloud-platform
   region    = var.region
   cidr      = var.cidr
   gateway   = var.gateway

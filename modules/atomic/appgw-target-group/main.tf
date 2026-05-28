@@ -1,4 +1,5 @@
 resource "ccp_appgw_target_group" "this" {
+  provider  = cetic-cloud-platform
   appgw_id  = var.appgw_id
   name      = var.name
   algorithm = var.algorithm
@@ -24,6 +25,7 @@ resource "ccp_appgw_target_group" "this" {
 }
 
 resource "ccp_appgw_target_group_member" "members" {
+  provider = cetic-cloud-platform
   for_each = var.members
 
   appgw_id        = var.appgw_id

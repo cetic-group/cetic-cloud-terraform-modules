@@ -1,4 +1,5 @@
 resource "ccp_vm_instance" "this" {
+  provider      = cetic-cloud-platform
   name          = var.name
   region        = var.region
   plan          = var.plan

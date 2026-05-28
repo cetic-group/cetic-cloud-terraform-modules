@@ -4,6 +4,51 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0] — 2026-05-28
+
+### Changed — provider local name now `cetic-cloud-platform`
+
+- Every `versions.tf` and `providers.tf` declares the provider with the
+  canonical local name `cetic-cloud-platform` (matches the Terraform
+  Registry's "Use Provider" snippet for `cetic-group/cetic-cloud-platform`).
+  Resource type names continue with the fixed prefix `ccp_*`.
+- All `resource "ccp_*"` / `data "ccp_*"` blocks inside modules,
+  landing-zones and examples carry an explicit
+  `provider = cetic-cloud-platform` attribute (required when the local
+  name differs from the resource prefix).
+- Provider version constraint bumped to `>= 1.1.2` across the catalog
+  (includes the v1.0.0 cosmetic rename, v1.0.1 `attached_to_id` drift
+  fix, v1.1.0 plan-time SNAT check + mutable `public_ip_id`, and the
+  v1.1.2 hotfix for the k8s/db_credentials TypeName regression).
+- Tests' `mock_provider "ccp"` renamed to `mock_provider "cetic-cloud-platform"`.
+
+### Migration for consumers
+
+The cleanest root-module pattern is now:
+
+```hcl
+terraform {
+  required_providers {
+    cetic-cloud-platform = {
+      source  = "cetic-group/cetic-cloud-platform"
+      version = "~> 1.1"
+    }
+  }
+}
+
+provider "cetic-cloud-platform" {}
+
+module "vpc" {
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/network/vpc?ref=v0.17.0"
+  # No `providers = { ... }` map needed — local names match.
+  ...
+}
+```
+
+Consumers still on `ccp` as their root local name can either switch (as
+above) or pass `providers = { cetic-cloud-platform = ccp }` to each
+module call.
+
 ## [0.15.0] — 2026-05-26
 
 ### Added — CCKS tier (HA control-plane exposure)

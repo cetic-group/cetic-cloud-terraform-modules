@@ -4,14 +4,14 @@
 terraform {
   required_version = ">= 1.7"
   required_providers {
-    ccp = {
+    cetic-cloud-platform = {
       source  = "cetic-group/cetic-cloud-platform"
       version = ">= 0.21.0"
     }
   }
 }
 
-provider "ccp" {
+provider "cetic-cloud-platform" {
   endpoint = "https://api.cloud.cetic-group.com"
   api_key  = var.ccp_api_key
 }
@@ -49,10 +49,12 @@ module "vpc" {
 }
 
 resource "ccp_public_ip" "this" {
-  region = "RNN"
+  provider = cetic-cloud-platform
+  region   = "RNN"
 }
 
 resource "ccp_container_instance" "hello" {
+  provider      = cetic-cloud-platform
   name          = "hello-world"
   region        = "RNN"
   plan          = "nano"

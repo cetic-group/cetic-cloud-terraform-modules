@@ -95,7 +95,7 @@ module "vpc" {
 > **Legacy alias still works.** Modules' `versions.tf` files declare `ccp`
 > internally for backward compatibility, so you can keep using `ccp` as
 > your local alias too — drop the `provider "cetic-cloud-platform"` and
-> `providers = { ccp = … }` lines and declare `provider "ccp"` directly.
+> `providers = { ccp = … }` lines and declare `provider "cetic-cloud-platform"` directly.
 > The two styles produce identical state.
 
 Ou plus simple : `landing-zones/basic-web-app` qui compose tout :

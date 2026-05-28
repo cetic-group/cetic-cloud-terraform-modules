@@ -3,6 +3,7 @@
 #
 # Ordre canonique normalisé côté provider TF (vnet_a_id < vnet_b_id).
 resource "ccp_vnet_peering" "this" {
+  provider  = cetic-cloud-platform
   name      = var.name
   vnet_a_id = var.vnet_a_id
   vnet_b_id = var.vnet_b_id

@@ -25,6 +25,7 @@ module "gateway" {
 
 # ── 2. Listeners (un par hostname) ───────────────────────────────────────────
 resource "ccp_appgw_listener" "this" {
+  provider = cetic-cloud-platform
   for_each = local.hostnames_indexed
 
   appgw_id      = module.gateway.id

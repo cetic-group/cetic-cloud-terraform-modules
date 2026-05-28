@@ -66,20 +66,21 @@ Modules Terraform officiels pour orchestrer **[CETIC Cloud Platform](https://clo
 terraform {
   required_version = ">= 1.7"
   required_providers {
-    ccp = {
+    cetic-cloud-platform = {
       source  = "cetic-group/cetic-cloud-platform"
-      version = ">= 0.23.0"
+      version = ">= 1.0.0"
     }
   }
 }
 
-provider "ccp" {
+provider "cetic-cloud-platform" {
   api_url = "https://api.cloud.cetic-group.com"
-  api_key = var.ccp_api_key  # `cl_live_…`
+  api_key = var.ccp_api_key  # `ccp_live_…`
 }
 
 module "vpc" {
-  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/network/vpc?ref=v0.8.0"
+  source    = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/network/vpc?ref=v0.16.0"
+  providers = { ccp = cetic-cloud-platform }   # modules internally declare `ccp`; pass the canonical provider here
 
   name   = "production"
   region = "RNN"
@@ -90,6 +91,12 @@ module "vpc" {
   }
 }
 ```
+
+> **Legacy alias still works.** Modules' `versions.tf` files declare `ccp`
+> internally for backward compatibility, so you can keep using `ccp` as
+> your local alias too — drop the `provider "cetic-cloud-platform"` and
+> `providers = { ccp = … }` lines and declare `provider "ccp"` directly.
+> The two styles produce identical state.
 
 Ou plus simple : `landing-zones/basic-web-app` qui compose tout :
 

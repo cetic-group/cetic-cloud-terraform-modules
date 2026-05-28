@@ -4,6 +4,43 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.0] — 2026-05-28
+
+### Changed — bump provider constraint to `>= 2.0.0`
+
+- Provider version constraint bumped from `>= 1.1.2` to `>= 2.0.0` across the
+  catalog (every `versions.tf`, `providers.tf`, example `main.tf` and
+  `README.md` snippet). Includes:
+  * v1.1.3 — full ingress controller coverage on `ccp_k8s_cluster` doc + anti-leak cleanup
+  * v1.1.4 — DB ×4 + LB missing params fix (`storage_gb`, `replicas`, `scale_set_id`, …)
+  * v1.1.5 — sidebar category splits fix (Database/Databases, Network/Networking)
+  * v1.2.0 — new `ccp_container_templates` + `ccp_vm_templates` datasources
+  * v2.0.0 — **BREAKING**: removal of the deprecated `ccp_lxc_templates` +
+    `ccp_qemu_templates` aliases
+
+### Changed — docstring references to dropped datasources
+
+- `landing-zones/{web-app-with-tls,basic-web-app}/variables.tf` —
+  `description` strings pointing at `data.ccp_lxc_templates` updated to
+  `data.ccp_container_templates` to match the v2 surface.
+
+### Migration for consumers
+
+If your root module pinned the provider to `~> 1.x`, you must bump to
+`~> 2.0` and rename any `data "ccp_lxc_templates"` /
+`data "ccp_qemu_templates"` to their v2 canonical names:
+
+```diff
+- data "ccp_lxc_templates" "available" {}
++ data "ccp_container_templates" "available" {}
+
+- data "ccp_qemu_templates" "available" {}
++ data "ccp_vm_templates" "available" {}
+```
+
+Field access (`templates[*].key` / `display_name` / `is_default`) is
+unchanged.
+
 ## [0.17.0] — 2026-05-28
 
 ### Changed — provider local name now `cetic-cloud-platform`

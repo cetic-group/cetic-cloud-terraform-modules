@@ -62,7 +62,7 @@ variable "app_plan" {
 variable "app_template" {
   type        = string
   default     = "ubuntu-24.04"
-  description = "Template OS du container (clé du catalogue, voir `data.ccp_lxc_templates`)."
+  description = "Template OS du container (clé du catalogue, voir `data.ccp_container_templates`)."
 }
 
 variable "app_root_password" {

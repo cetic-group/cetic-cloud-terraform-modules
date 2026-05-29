@@ -315,7 +315,7 @@ le binaire local — pratique pour itérer sur des modifs schema avant release.
 
 ## Versionnage
 
-SemVer aligné conceptuellement avec le provider. **Latest : `v0.18.2`** (compatible provider `>= 2.0.0`).
+SemVer aligné conceptuellement avec le provider. **Latest : `v0.19.0`** (compatible provider `>= 3.0.0`).
 
 - `v0.1.x` : compatible provider `>= 0.7.1`
 - `v0.2.x` : compatible provider `>= 0.8.0` (nouveaux champs scale-set / DB credentials)
@@ -326,6 +326,7 @@ SemVer aligné conceptuellement avec le provider. **Latest : `v0.18.2`** (compat
 - `v0.17.x` : compatible provider `>= 1.1.2` (local name canonique `cetic-cloud-platform`, attr `provider = cetic-cloud-platform` obligatoire sur ~85 blocs)
 - `v0.18.0` (2026-05-28) : compatible provider `>= 2.0.0`. **BREAKING amont** — si un consumer utilisait encore `data "ccp_lxc_templates"` ou `data "ccp_qemu_templates"` (retirés en provider v2.0.0), migrer vers `data "ccp_container_templates"` / `data "ccp_vm_templates"`. PR #19 — 46 fichiers patchés.
 - `v0.18.1` (2026-05-29) : fix `storage/block-volume` — `attach_to.type` mappe l'alias legacy `vm_instance` → `vm` + accepte `vm` (le provider rejetait `vm_instance` depuis v0.24+). Rétro-compatible. PR #21.
-- `v0.18.2` (2026-05-29) : `managed/k8s-cluster` — nouveau var **`public_ip_id`** mutable (attach/détach de l'IP publique apiserver sur un cluster existant, sans ForceNew, ≠ `apiserver_public_ip_id` create-only). PR #22.
+- `v0.18.2` (2026-05-29) : `managed/k8s-cluster` — var `public_ip_id` (éphémère, retiré en v0.19.0). PR #22.
+- `v0.19.0` (2026-05-29) : compatible provider **`>= 3.0.0`** (cascade 39 versions.tf). `managed/k8s-cluster` — retrait du var `public_ip_id` (le provider v3 a fusionné les deux attributs) ; **`apiserver_public_ip_id` est désormais mutable** (attach/détach/rotate sans ForceNew, via le provider). PR #24.
 
 **Convention** : on bump le provider constraint dès qu'une feature client (matérialisée par un changement de schéma upstream) requiert la nouvelle version. Les patch-only du provider (docs, anti-leak, sub-cent pricing seed) n'imposent pas un bump module sauf si une migration aliase est en jeu (cas v0.18.0 vs provider v2.0.0).

@@ -26,13 +26,10 @@ resource "ccp_k8s_cluster" "this" {
   ingress_public_ip_id       = var.ingress_public_ip_id
   ingress_internal_ip        = var.ingress_internal_ip
 
+  # IP publique apiserver — mutable depuis provider v3.0.0 (attach/détach/rotate
+  # sans recréer le cluster). Plus de `public_ip_id` séparé (supprimé en v3).
   apiserver_public_ip_id = var.apiserver_public_ip_id
   apiserver_internal_ip  = var.apiserver_internal_ip
-
-  # Attach/détach mutable de l'IP publique apiserver (pas de ForceNew, contrairement
-  # à `apiserver_public_ip_id`). À utiliser pour exposer/retirer l'apiserver sur un
-  # cluster déjà provisionné sans le recréer.
-  public_ip_id = var.public_ip_id
 
   tags = var.tags
 }

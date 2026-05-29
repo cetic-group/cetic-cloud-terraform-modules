@@ -173,25 +173,19 @@ variable "ingress_internal_ip" {
 variable "apiserver_public_ip_id" {
   type        = string
   default     = null
-  description = "UUID d'une IP publique pour l'apiserver (kubeconfig public). `null` = privé seulement."
+  description = <<-EOT
+    UUID d'une IP publique pour l'apiserver (kubeconfig public). **Mutable**
+    (provider >= 3.0.0) : définir l'UUID attache l'IP, `null` la détache,
+    changer la valeur la remplace — le tout **sans recréer le cluster**, à la
+    création comme après coup. L'IP doit être dans la même région, issue d'un
+    pool BYOIP routé, et le VNet du cluster doit avoir SNAT activé.
+  EOT
 }
 
 variable "apiserver_internal_ip" {
   type        = string
   default     = null
   description = "IP privée fixe pour l'apiserver. `null` = auto."
-}
-
-variable "public_ip_id" {
-  type        = string
-  default     = null
-  description = <<-EOT
-    UUID d'une IP publique à attacher/détacher à l'apiserver d'un cluster
-    **déjà provisionné** — mutable, sans ForceNew (≠ `apiserver_public_ip_id`
-    qui n'agit qu'à la création et recrée le cluster s'il change). Définir la
-    valeur attache l'IP (kubeconfig public), repasser à `null` la détache.
-    Ne pas définir `apiserver_public_ip_id` ET `public_ip_id` en même temps.
-  EOT
 }
 
 variable "tags" {

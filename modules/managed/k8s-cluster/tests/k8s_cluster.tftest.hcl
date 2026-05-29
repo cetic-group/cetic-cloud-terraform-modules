@@ -236,3 +236,52 @@ run "initial_pool_rejects_max_le_min" {
 
   expect_failures = [var.initial_pool]
 }
+
+run "initial_pool_labels_and_taints_passthrough" {
+  command = plan
+
+  variables {
+    name            = "test-lt"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    initial_pool = {
+      name     = "default"
+      plan     = "small"
+      replicas = 2
+      labels   = { "cetic-group.com/workload" = "app" }
+      taints = [
+        { key = "dedicated", value = "app", effect = "NoSchedule" },
+      ]
+    }
+  }
+
+  assert {
+    condition     = ccp_k8s_cluster.this.initial_pool.labels["cetic-group.com/workload"] == "app"
+    error_message = "Les labels de l'initial_pool doivent être propagés au provider."
+  }
+  assert {
+    condition     = one(ccp_k8s_cluster.this.initial_pool.taints).effect == "NoSchedule"
+    error_message = "Les taints de l'initial_pool doivent être propagés au provider."
+  }
+}
+
+run "initial_pool_rejects_invalid_taint_effect" {
+  command = plan
+
+  variables {
+    name            = "test-lt-bad"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    initial_pool = {
+      taints = [
+        { key = "x", effect = "BogusEffect" },
+      ]
+    }
+  }
+
+  expect_failures = [var.initial_pool]
+}

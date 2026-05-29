@@ -75,6 +75,9 @@ variable "initial_pool" {
     Initial worker pool créé avec le cluster.
     - `name` / `plan` : immutables post-création.
     - `replicas` : mutable.
+    - `labels` : map de labels Kubernetes propagés aux nodes du pool. Mutable.
+    - `taints` : liste de taints Kubernetes (`{ key, value?, effect }`,
+      `effect` ∈ `NoSchedule`|`PreferNoSchedule`|`NoExecute`). Mutable.
     - `min_size` / `max_size` : pour l'autoscaler. Si les deux sont set,
       l'autoscaler du cluster gère ce pool (min_size ≥ 0, max_size > min_size).
       Retirer les deux désactive l'autoscaler (pool figé à `replicas`).
@@ -83,6 +86,12 @@ variable "initial_pool" {
     name     = optional(string, "default")
     plan     = optional(string, "small")
     replicas = optional(number, 1)
+    labels   = optional(map(string), {})
+    taints = optional(list(object({
+      key    = string
+      value  = optional(string)
+      effect = string
+    })), [])
     min_size = optional(number)
     max_size = optional(number)
   })
@@ -99,6 +108,13 @@ variable "initial_pool" {
       : (var.initial_pool.min_size >= 0 && var.initial_pool.max_size > var.initial_pool.min_size)
     )
     error_message = "initial_pool : min_size doit être ≥ 0 et max_size > min_size."
+  }
+  validation {
+    condition = alltrue([
+      for t in coalesce(var.initial_pool.taints, []) :
+      contains(["NoSchedule", "PreferNoSchedule", "NoExecute"], t.effect)
+    ])
+    error_message = "initial_pool : chaque taint.effect doit être l'un de : NoSchedule, PreferNoSchedule, NoExecute."
   }
 }
 

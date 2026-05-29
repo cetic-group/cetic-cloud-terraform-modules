@@ -3,7 +3,7 @@ terraform {
   required_providers {
     cetic-cloud-platform = {
       source  = "cetic-group/cetic-cloud-platform"
-      version = ">= 3.1.1"
+      version = ">= 3.2.0"
     }
   }
 }

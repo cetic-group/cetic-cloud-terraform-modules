@@ -155,3 +155,21 @@ run "rejects_invalid_taint_effect" {
     var.additional_pools,
   ]
 }
+
+run "public_ip_id_passthrough_mutable_apiserver_attach" {
+  command = plan
+
+  variables {
+    name            = "test-pubip"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    public_ip_id    = "00000000-0000-0000-0000-0000000000ef"
+  }
+
+  assert {
+    condition     = ccp_k8s_cluster.this.public_ip_id == "00000000-0000-0000-0000-0000000000ef"
+    error_message = "`public_ip_id` (mutable, attach apiserver sans ForceNew) doit être transmis au resource."
+  }
+}

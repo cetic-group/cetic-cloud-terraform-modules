@@ -79,8 +79,9 @@ output "kubeconfig_url" {
 | `ingress_controller_class` | string | `"incluster"` | `incluster` (Cilium L2) / `managed` (LB dédié). |
 | `ingress_public_ip_id` | string | `null` | IP pré-allouée. |
 | `ingress_internal_ip` | string | `null` | IP privée fixe. |
-| `apiserver_public_ip_id` | string | `null` | Si fourni, kubeconfig public. |
+| `apiserver_public_ip_id` | string | `null` | Si fourni à la **création**, kubeconfig public. **ForceNew** (recrée le cluster si changé). |
 | `apiserver_internal_ip` | string | `null` | IP privée fixe apiserver. |
+| `public_ip_id` | string | `null` | Attach/détach **mutable** de l'IP publique apiserver sur un cluster déjà provisionné (pas de ForceNew). `null` = détaché. Ne pas combiner avec `apiserver_public_ip_id`. |
 | `tags` | list(string) | `[]` | |
 
 ## Outputs

@@ -70,7 +70,7 @@ output "kubeconfig_url" {
 | `os_template_key` | string | `null` | Cf. `data.ccp_k8s_templates`. |
 | `pod_cidr` | string | `"10.244.0.0/16"` | |
 | `service_cidr` | string | `"10.96.0.0/12"` | |
-| `initial_pool` | object({name, plan, replicas}) | `{}` | Pool initial (immutable). |
+| `initial_pool` | object({name, plan, replicas, min_size?, max_size?}) | `{}` | Pool initial. `name`/`plan` immutables ; `replicas` mutable ; `min_size`+`max_size` (ensemble) activent l'autoscaler sur ce pool. |
 | `additional_pools` | map(object) | `{}` | Pools additionnels via for_each. Chaque objet : `plan`, `replicas`, `min_size?`, `max_size?`, `labels?`, `taints?`. |
 | `autoscaler_scale_down_delay_after_add` | string | `"10m"` | |
 | `autoscaler_scale_down_unneeded_time` | string | `"10m"` | |
@@ -104,8 +104,8 @@ output "kubeconfig_url" {
 - **`tier` immutable** : `dev` → `prod` (ou l'inverse) recrée le cluster. Choisir
   `prod` dès la création pour les charges critiques afin d'activer le frontal
   d'exposition redondé (deux instances actives/passives + VIP flottante VNet).
-- **`initial_pool` immutable** : pour le supprimer ou le redimensionner différemment, recréer le cluster.
-- **Pools additionnels avec `min_size`/`max_size`** : le cluster autoscaler propage automatiquement les annotations sur la MachineDeployment et scale up/down selon la charge.
+- **`initial_pool`** : `name`/`plan` sont immutables (recréer le cluster pour les changer) ; `replicas` est mutable. Définir `min_size` **et** `max_size` active l'autoscaler sur ce pool ; les retirer le désactive (pool figé à `replicas`). Nécessite le provider `>= 3.1.1`.
+- **Pools (initial ou additionnels) avec `min_size`/`max_size`** : le cluster autoscaler propage automatiquement les annotations sur la MachineDeployment et scale up/down selon la charge.
 - **Ingress en mode `incluster`** : HA inter-worker via Cilium L2 announce, failover ~22s.
 - **Ingress en mode `managed`** : LB dédié devant l'ingress controller — meilleur pour des bursts de connexions externes mais coûte un LB additionnel.
 - Le **kubeconfig** est récupérable via `cetic k8s kubeconfig <id>` (CLI) ou `GET /v1/k8s/clusters/{id}/kubeconfig`. Pas exposé par le provider TF (matière à être ajouté en datasource v0.9+).

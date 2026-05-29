@@ -71,13 +71,35 @@ variable "service_cidr" {
 
 # ─── Initial worker pool (forcé à la création) ────────────────────────────────
 variable "initial_pool" {
-  description = "Initial worker pool créé avec le cluster (immutable post-création)."
+  description = <<-EOT
+    Initial worker pool créé avec le cluster.
+    - `name` / `plan` : immutables post-création.
+    - `replicas` : mutable.
+    - `min_size` / `max_size` : pour l'autoscaler. Si les deux sont set,
+      l'autoscaler du cluster gère ce pool (min_size ≥ 0, max_size > min_size).
+      Retirer les deux désactive l'autoscaler (pool figé à `replicas`).
+  EOT
   type = object({
     name     = optional(string, "default")
     plan     = optional(string, "small")
     replicas = optional(number, 1)
+    min_size = optional(number)
+    max_size = optional(number)
   })
   default = {}
+
+  validation {
+    condition     = (var.initial_pool.min_size == null) == (var.initial_pool.max_size == null)
+    error_message = "initial_pool : min_size et max_size doivent être fournis ensemble (ou aucun des deux)."
+  }
+  validation {
+    condition = (
+      (var.initial_pool.min_size == null || var.initial_pool.max_size == null)
+      ? true
+      : (var.initial_pool.min_size >= 0 && var.initial_pool.max_size > var.initial_pool.min_size)
+    )
+    error_message = "initial_pool : min_size doit être ≥ 0 et max_size > min_size."
+  }
 }
 
 # ─── Pools additionnels ──────────────────────────────────────────────────────

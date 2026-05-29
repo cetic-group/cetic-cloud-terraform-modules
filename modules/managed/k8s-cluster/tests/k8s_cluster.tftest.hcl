@@ -173,3 +173,66 @@ run "apiserver_public_ip_id_passthrough" {
     error_message = "`apiserver_public_ip_id` (unique levier mutable, provider v3) doit être transmis au resource."
   }
 }
+
+run "initial_pool_autoscaler_passthrough" {
+  command = plan
+
+  variables {
+    name            = "test-asg"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    initial_pool = {
+      name     = "default"
+      plan     = "small"
+      replicas = 2
+      min_size = 2
+      max_size = 5
+    }
+  }
+
+  assert {
+    condition     = ccp_k8s_cluster.this.initial_pool.min_size == 2
+    error_message = "min_size de l'initial_pool doit être propagé au provider."
+  }
+  assert {
+    condition     = ccp_k8s_cluster.this.initial_pool.max_size == 5
+    error_message = "max_size de l'initial_pool doit être propagé au provider."
+  }
+}
+
+run "initial_pool_rejects_min_without_max" {
+  command = plan
+
+  variables {
+    name            = "test-asg-bad"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    initial_pool = {
+      min_size = 2
+    }
+  }
+
+  expect_failures = [var.initial_pool]
+}
+
+run "initial_pool_rejects_max_le_min" {
+  command = plan
+
+  variables {
+    name            = "test-asg-bad2"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    initial_pool = {
+      min_size = 5
+      max_size = 3
+    }
+  }
+
+  expect_failures = [var.initial_pool]
+}

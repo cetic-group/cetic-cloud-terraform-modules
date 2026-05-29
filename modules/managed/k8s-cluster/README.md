@@ -6,7 +6,7 @@ Wrapper riche autour de `ccp_k8s_cluster` + `ccp_k8s_node_pool`. Crée un cluste
 
 ```hcl
 module "platform" {
-  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/managed/k8s-cluster?ref=v0.2.0"
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/managed/k8s-cluster?ref=v0.21.0"
 
   name        = "platform-prod"
   region      = "RNN"
@@ -18,6 +18,10 @@ module "platform" {
     name     = "default"
     plan     = "small"
     replicas = 2
+    labels   = { workload = "app" }
+    # Autoscaler sur le pool initial (optionnel) : min_size + max_size ensemble.
+    min_size = 2
+    max_size = 4
   }
 
   additional_pools = {
@@ -70,7 +74,7 @@ output "kubeconfig_url" {
 | `os_template_key` | string | `null` | Cf. `data.ccp_k8s_templates`. |
 | `pod_cidr` | string | `"10.244.0.0/16"` | |
 | `service_cidr` | string | `"10.96.0.0/12"` | |
-| `initial_pool` | object({name, plan, replicas, min_size?, max_size?}) | `{}` | Pool initial. `name`/`plan` immutables ; `replicas` mutable ; `min_size`+`max_size` (ensemble) activent l'autoscaler sur ce pool. |
+| `initial_pool` | object({name, plan, replicas, labels?, taints?, min_size?, max_size?}) | `{}` | Pool initial. `name`/`plan` immutables ; `replicas`/`labels`/`taints`/`min_size`/`max_size` mutables. `labels` = map ; `taints` = liste de `{ key, value?, effect }` ; `min_size`+`max_size` (ensemble) activent l'autoscaler. |
 | `additional_pools` | map(object) | `{}` | Pools additionnels via for_each. Chaque objet : `plan`, `replicas`, `min_size?`, `max_size?`, `labels?`, `taints?`. |
 | `autoscaler_scale_down_delay_after_add` | string | `"10m"` | |
 | `autoscaler_scale_down_unneeded_time` | string | `"10m"` | |
@@ -104,7 +108,7 @@ output "kubeconfig_url" {
 - **`tier` immutable** : `dev` → `prod` (ou l'inverse) recrée le cluster. Choisir
   `prod` dès la création pour les charges critiques afin d'activer le frontal
   d'exposition redondé (deux instances actives/passives + VIP flottante VNet).
-- **`initial_pool`** : `name`/`plan` sont immutables (recréer le cluster pour les changer) ; `replicas` est mutable. Définir `min_size` **et** `max_size` active l'autoscaler sur ce pool ; les retirer le désactive (pool figé à `replicas`). Nécessite le provider `>= 3.1.1`.
+- **`initial_pool`** : `name`/`plan` sont immutables (recréer le cluster pour les changer) ; `replicas`, `labels`, `taints`, `min_size`/`max_size` sont mutables in-place (parité avec `additional_pools`). Définir `min_size` **et** `max_size` active l'autoscaler ; les retirer le désactive (pool figé à `replicas`). `labels`/`taints` nécessitent le provider `>= 3.2.0` ; l'autoscaler `>= 3.1.1`.
 - **Pools (initial ou additionnels) avec `min_size`/`max_size`** : le cluster autoscaler propage automatiquement les annotations sur la MachineDeployment et scale up/down selon la charge.
 - **Ingress en mode `incluster`** : HA inter-worker via Cilium L2 announce, failover ~22s.
 - **Ingress en mode `managed`** : LB dédié devant l'ingress controller — meilleur pour des bursts de connexions externes mais coûte un LB additionnel.

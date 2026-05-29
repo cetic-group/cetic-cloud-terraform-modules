@@ -15,6 +15,11 @@ resource "ccp_k8s_cluster" "this" {
     name     = var.initial_pool.name
     plan     = var.initial_pool.plan
     replicas = var.initial_pool.replicas
+    # Labels + taints sur l'initial pool (provider v3.2.0+), parité avec
+    # additional_pools. `taints`/`labels` sont des attributs (assignés avec `=`),
+    # pas des blocs. [] / {} = omis.
+    labels = var.initial_pool.labels
+    taints = var.initial_pool.taints
     # Autoscaler sur l'initial pool (provider v3.1.0+). Les deux set → activé ;
     # retirés → désactivé (le provider envoie 0/0). Passés tels quels (null = omis).
     min_size = var.initial_pool.min_size

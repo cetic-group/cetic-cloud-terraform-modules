@@ -23,14 +23,14 @@ variable "size_gb" {
 variable "attach_to" {
   type = object({
     id   = string
-    type = string # "container" | "vm_instance"
+    type = string # "container" | "vm" ("vm_instance" = alias legacy → mappé sur "vm")
   })
   default     = null
-  description = "Cible d'attachement optionnelle. `null` = volume détaché. `type` doit être `container` ou `vm_instance`."
+  description = "Cible d'attachement optionnelle. `null` = volume détaché. `type` doit être `container` ou `vm` (`vm_instance` accepté comme alias legacy déprécié, mappé sur `vm`)."
 
   validation {
-    condition     = var.attach_to == null || contains(["container", "vm_instance"], try(var.attach_to.type, ""))
-    error_message = "`attach_to.type` doit être `container` ou `vm_instance`."
+    condition     = var.attach_to == null || contains(["container", "vm", "vm_instance"], try(var.attach_to.type, ""))
+    error_message = "`attach_to.type` doit être `container` ou `vm` (`vm_instance` = alias legacy déprécié)."
   }
 }
 

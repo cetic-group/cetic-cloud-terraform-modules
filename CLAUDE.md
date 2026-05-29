@@ -113,7 +113,7 @@ Toute notation d'infra sous-jacente (HAProxy, VRRP, CNPG, LXC, MASQUERADE, etc.)
 ## Pièges API connus
 
 - **`ccp_vnet_firewall_rule.direction`** : le backend valide `^(in|out|forward)$` (**lowercase**). Si tu wrappes ce champ dans un module, normalise avec `lower(...)`, **jamais** `upper(...)`. Le `action` reste uppercase (`^(ACCEPT|DROP|REJECT)$`).
-- **`ccp_block_volume.attached_to_type` = `"vm"`, PAS `"vm_instance"`** (depuis provider v0.24+). Le module `modules/storage/block-volume` v0.17.0 valide encore `vm_instance` dans `variables.tf` — bug latent à fixer en v0.17.1. Workaround actuel : utiliser `ccp_block_volume` directement avec `attached_to_type = "vm"`. Voir mémoire `feedback-tf-block-volume-attached-to-type-mismatch`.
+- **`ccp_block_volume.attached_to_type` = `"vm"`, PAS `"vm_instance"`** (depuis provider v0.24+). **CORRIGÉ v0.18.1** : `modules/storage/block-volume` accepte désormais `container`/`vm` et mappe l'alias legacy `vm_instance` → `vm` (local `attached_to_type` dans `main.tf`). Rétro-compatible (le HCL existant en `vm_instance` continue de marcher). Tests `tests/attach_type.tftest.hcl`. Voir mémoire `feedback-tf-block-volume-attached-to-type-mismatch`.
 
 ## Pattern v1.0+ — `cetic-cloud-platform` local name + `provider = ...` explicite
 

@@ -28,7 +28,7 @@ module "data_disk" {
 | `name` | string | yes | 1-100 chars. |
 | `region` | string | yes | `RNN`/`PAR`/`ABJ`. |
 | `size_gb` | number | yes | 1-16384. Mutable up only. |
-| `attach_to` | object({id, type}) | no | `type` ∈ `container` / `vm_instance`. |
+| `attach_to` | object({id, type}) | no | `type` ∈ `container` / `vm` (`vm_instance` accepté comme alias legacy déprécié, mappé sur `vm`). |
 | `tags` | list(string) | no | |
 
 ## Outputs

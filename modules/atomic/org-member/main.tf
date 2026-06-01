@@ -1,5 +1,5 @@
 resource "ccp_org_member" "this" {
-  provider = cetic-cloud-platform
+  provider = ccp
   email    = var.email
   role     = var.role
 }

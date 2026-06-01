@@ -1,5 +1,5 @@
 resource "ccp_load_balancer" "this" {
-  provider     = cetic-cloud-platform
+  provider     = ccp
   name         = var.name
   region       = var.region
   plan         = var.plan

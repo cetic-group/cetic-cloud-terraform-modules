@@ -1,5 +1,5 @@
 resource "ccp_appgw_route" "this" {
-  provider        = cetic-cloud-platform
+  provider        = ccp
   appgw_id        = var.appgw_id
   listener_id     = var.listener_id
   target_group_id = var.target_group_id

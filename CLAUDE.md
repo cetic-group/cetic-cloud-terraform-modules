@@ -2,20 +2,20 @@
 
 > Modules Terraform officiels pour CETIC Cloud Platform.
 > Repo public : https://github.com/cetic-group/cetic-cloud-terraform-modules
-> Provider consommé : `cetic-group/cetic-cloud-platform` (cf. `terraform-provider-cetic-cloud-platform/CLAUDE.md` pour la convention release).
+> Provider consommé : `cetic-group/ccp` (cf. `terraform-provider-cetic-cloud-platform/CLAUDE.md` pour la convention release ; le repo provider garde son nom de dossier historique).
 
 ---
 
 ## Convention bump version provider
 
-À **chaque release** du provider Terraform `cetic-group/cetic-cloud-platform`
+À **chaque release** du provider Terraform `cetic-group/ccp`
 (nouveau tag `vX.Y.Z`), mettre à jour systématiquement :
 
 1. **`versions.tf` de chaque module / landing-zone / example** :
    ```hcl
    required_providers {
-     cetic-cloud-platform = {
-       source  = "cetic-group/cetic-cloud-platform"
+     ccp = {
+       source  = "cetic-group/ccp"
        version = ">= X.Y.Z"
      }
    }
@@ -115,49 +115,33 @@ Toute notation d'infra sous-jacente (HAProxy, VRRP, CNPG, LXC, MASQUERADE, etc.)
 - **`ccp_vnet_firewall_rule.direction`** : le backend valide `^(in|out|forward)$` (**lowercase**). Si tu wrappes ce champ dans un module, normalise avec `lower(...)`, **jamais** `upper(...)`. Le `action` reste uppercase (`^(ACCEPT|DROP|REJECT)$`).
 - **`ccp_block_volume.attached_to_type` = `"vm"`, PAS `"vm_instance"`** (depuis provider v0.24+). **CORRIGÉ v0.18.1** : `modules/storage/block-volume` accepte désormais `container`/`vm` et mappe l'alias legacy `vm_instance` → `vm` (local `attached_to_type` dans `main.tf`). Rétro-compatible (le HCL existant en `vm_instance` continue de marcher). Tests `tests/attach_type.tftest.hcl`. Voir mémoire `feedback-tf-block-volume-attached-to-type-mismatch`.
 
-## Pattern v1.0+ — `cetic-cloud-platform` local name + `provider = ...` explicite
+## Pattern v4.0+ — local name `ccp` (provider renommé `cetic-group/ccp`)
 
-Depuis v0.17.0 des modules + v1.0.0 du provider, tous les modules déclarent
-le provider avec le local name `cetic-cloud-platform` (matche le snippet
-"Use Provider" du Registry) :
+Depuis les modules v0.22.0 + le provider v4.0.0, le provider a été renommé :
+adresse Registry `cetic-group/ccp`, nom local Terraform `ccp` (les resource
+types restent `ccp_*`). Tous les modules déclarent :
 
 ```hcl
 # versions.tf de chaque module
 terraform {
   required_version = ">= 1.7"
   required_providers {
-    cetic-cloud-platform = {
-      source  = "cetic-group/cetic-cloud-platform"
-      version = ">= 2.0.0"
+    ccp = {
+      source  = "cetic-group/ccp"
+      version = ">= 4.0.0"
     }
   }
 }
 ```
 
-Comme le local name (`cetic-cloud-platform`) diffère du préfixe des resource
-types (`ccp_*`), Terraform ne fait **plus** l'auto-résolution. Chaque
-`resource "ccp_*"` / `data "ccp_*"` dans les modules DOIT carry un
-`provider = cetic-cloud-platform` explicite :
+Comme le local name (`ccp`) **matche** désormais le préfixe des resource types
+(`ccp_*`), Terraform auto-résout : un attribut `provider = ...` explicite sur
+chaque bloc n'est **plus requis**. Les modules portent encore
+`provider = ccp` (hérité de l'ancien pattern, inoffensif) ; on peut le garder
+ou le retirer au gré des refactors.
 
-```hcl
-resource "ccp_vpc" "this" {
-  provider = cetic-cloud-platform   # ← OBLIGATOIRE depuis v0.17.0
-  name     = var.name
-  ...
-}
-```
-
-**Toute nouvelle resource/data dans un module doit suivre ce pattern.**
-Vérification post-edit :
-
-```bash
-grep -rL 'provider = cetic-cloud-platform' \
-  $(grep -rl 'resource "ccp_\|data "ccp_' modules/ landing-zones/ examples/ --include="*.tf")
-```
-
-Côté consommateur (root module), c'est OK d'utiliser soit `cetic-cloud-platform`
-(no `providers = {...}` map nécessaire) soit `ccp` (avec `providers = { cetic-cloud-platform = ccp }`
-sur chaque module call). Recommander le premier dans les README.
+Côté consommateur (root module), aucun `providers = {...}` map n'est nécessaire
+sur les module calls — l'auto-résolution suffit. Le recommander dans les README.
 
 ## Ordre de destruction — depends_on explicites
 
@@ -240,7 +224,7 @@ Utiliser **`terraform test` natif** (HCL `.tftest.hcl`) avec `mock_provider`.
 Pas d'`apply` réel — la CI tourne sans creds CCP.
 
 ```hcl
-mock_provider "cetic-cloud-platform" {
+mock_provider "ccp" {
   mock_resource "ccp_vpc" {
     defaults = {
       id     = "00000000-0000-0000-0000-000000000001"
@@ -296,7 +280,7 @@ Pour développer sur le provider en parallèle, configurer un override dans
 ```hcl
 provider_installation {
   dev_overrides {
-    "cetic-group/cetic-cloud-platform" = "/home/coul/Documents/techledger/cetic-group/terraform-provider-cetic-cloud-platform"
+    "cetic-group/ccp" = "/home/coul/Documents/techledger/cetic-group/terraform-provider-cetic-cloud-platform"
   }
   direct {}
 }

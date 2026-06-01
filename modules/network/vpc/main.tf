@@ -1,12 +1,12 @@
 resource "ccp_vpc" "this" {
-  provider = cetic-cloud-platform
+  provider = ccp
   name     = var.name
   region   = var.region
   tags     = var.tags
 }
 
 resource "ccp_vnet" "this" {
-  provider = cetic-cloud-platform
+  provider = ccp
   for_each = var.vnets
 
   vpc_id   = ccp_vpc.this.id
@@ -43,7 +43,7 @@ locals {
 }
 
 resource "ccp_vnet_ip_reservation" "this" {
-  provider = cetic-cloud-platform
+  provider = ccp
   for_each = local.ip_reservations_flat
 
   vnet_id     = ccp_vnet.this[each.value.vnet_key].id
@@ -54,7 +54,7 @@ resource "ccp_vnet_ip_reservation" "this" {
 }
 
 resource "ccp_vnet_firewall_rule" "this" {
-  provider = cetic-cloud-platform
+  provider = ccp
   for_each = local.firewall_rules_flat
 
   vnet_id     = ccp_vnet.this[each.value.vnet_key].id

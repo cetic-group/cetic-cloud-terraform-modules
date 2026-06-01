@@ -1,5 +1,5 @@
 resource "ccp_appgw_target_group_member" "this" {
-  provider        = cetic-cloud-platform
+  provider        = ccp
   appgw_id        = var.appgw_id
   target_group_id = var.target_group_id
 

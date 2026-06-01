@@ -4,7 +4,7 @@ Modules Terraform officiels pour orchestrer **[CETIC Cloud Platform](https://clo
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Terraform >= 1.7](https://img.shields.io/badge/Terraform-%E2%89%A5%201.7-purple.svg)](https://www.terraform.io)
-[![Provider](https://img.shields.io/badge/provider-cetic--group%2Fcetic--cloud--platform-orange.svg)](https://registry.terraform.io/providers/cetic-group/cetic-cloud-platform/latest)
+[![Provider](https://img.shields.io/badge/provider-cetic--group%2Fccp-orange.svg)](https://registry.terraform.io/providers/cetic-group/ccp/latest)
 
 > **Repo officiel** : https://github.com/cetic-group/cetic-cloud-terraform-modules
 > **Support** : ouvrez une issue ou contactez-nous sur https://console.cloud.cetic-group.com
@@ -66,21 +66,20 @@ Modules Terraform officiels pour orchestrer **[CETIC Cloud Platform](https://clo
 terraform {
   required_version = ">= 1.7"
   required_providers {
-    cetic-cloud-platform = {
-      source  = "cetic-group/cetic-cloud-platform"
-      version = ">= 3.2.0"
+    ccp = {
+      source  = "cetic-group/ccp"
+      version = ">= 4.0.0"
     }
   }
 }
 
-provider "cetic-cloud-platform" {
+provider "ccp" {
   api_url = "https://api.cloud.cetic-group.com"
   api_key = var.ccp_api_key  # `ccp_live_…`
 }
 
 module "vpc" {
-  source    = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/network/vpc?ref=v0.16.0"
-  providers = { ccp = cetic-cloud-platform }   # modules internally declare `ccp`; pass the canonical provider here
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/network/vpc?ref=v0.22.0"
 
   name   = "production"
   region = "RNN"
@@ -92,11 +91,9 @@ module "vpc" {
 }
 ```
 
-> **Legacy alias still works.** Modules' `versions.tf` files declare `ccp`
-> internally for backward compatibility, so you can keep using `ccp` as
-> your local alias too — drop the `provider "cetic-cloud-platform"` and
-> `providers = { ccp = … }` lines and declare `provider "cetic-cloud-platform"` directly.
-> The two styles produce identical state.
+> **Local name = `ccp`.** Modules' `versions.tf` files declare the provider
+> under the local name `ccp` (matching the `ccp_*` resource prefix), so no
+> `providers = {...}` map is needed on module calls — Terraform auto-resolves.
 
 Ou plus simple : `landing-zones/basic-web-app` qui compose tout :
 
@@ -159,7 +156,7 @@ Ou utilise la landing-zone **`iam-team-segregation`** qui compose ce pattern × 
 
 ## Versionnage
 
-Suit le provider `cetic-group/cetic-cloud-platform`. Tag SemVer :
+Suit le provider `cetic-group/ccp`. Tag SemVer :
 - `v0.1.x` : compatible provider `>= 0.5.0`
 - `v0.4.x` : compatible provider `>= 0.10.0`
 - `v0.5.x` : compatible provider `>= 0.11.0` — ajoute les modules IAM (Roles v1) + landing-zone `iam-team-segregation`
@@ -168,6 +165,7 @@ Suit le provider `cetic-group/cetic-cloud-platform`. Tag SemVer :
 - `v0.8.x` : compatible provider `>= 0.14.0` — ajoute les modules Application Gateway v1 (`atomic/application-gateway`, `atomic/appgw-route`, `atomic/appgw-target-group`, `exposure/web-app-with-appgw`) et l'option `exposure_type = "appgw"` dans la landing-zone `basic-web-app`
 - `v0.15.x` : compatible provider `>= 0.21.0` — ajoute la variable `tier` (`dev`/`prod`) à `managed/k8s-cluster` (frontal d'exposition HA actif/passif + VIP flottante en `prod`) et le passthrough `k8s_tier` dans la landing-zone `k8s-platform`
 - `v0.16.x` : compatible provider `>= 0.23.0` — passthrough `taints` sur `managed/k8s-cluster` et la landing-zone `k8s-platform` (champ `taints` dans chaque pool de `additional_pools`)
+- `v0.22.x` : compatible provider `>= 4.0.0` — renommage du provider : adresse Registry `cetic-group/ccp`, nom local Terraform `ccp` (les ressources restent `ccp_*`)
 - bump majeur (`v1.0.0`) quand le provider stabilise son API
 
 ## Tests

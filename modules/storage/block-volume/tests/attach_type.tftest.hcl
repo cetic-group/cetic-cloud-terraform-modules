@@ -5,7 +5,7 @@
 # `vm_instance` tel quel → le provider rejetait. Le module mappe désormais
 # `vm_instance` → `vm` (alias déprécié) et accepte aussi `vm` directement.
 
-mock_provider "cetic-cloud-platform" {
+mock_provider "ccp" {
   mock_resource "ccp_block_volume" {
     defaults = {
       id     = "00000000-0000-0000-0000-0000000000c1"

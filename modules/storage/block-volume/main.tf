@@ -6,7 +6,7 @@ locals {
 }
 
 resource "ccp_block_volume" "this" {
-  provider         = cetic-cloud-platform
+  provider         = ccp
   name             = var.name
   region           = var.region
   size_gb          = var.size_gb

@@ -4,6 +4,47 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.22.0] — 2026-06-01
+
+### Changed — provider renamed to `cetic-group/ccp` (local name `ccp`)
+
+- The CETIC provider was renamed. Across the whole catalog (every
+  `versions.tf`, `providers.tf`, example `main.tf`, README and docs):
+  * Registry source `cetic-group/cetic-cloud-platform` → **`cetic-group/ccp`**.
+  * Terraform local name `cetic-cloud-platform` → **`ccp`** (in
+    `required_providers` declarations, `provider "…"` blocks and the
+    `provider = …` attribute on every `resource "ccp_*"` / `data "ccp_*"`).
+  * Provider version constraint bumped from `>= 3.2.0` to **`>= 4.0.0`**.
+- Resource and datasource type names are **unchanged** — they keep the
+  `ccp_*` prefix. Since the new local name (`ccp`) now matches that prefix,
+  no `providers = { ... }` map is required on module calls (Terraform
+  auto-resolves).
+
+### Migration for consumers
+
+```diff
+ terraform {
+   required_providers {
+-    cetic-cloud-platform = {
+-      source  = "cetic-group/cetic-cloud-platform"
+-      version = ">= 3.2.0"
++    ccp = {
++      source  = "cetic-group/ccp"
++      version = ">= 4.0.0"
+     }
+   }
+ }
+
+-provider "cetic-cloud-platform" {}
++provider "ccp" {}
+
+ module "vpc" {
+   source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/network/vpc?ref=v0.22.0"
+-  providers = { ccp = cetic-cloud-platform }
+   ...
+ }
+```
+
 ## [0.18.0] — 2026-05-28
 
 ### Changed — bump provider constraint to `>= 2.0.0`

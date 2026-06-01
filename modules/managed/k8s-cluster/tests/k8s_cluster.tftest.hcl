@@ -1,6 +1,6 @@
 # Tests natifs Terraform pour `managed/k8s-cluster`.
 
-mock_provider "cetic-cloud-platform" {
+mock_provider "ccp" {
   mock_resource "ccp_k8s_cluster" {
     defaults = {
       id                        = "00000000-0000-0000-0000-000000000010"

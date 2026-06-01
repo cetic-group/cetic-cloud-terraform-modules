@@ -1,6 +1,6 @@
 # Tests natifs Terraform pour `atomic/ssh-key`.
 
-mock_provider "cetic-cloud-platform" {
+mock_provider "ccp" {
   mock_resource "ccp_ssh_key" {
     defaults = {
       id          = "00000000-0000-0000-0000-000000000099"

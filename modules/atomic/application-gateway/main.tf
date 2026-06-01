@@ -1,5 +1,5 @@
 resource "ccp_application_gateway" "this" {
-  provider     = cetic-cloud-platform
+  provider     = ccp
   name         = var.name
   region       = var.region
   plan         = var.plan

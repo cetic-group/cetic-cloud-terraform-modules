@@ -1,4 +1,4 @@
-mock_provider "cetic-cloud-platform" {
+mock_provider "ccp" {
   mock_resource "ccp_appgw_target_group" {
     defaults = {
       id = "00000000-0000-0000-0000-00000000d001"

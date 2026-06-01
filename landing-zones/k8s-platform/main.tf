@@ -36,7 +36,7 @@ module "vpc" {
 
 # ─── IP publique optionnelle pour l'apiserver ────────────────────────────────
 resource "ccp_public_ip" "apiserver" {
-  provider = cetic-cloud-platform
+  provider = ccp
   count    = var.expose_apiserver_publicly ? 1 : 0
   region   = var.region
 }

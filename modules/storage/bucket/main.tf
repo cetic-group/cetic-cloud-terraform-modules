@@ -1,5 +1,5 @@
 resource "ccp_object_bucket" "this" {
-  provider  = cetic-cloud-platform
+  provider  = ccp
   name      = var.name
   region    = var.region
   is_public = var.is_public
@@ -9,7 +9,7 @@ resource "ccp_object_bucket" "this" {
 # Clés scopées (subusers) — tenant-wide en v1, mais scopées par access_level.
 # Note : v1 = tenant-wide ; per-bucket policies viendront en v2 (cf. backlog).
 resource "ccp_object_storage_key" "scoped" {
-  provider = cetic-cloud-platform
+  provider = ccp
   for_each = var.scoped_keys
 
   region       = var.region

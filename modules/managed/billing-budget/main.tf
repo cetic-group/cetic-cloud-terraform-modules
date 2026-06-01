@@ -6,7 +6,7 @@
 # au signup, hors workflow Terraform habituel.
 
 resource "ccp_budget" "this" {
-  provider             = cetic-cloud-platform
+  provider             = ccp
   monthly_budget_cents = floor(var.monthly_budget_eur * 100)
   alert_thresholds_pct = var.alert_thresholds_pct
   notify_emails        = var.notify_emails
@@ -14,7 +14,7 @@ resource "ccp_budget" "this" {
 }
 
 resource "ccp_commit" "this" {
-  provider = cetic-cloud-platform
+  provider = ccp
   count    = var.commit_type == null ? 0 : 1
 
   commit_type = var.commit_type

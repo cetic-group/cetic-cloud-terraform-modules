@@ -1,5 +1,5 @@
 resource "ccp_secret" "this" {
-  provider    = cetic-cloud-platform
+  provider    = ccp
   name        = var.name
   description = var.description
   data        = var.data

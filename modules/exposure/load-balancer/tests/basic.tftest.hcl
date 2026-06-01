@@ -1,6 +1,6 @@
 # Tests natifs Terraform pour `exposure/load-balancer`.
 
-mock_provider "cetic-cloud-platform" {
+mock_provider "ccp" {
   mock_resource "ccp_load_balancer" {
     defaults = {
       id                = "00000000-0000-0000-0000-0000000000a1"

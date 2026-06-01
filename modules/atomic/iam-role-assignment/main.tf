@@ -1,5 +1,5 @@
 resource "ccp_iam_role_assignment" "this" {
-  provider       = cetic-cloud-platform
+  provider       = ccp
   role_id        = var.role_id
   principal_type = var.principal_type
   principal_id   = var.principal_id

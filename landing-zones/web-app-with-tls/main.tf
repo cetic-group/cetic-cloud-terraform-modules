@@ -52,7 +52,7 @@ module "public_ip" {
 
 # ── Container backend (single instance — la landing-zone vise un cas simple) ─
 resource "ccp_container_instance" "app" {
-  provider      = cetic-cloud-platform
+  provider      = ccp
   name          = local.app_name
   region        = var.region
   plan          = var.app_plan

@@ -29,8 +29,8 @@ module "web" {
   vnet_id      = module.vpc.vnet_ids.web
   public_ip_id = module.appgw_public_ip.id
 
-  hostnames = ["api.example.com", "admin.example.com"]
-  custom_domain = true
+  hostnames      = ["api.example.com", "admin.example.com"]
+  acme_challenge = "http01" # certs Let's Encrypt — CNAME vers la gateway requis avant apply
 
   hsts_enabled = true
 
@@ -107,7 +107,9 @@ output "appgw_url" {
 | `global_allow_cidrs` | list(string) | no | `[]` | |
 | `global_deny_cidrs` | list(string) | no | `[]` | |
 | `hostnames` | list(string) | yes | — | 1 par listener (référencé par index dans `routes`). |
-| `custom_domain` | bool | no | `false` | `true` = CNAME client requis. |
+| `acme_challenge` | string | no | `"http01"` | `http01` / `dns01` / `null` (pas de cert). Appliqué à tous les hostnames. |
+| `acme_dns_provider` | string | no | `null` | Clé provider DNS pour `dns01` (ex. `cloudflare`). |
+| `acme_dns_credentials` | map(string) | no | `null` | Credentials DNS pour `dns01` (sensible, write-only). |
 | `target_groups` | map(object) | yes | — | Voir schéma `atomic/appgw-target-group`. |
 | `routes` | list(object) | yes | — | Voir schéma ci-dessous. |
 
@@ -143,4 +145,4 @@ output "appgw_url" {
 
 - **Ordre des hostnames stable** : `routes[*].listener_index` est résolu par position dans `hostnames`. Réordonner la liste change la cible des routes — préférer ajouter en queue.
 - **Reuse des target groups** : plusieurs routes peuvent pointer vers le même `target_group_key` (cas typique : routing path-based vers un même backend pool sous conditions différentes).
-- **Custom domain** : `custom_domain=true` exige un CNAME client vers l'IP publique de la gateway **avant** l'apply, sinon l'émission ACME échoue.
+- **ACME** : `http01` exige que le hostname résolve vers l'IP publique de la gateway (CNAME/A) **avant** l'apply. `dns01` exige `acme_dns_provider` + `acme_dns_credentials` (pas de pré-requis DNS A/CNAME). `acme_challenge = null` n'émet aucun certificat.

@@ -28,9 +28,11 @@ resource "ccp_appgw_listener" "this" {
   provider = ccp
   for_each = local.hostnames_indexed
 
-  appgw_id      = module.gateway.id
-  hostname      = each.value
-  custom_domain = var.custom_domain
+  appgw_id             = module.gateway.id
+  hostname             = each.value
+  acme_challenge       = var.acme_challenge
+  acme_dns_provider    = var.acme_dns_provider
+  acme_dns_credentials = var.acme_dns_credentials
 }
 
 # ── 3. Target groups (avec leurs members) ────────────────────────────────────

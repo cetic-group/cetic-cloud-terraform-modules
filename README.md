@@ -68,7 +68,7 @@ terraform {
   required_providers {
     ccp = {
       source  = "cetic-group/ccp"
-      version = ">= 4.0.0"
+      version = ">= 4.1.0"
     }
   }
 }
@@ -166,6 +166,7 @@ Suit le provider `cetic-group/ccp`. Tag SemVer :
 - `v0.15.x` : compatible provider `>= 0.21.0` — ajoute la variable `tier` (`dev`/`prod`) à `managed/k8s-cluster` (frontal d'exposition HA actif/passif + VIP flottante en `prod`) et le passthrough `k8s_tier` dans la landing-zone `k8s-platform`
 - `v0.16.x` : compatible provider `>= 0.23.0` — passthrough `taints` sur `managed/k8s-cluster` et la landing-zone `k8s-platform` (champ `taints` dans chaque pool de `additional_pools`)
 - `v0.22.x` : compatible provider `>= 4.0.0` — renommage du provider : adresse Registry `cetic-group/ccp`, nom local Terraform `ccp` (les ressources restent `ccp_*`)
+- `v0.23.x` : compatible provider `>= 4.1.0` — `network/public-ip` (`quantity`/`label`/`description` + outputs liste), `exposure/load-balancer` aligné sur le schéma listener réel du provider (`listen_port`/`roundrobin`/… + Let's Encrypt ACME), `atomic/appgw-listener` migre `custom_domain` → `acme_challenge`/`acme_dns_provider`/`acme_dns_credentials`
 - bump majeur (`v1.0.0`) quand le provider stabilise son API
 
 ## Tests

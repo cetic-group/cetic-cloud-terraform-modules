@@ -13,9 +13,9 @@ output "hostname" {
   value       = ccp_appgw_listener.this.hostname
 }
 
-output "custom_domain" {
-  description = "`true` si le hostname est un domaine client (ACME DNS-01)."
-  value       = ccp_appgw_listener.this.custom_domain
+output "acme_challenge" {
+  description = "Type de challenge ACME utilisé (`http01` / `dns01`), ou `null` si aucun cert."
+  value       = ccp_appgw_listener.this.acme_challenge
 }
 
 output "acme_status" {
@@ -23,8 +23,18 @@ output "acme_status" {
   value       = ccp_appgw_listener.this.acme_status
 }
 
+output "acme_issued_at" {
+  description = "Timestamp RFC 3339 d'émission du certificat courant (ou `null`)."
+  value       = ccp_appgw_listener.this.acme_issued_at
+}
+
+output "acme_renew_after" {
+  description = "Timestamp RFC 3339 après lequel le certificat est éligible au renouvellement (ou `null`)."
+  value       = ccp_appgw_listener.this.acme_renew_after
+}
+
 output "acme_last_renewal_at" {
-  description = "Timestamp RFC 3339 de la dernière émission/renouvellement réussi (ou `null`)."
+  description = "Timestamp RFC 3339 du dernier renouvellement réussi (ou `null`)."
   value       = ccp_appgw_listener.this.acme_last_renewal_at
 }
 

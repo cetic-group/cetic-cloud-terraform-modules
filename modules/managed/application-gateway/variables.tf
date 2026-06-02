@@ -121,10 +121,32 @@ variable "hostnames" {
   }
 }
 
-variable "custom_domain" {
-  type        = bool
-  default     = false
-  description = "Si `true`, les hostnames sont des domaines clients (CNAME requis avant apply). Sinon sous-domaine auto sous `app.cloud.cetic-group.com`."
+variable "acme_challenge" {
+  type        = string
+  default     = "http01"
+  description = <<-EOT
+    Type de challenge ACME (Let's Encrypt) appliqué à tous les listeners (hostnames) :
+    `http01` (défaut) ou `dns01`. `null` = aucun certificat TLS émis.
+    `dns01` requiert `acme_dns_provider` + `acme_dns_credentials` (et un CNAME du domaine client).
+  EOT
+
+  validation {
+    condition     = var.acme_challenge == null ? true : contains(["http01", "dns01"], var.acme_challenge)
+    error_message = "`acme_challenge` doit être `http01`, `dns01` ou null."
+  }
+}
+
+variable "acme_dns_provider" {
+  type        = string
+  default     = null
+  description = "Clé du provider DNS pour `dns01` (ex. `cloudflare`). Requis si `acme_challenge = \"dns01\"`."
+}
+
+variable "acme_dns_credentials" {
+  type        = map(string)
+  default     = null
+  sensitive   = true
+  description = "Credentials du provider DNS pour `dns01` (write-only). Requis si `acme_challenge = \"dns01\"`."
 }
 
 # ── Target groups ───────────────────────────────────────────────────────────

@@ -31,9 +31,9 @@ module "web" {
   vnet_id      = module.vpc.vnet_ids.web
   public_ip_id = module.appgw_public_ip.id
 
-  hostnames     = ["api.example.com", "admin.example.com"]
-  custom_domain = true
-  hsts_enabled  = true
+  hostnames      = ["api.example.com", "admin.example.com"]
+  acme_challenge = "http01" # certs Let's Encrypt — CNAME vers la gateway requis avant apply
+  hsts_enabled   = true
 
   target_groups = {
     api = {
@@ -112,7 +112,9 @@ output "acme_status" {
 | `global_deny_cidrs` | list(string) | no | `[]` | |
 | `trust_proxy_headers` | bool | no | `false` | |
 | `hostnames` | list(string) | yes | — | 1 listener par hostname (référencé par index dans `routes`). |
-| `custom_domain` | bool | no | `false` | `true` = domaines clients (CNAME requis). |
+| `acme_challenge` | string | no | `"http01"` | `http01` / `dns01` / `null` (pas de cert). Appliqué à tous les hostnames. |
+| `acme_dns_provider` | string | no | `null` | Clé provider DNS pour `dns01` (ex. `cloudflare`). |
+| `acme_dns_credentials` | map(string) | no | `null` | Credentials DNS pour `dns01` (sensible, write-only). |
 | `target_groups` | map(object) | yes | — | Voir schéma `atomic/appgw-target-group`. |
 | `routes` | list(object) | yes | — | Voir schéma ci-dessous. Le sub-champ `basic_auth_users` est marqué sensitive par l'atomic sous-jacent. |
 
@@ -160,6 +162,6 @@ output "acme_status" {
 
 - **Ordre des hostnames stable** : `routes[*].listener_index` référence par position. Réordonner `hostnames` change la cible des routes — préférer ajouter en queue.
 - **Reuse de target groups** : plusieurs routes peuvent pointer vers le même `target_group_key` (path-based avec policies différentes).
-- **Custom domain** : `custom_domain=true` exige un CNAME client vers l'IP publique de la gateway **avant** apply, sinon ACME échoue.
+- **ACME** : `http01` exige que le hostname résolve vers l'IP publique de la gateway (CNAME/A) **avant** apply. `dns01` exige `acme_dns_provider` + `acme_dns_credentials`. `acme_challenge = null` n'émet aucun certificat.
 - **`basic_auth_users` — sensibilité state** : les mots de passe sont persistés en clair. Utiliser un backend chiffré (S3+KMS, Vault, TFC). La plateforme ne les rend jamais ; au `terraform import`, les blocs sont vides et un `apply` les re-synchronise.
 - **Migration depuis `exposure/web-app-with-appgw`** : signature identique côté inputs (à l'exception du nom du chemin source). Permuter `source` suffit ; pas de breaking change ni de drift d'état attendu.

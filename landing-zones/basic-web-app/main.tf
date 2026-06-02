@@ -91,10 +91,9 @@ resource "ccp_load_balancer" "this" {
   tags         = local.base_tags
 
   listener {
-    name          = "http"
-    algorithm     = "round_robin"
-    protocol      = "http"
-    frontend_port = 80
+    protocol    = "http"
+    listen_port = 80
+    algorithm   = "roundrobin"
 
     dynamic "backend" {
       for_each = ccp_container_instance.app
@@ -109,10 +108,9 @@ resource "ccp_load_balancer" "this" {
   dynamic "listener" {
     for_each = var.expose_https ? [1] : []
     content {
-      name          = "https"
-      algorithm     = "round_robin"
-      protocol      = "tcp"
-      frontend_port = 443
+      protocol    = "tcp"
+      listen_port = 443
+      algorithm   = "roundrobin"
 
       dynamic "backend" {
         for_each = ccp_container_instance.app
@@ -143,8 +141,10 @@ module "appgw" {
   public_ip_id = ccp_public_ip.exposure.id
   tags         = local.base_tags
 
-  hostnames     = [local.appgw_hostname_effective]
-  custom_domain = var.appgw_custom_domain
+  hostnames            = [local.appgw_hostname_effective]
+  acme_challenge       = var.appgw_acme_challenge
+  acme_dns_provider    = var.appgw_acme_dns_provider
+  acme_dns_credentials = var.appgw_acme_dns_credentials
 
   force_https               = true
   hsts_enabled              = var.appgw_hsts_enabled

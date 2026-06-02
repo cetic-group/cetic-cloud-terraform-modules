@@ -1,5 +1,5 @@
 module "vpc_prod" {
-  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/network/vpc?ref=v0.3.4"
+  source = "../../modules/network/vpc"
 
   for_each = var.vpc_map
 
@@ -9,7 +9,7 @@ module "vpc_prod" {
 }
 
 module "vpc-prod_10_0_to_vpc-prod_10_1" {
-  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/network/vnet-peering?ref=v0.3.4"
+  source = "../../modules/network/vnet-peering"
 
   name      = "prod-data-to-staging-web"
   vnet_a_id = module.vpc_prod["vpc-prod-10-0"].vnet_ids["vnet-10-0-1"]

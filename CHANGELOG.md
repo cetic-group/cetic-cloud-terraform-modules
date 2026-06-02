@@ -4,7 +4,7 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.23.1] — 2026-06-02
+## [0.23.2] — 2026-06-02
 
 ### Fixed — plans AppGW : clés canoniques `appgw-*` (alias `small`/`medium`/`large`)
 
@@ -24,6 +24,13 @@ validaient uniquement les formes courtes → toute création échouait en 422.
 
 Rétro-compatible : les consommateurs qui passaient `small`/`medium`/`large` obtiennent
 désormais la clé canonique côté API (au lieu d'un 422).
+
+## [0.23.1] — 2026-06-02
+
+### Fixed — `landing-zones/vpc-design*` : refs de modules alignées
+
+- Les landing-zones `vpc-design` / `vpc-design-peering` référençaient encore
+  `?ref=v0.3.4` et l'ancienne adresse du provider. Refs alignées sur le repo courant. PR #28.
 
 ## [0.23.0] — 2026-06-02
 

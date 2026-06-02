@@ -22,12 +22,18 @@ variable "region" {
 
 variable "plan" {
   type        = string
-  default     = "small"
-  description = "Plan AppGW : `small` / `medium` / `large`."
+  default     = "appgw-small"
+  description = <<-EOT
+    Plan AppGW. Clés canoniques : `appgw-small` / `appgw-medium` / `appgw-large`
+    (alias acceptés : `small` / `medium` / `large` — normalisés par le module atomic).
+  EOT
 
   validation {
-    condition     = contains(["small", "medium", "large"], var.plan)
-    error_message = "`plan` doit être `small`, `medium` ou `large`."
+    condition = contains(
+      ["appgw-small", "appgw-medium", "appgw-large", "small", "medium", "large"],
+      var.plan,
+    )
+    error_message = "`plan` doit être l'un de : appgw-small, appgw-medium, appgw-large (ou alias small/medium/large)."
   }
 }
 

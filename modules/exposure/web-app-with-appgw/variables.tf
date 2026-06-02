@@ -14,8 +14,8 @@ variable "region" {
 
 variable "plan" {
   type        = string
-  default     = "small"
-  description = "Plan AppGW : `small` / `medium` / `large`."
+  default     = "appgw-small"
+  description = "Plan AppGW. Clés canoniques : `appgw-small` / `appgw-medium` / `appgw-large` (alias `small`/`medium`/`large` acceptés)."
 }
 
 variable "vpc_id" {

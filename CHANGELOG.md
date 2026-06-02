@@ -4,6 +4,27 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.23.1] — 2026-06-02
+
+### Fixed — plans AppGW : clés canoniques `appgw-*` (alias `small`/`medium`/`large`)
+
+L'API valide les plans AppGW contre le catalogue `compute_plans` (kind=`appgw`),
+dont les clés sont **`appgw-small` / `appgw-medium` / `appgw-large`**. Les modules
+validaient uniquement les formes courtes → toute création échouait en 422.
+
+- **`atomic/application-gateway`** : la variable `plan` accepte les clés canoniques
+  `appgw-*` ET les alias courts (`small`/`medium`/`large`), normalisés vers la clé
+  canonique avant l'appel API (même pattern que l'alias `vm_instance` → `vm` de
+  `storage/block-volume` v0.18.1). Défaut : `appgw-small`. Test `accepts_canonical_plan_key`.
+- **`managed/application-gateway`**, **`exposure/web-app-with-appgw`**,
+  **`landing-zones/web-app-with-tls`**, **`landing-zones/basic-web-app`** :
+  validations relâchées de la même façon (passthrough vers l'atomic qui normalise).
+- Contrainte provider **`>= 4.1.1`** sur les 5 modules AppGW (le provider v4.1.1
+  retire sa propre validation client-side en dur — les deux fixes vont ensemble).
+
+Rétro-compatible : les consommateurs qui passaient `small`/`medium`/`large` obtiennent
+désormais la clé canonique côté API (au lieu d'un 422).
+
 ## [0.23.0] — 2026-06-02
 
 Aligné sur le provider `cetic-group/ccp` **v4.1.0**. Cascade : contrainte

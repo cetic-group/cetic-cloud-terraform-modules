@@ -299,7 +299,7 @@ le binaire local — pratique pour itérer sur des modifs schema avant release.
 
 ## Versionnage
 
-SemVer aligné conceptuellement avec le provider. **Latest : `v0.21.0`** (compatible provider `>= 3.2.0`).
+SemVer aligné conceptuellement avec le provider. **Latest : `v0.23.1`** (compatible provider `>= 4.1.1` pour les modules AppGW, `>= 4.1.0` ailleurs).
 
 - `v0.1.x` : compatible provider `>= 0.7.1`
 - `v0.2.x` : compatible provider `>= 0.8.0` (nouveaux champs scale-set / DB credentials)
@@ -314,5 +314,8 @@ SemVer aligné conceptuellement avec le provider. **Latest : `v0.21.0`** (compat
 - `v0.19.0` (2026-05-29) : compatible provider **`>= 3.0.0`** (cascade 39 versions.tf). `managed/k8s-cluster` — retrait du var `public_ip_id` (le provider v3 a fusionné les deux attributs) ; **`apiserver_public_ip_id` est désormais mutable** (attach/détach/rotate sans ForceNew, via le provider). PR #24.
 - `v0.20.0` (2026-05-29) : compatible provider **`>= 3.1.1`** (cascade 39 versions.tf). `managed/k8s-cluster` — la var `initial_pool` expose `min_size`/`max_size` (optionnels) → autoscaler activable sur le pool initial (parité avec `additional_pools`). Les deux ensemble = activé ; retirés = désactivé (le provider envoie 0/0 depuis v3.1.1). 2 validations : set-ensemble + `max_size > min_size ≥ 0`. 3 tests `tftest` ajoutés (passthrough + 2 rejets). PR #25.
 - `v0.21.0` (2026-05-29) : compatible provider **`>= 3.2.0`** (cascade 39 versions.tf). `managed/k8s-cluster` — la var `initial_pool` expose `labels` (map) + `taints` (liste `{key,value?,effect}`), parité complète avec `additional_pools` (mutables in-place). Câblés sur `ccp_k8s_cluster.initial_pool` (attributs `labels`/`taints`, pas des blocs). Validation `taint.effect`. 2 tests `tftest` (passthrough labels+taints + rejet effect invalide). PR #26.
+- `v0.22.0` (2026-06-01) : renommage provider — adresse Registry `cetic-group/ccp`, local name `ccp`.
+- `v0.23.0` (2026-06-02) : compatible provider **`>= 4.1.0`**. `network/public-ip` quantity/label/description ; alignement ACME LB + AppGW (`acme_challenge` http01/dns01, retrait `custom_domain` no-op). PR #27.
+- `v0.23.1` (2026-06-02) : fix plans AppGW — clés canoniques **`appgw-*`** acceptées + alias courts normalisés dans `atomic/application-gateway` (les validations en dur small/medium/large rejetaient les seules clés que l'API accepte → 422 systématique). Contrainte **`>= 4.1.1`** sur les 5 modules AppGW (le provider v4.1.1 retire sa validation client-side). PR #29.
 
 **Convention** : on bump le provider constraint dès qu'une feature client (matérialisée par un changement de schéma upstream) requiert la nouvelle version. Les patch-only du provider (docs, anti-leak, sub-cent pricing seed) n'imposent pas un bump module sauf si une migration aliase est en jeu (cas v0.18.0 vs provider v2.0.0).

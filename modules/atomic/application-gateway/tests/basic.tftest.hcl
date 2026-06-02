@@ -22,8 +22,8 @@ run "creates_with_minimal" {
     error_message = "name not propagated"
   }
   assert {
-    condition     = ccp_application_gateway.this.plan == "small"
-    error_message = "default plan should be small"
+    condition     = ccp_application_gateway.this.plan == "appgw-small"
+    error_message = "default plan should normalize to appgw-small"
   }
   assert {
     condition     = ccp_application_gateway.this.force_https == true
@@ -49,12 +49,27 @@ run "creates_with_full_settings" {
     tags                      = ["env:prod", "team:platform"]
   }
   assert {
-    condition     = ccp_application_gateway.this.plan == "large"
-    error_message = "plan should be propagated"
+    condition     = ccp_application_gateway.this.plan == "appgw-large"
+    error_message = "short-form plan alias should normalize to appgw-large"
   }
   assert {
     condition     = ccp_application_gateway.this.hsts_enabled == true
     error_message = "hsts_enabled should be propagated"
+  }
+}
+
+run "accepts_canonical_plan_key" {
+  command = plan
+  variables {
+    name    = "canonical-plan"
+    region  = "RNN"
+    plan    = "appgw-medium"
+    vpc_id  = "00000000-0000-0000-0000-000000000010"
+    vnet_id = "00000000-0000-0000-0000-000000000020"
+  }
+  assert {
+    condition     = ccp_application_gateway.this.plan == "appgw-medium"
+    error_message = "canonical plan key should be passed through unchanged"
   }
 }
 

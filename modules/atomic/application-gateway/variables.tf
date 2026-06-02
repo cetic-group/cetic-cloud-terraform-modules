@@ -20,12 +20,19 @@ variable "region" {
 
 variable "plan" {
   type        = string
-  default     = "small"
-  description = "Plan de l'AppGW : `small` / `medium` / `large`. Détermine routes max, listeners max, rate limit max, WAF."
+  default     = "appgw-small"
+  description = <<-EOT
+    Plan de l'AppGW. Clés canoniques de l'API : `appgw-small` / `appgw-medium` / `appgw-large`.
+    Les formes courtes `small` / `medium` / `large` sont acceptées en alias et normalisées
+    vers la clé canonique avant l'appel API. Détermine routes max, listeners max, rate limit max, WAF.
+  EOT
 
   validation {
-    condition     = contains(["small", "medium", "large"], var.plan)
-    error_message = "`plan` doit être l'un de : small, medium, large."
+    condition = contains(
+      ["appgw-small", "appgw-medium", "appgw-large", "small", "medium", "large"],
+      var.plan,
+    )
+    error_message = "`plan` doit être l'un de : appgw-small, appgw-medium, appgw-large (ou alias small/medium/large)."
   }
 }
 

@@ -1,8 +1,15 @@
+locals {
+  # L'API n'accepte que les clés de plan canoniques `appgw-*`. Les formes courtes
+  # (`small`/`medium`/`large`) sont acceptées en alias et normalisées ici — même
+  # pattern que l'alias `vm_instance` → `vm` de storage/block-volume (v0.18.1).
+  plan_canonical = startswith(var.plan, "appgw-") ? var.plan : "appgw-${var.plan}"
+}
+
 resource "ccp_application_gateway" "this" {
   provider     = ccp
   name         = var.name
   region       = var.region
-  plan         = var.plan
+  plan         = local.plan_canonical
   vpc_id       = var.vpc_id
   vnet_id      = var.vnet_id
   public_ip_id = var.public_ip_id

@@ -92,12 +92,15 @@ variable "app_health_path" {
 
 variable "appgw_plan" {
   type        = string
-  default     = "small"
-  description = "Plan de l'AppGW : `small` / `medium` / `large`."
+  default     = "appgw-small"
+  description = "Plan de l'AppGW. Clés canoniques : `appgw-small` / `appgw-medium` / `appgw-large` (alias `small`/`medium`/`large` acceptés)."
 
   validation {
-    condition     = contains(["small", "medium", "large"], var.appgw_plan)
-    error_message = "`appgw_plan` doit être `small`, `medium` ou `large`."
+    condition = contains(
+      ["appgw-small", "appgw-medium", "appgw-large", "small", "medium", "large"],
+      var.appgw_plan,
+    )
+    error_message = "`appgw_plan` doit être l'un de : appgw-small, appgw-medium, appgw-large (ou alias small/medium/large)."
   }
 }
 

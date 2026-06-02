@@ -125,7 +125,7 @@ run "appgw_mode_creates_gateway" {
     exposure_type            = "appgw"
     appgw_plan               = "medium"
     appgw_hostname           = "app.example.com"
-    appgw_custom_domain      = true
+    appgw_acme_challenge     = "http01"
     appgw_hsts_enabled       = true
     appgw_rate_limit_per_sec = 500
   }

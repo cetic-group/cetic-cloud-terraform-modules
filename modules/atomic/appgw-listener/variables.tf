@@ -18,14 +18,45 @@ variable "hostname" {
   }
 }
 
-variable "custom_domain" {
-  type        = bool
-  default     = false
+variable "acme_challenge" {
+  type        = string
+  default     = null
   description = <<-EOT
-    `true` = le hostname est un domaine appartenant au client (validation ACME DNS-01,
-    CNAME requis vers la gateway **avant** apply, sinon l'émission échoue).
-    `false` (défaut) = sous-domaine auto sous `app.cloud.cetic-group.com` (validation ACME HTTP-01).
+    Type de challenge ACME (Let's Encrypt) pour émettre le certificat TLS du listener :
+    `http01` ou `dns01`. **Sans cet attribut, aucun certificat TLS n'est jamais émis.**
 
-    **Immutable** : changer ce mode force destroy + create.
+    `dns01` requiert en plus `acme_dns_provider` + `acme_dns_credentials`.
+
+    **Immutable** : un changement force destroy + create.
+  EOT
+
+  validation {
+    condition     = var.acme_challenge == null ? true : contains(["http01", "dns01"], var.acme_challenge)
+    error_message = "`acme_challenge` doit être `http01`, `dns01` ou null."
+  }
+}
+
+variable "acme_dns_provider" {
+  type        = string
+  default     = null
+  description = <<-EOT
+    Clé du provider DNS pour le challenge `dns01` (ex. `cloudflare`, `route53`).
+    Requis quand `acme_challenge = "dns01"`. Découvrir le catalogue supporté via la
+    data source `ccp_acme_dns_providers`.
+
+    **Immutable** : un changement force destroy + create.
+  EOT
+}
+
+variable "acme_dns_credentials" {
+  type        = map(string)
+  default     = null
+  sensitive   = true
+  description = <<-EOT
+    Credentials du provider DNS pour le challenge `dns01` (write-only — jamais relus par l'API).
+    Les clés attendues dépendent du provider (cf. `ccp_acme_dns_providers`).
+    Requis quand `acme_challenge = "dns01"`.
+
+    **Immutable** : un changement force destroy + create.
   EOT
 }

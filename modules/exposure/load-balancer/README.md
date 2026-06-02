@@ -1,17 +1,17 @@
 # Module `exposure/load-balancer`
 
-Wrapper riche autour de `ccp_load_balancer` qui expose `listeners` comme une map of object(map de backends), évitant les `dynamic "listener" { dynamic "backend" }` à la main dans tout le code consommateur.
+Wrapper riche autour de `ccp_load_balancer` qui expose `listeners` comme une map of object (map de backends), évitant les `dynamic "listener" { dynamic "backend" }` à la main dans tout le code consommateur. Supporte les certificats Let's Encrypt automatiques (ACME) sur les listeners `https`.
 
-## Exemple
+## Exemple — HTTP + HTTPS avec cert Let's Encrypt (HTTP-01)
 
 ```hcl
 module "lb_public_ip" {
-  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/network/public-ip?ref=v0.1.0"
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/network/public-ip?ref=v0.23.0"
   region = "RNN"
 }
 
 module "lb" {
-  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/exposure/load-balancer?ref=v0.12.0"
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/exposure/load-balancer?ref=v0.23.0"
 
   name         = "web-lb"
   region       = "RNN"
@@ -22,22 +22,55 @@ module "lb" {
 
   listeners = {
     http = {
-      algorithm     = "round_robin"
-      protocol      = "http"
-      frontend_port = 80
+      protocol    = "http"
+      listen_port = 80
       backends = {
         web_01 = { container_id = ccp_container_instance.web_01.id, port = 8080, weight = 1 }
         web_02 = { container_id = ccp_container_instance.web_02.id, port = 8080, weight = 1 }
-        web_03 = { container_id = ccp_container_instance.web_03.id, port = 8080, weight = 1 }
       }
     }
     https = {
-      algorithm     = "round_robin"
-      protocol      = "tcp"
-      frontend_port = 443
+      protocol       = "https"
+      listen_port    = 443
+      algorithm      = "roundrobin"
+      domain         = "www.example.com"
+      acme_challenge = "http01"
       backends = {
-        web_01 = { container_id = ccp_container_instance.web_01.id, port = 8443 }
-        web_02 = { container_id = ccp_container_instance.web_02.id, port = 8443 }
+        web_01 = { container_id = ccp_container_instance.web_01.id, port = 8080 }
+        web_02 = { container_id = ccp_container_instance.web_02.id, port = 8080 }
+      }
+    }
+  }
+}
+```
+
+## Exemple — HTTPS avec challenge DNS-01 (domaine client)
+
+```hcl
+variable "cloudflare_token" {
+  type      = string
+  sensitive = true
+}
+
+module "lb" {
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/exposure/load-balancer?ref=v0.23.0"
+
+  name    = "api-lb"
+  region  = "RNN"
+  vnet_id = module.vpc.vnet_ids.web
+
+  listeners = {
+    https = {
+      protocol          = "https"
+      listen_port       = 443
+      domain            = "api.example.com"
+      acme_challenge    = "dns01"
+      acme_dns_provider = "cloudflare"
+      acme_dns_credentials = {
+        api_token = var.cloudflare_token
+      }
+      backends = {
+        api_01 = { container_id = ccp_container_instance.api.id, port = 8080 }
       }
     }
   }
@@ -54,15 +87,21 @@ module "lb" {
 | `plan` | string | no | `"small"` | Plan de capacité : `small` (1 vCPU/512 Mo, 4,99 €), `medium` (2 vCPU/1 Go, 11,99 €), `large` (4 vCPU/2 Go, 27,99 €). **Immuable** — `RequiresReplace` côté provider. |
 | `public_ip_id` | string | no | `null` | IP publique à attacher. |
 | `tags` | list(string) | no | `[]` | |
-| `listeners` | map(object) | no | `{}` | Voir schéma ci-dessous. |
+| `listeners` | map(object) | no | `{}` | Voir schéma ci-dessous. La clé est un label logique (non envoyé à l'API). |
 
 ### Schéma `listeners[*]`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `algorithm` | string | `"round_robin"` | `round_robin` / `least_conn` / `source_ip`. |
-| `protocol` | string | `"tcp"` | `http` / `tcp`. |
-| `frontend_port` | number | required | 1-65535. |
+| `protocol` | string | `"tcp"` | `tcp` / `http` / `https`. **Immuable**. |
+| `listen_port` | number | required | Port d'écoute du LB (1-65535). **Immuable**. |
+| `algorithm` | string | `"roundrobin"` | `roundrobin` / `leastconn` / `source`. **Immuable**. |
+| `health_check_enabled` | bool | `true` | Active les health checks backend. |
+| `health_check_path` | string | `null` | Chemin HTTP des health checks (`http`/`https`). |
+| `domain` | string | `null` | FQDN servi par un listener `https`. Requis si `acme_challenge` set. Lowercase. |
+| `acme_challenge` | string | `null` | `http01` / `dns01` — émission auto Let's Encrypt. Requiert `protocol = "https"` + `domain`. |
+| `acme_dns_provider` | string | `null` | Clé du provider DNS pour `dns01` (ex. `cloudflare`). |
+| `acme_dns_credentials` | map(string) | `null` | Credentials DNS pour `dns01` (sensible, write-only). |
 | `backends` | map(object) | required | Map de backends. |
 
 ### Schéma `backends[*]`
@@ -72,7 +111,7 @@ module "lb" {
 | `container_id` | string | XOR | UUID container. |
 | `vm_instance_id` | string | XOR | UUID VM. |
 | `port` | number | required | Port destination. |
-| `weight` | number | `1` | Poids du backend. |
+| `weight` | number | `1` | Poids du backend (réconcilié en place). |
 
 Exactement un de `container_id` / `vm_instance_id` est requis.
 
@@ -83,10 +122,12 @@ Exactement un de `container_id` / `vm_instance_id` est requis.
 | `id` | UUID du LB. |
 | `vip_address` | VIP privée. |
 | `public_ip_address` | IP publique attachée. |
-| `status` | |
+| `status` | `provisioning` / `active` / `updating` / `error`. |
+| `created_at` | Timestamp RFC 3339 de création. |
 
 ## Notes
 
 - HA inter-node automatique (par défaut).
-- `scale_set_id` comme backend pas encore exposé par le provider (cf. backlog v0.8.0).
-- Les backends sont fully reconciled à chaque apply : un backend retiré du HCL = retrait sans downtime.
+- **Listeners immuables** : tout changement d'un champ listener autre que ses backends (protocol, port, algorithm, domain, réglages ACME) force un remplacement complet du LB.
+- **Backends réconciliés en place** : ajout/retrait/changement de `weight` d'un backend ne remplace pas le LB.
+- **ACME** requiert `protocol = "https"` + `domain`. Pour `dns01`, fournir aussi `acme_dns_provider` + `acme_dns_credentials`. Découvrir les providers DNS supportés via la data source `ccp_acme_dns_providers`.

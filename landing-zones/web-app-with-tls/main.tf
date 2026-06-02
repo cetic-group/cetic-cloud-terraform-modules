@@ -75,8 +75,8 @@ module "appgw" {
   public_ip_id = module.public_ip.id
   tags         = local.base_tags
 
-  hostnames     = [local.effective_host]
-  custom_domain = true # le hostname est un domaine client, CNAME requis avant apply
+  hostnames      = [local.effective_host]
+  acme_challenge = "http01" # cert Let's Encrypt — un CNAME vers la gateway doit être en place avant apply
 
   force_https  = true
   hsts_enabled = true

@@ -162,10 +162,32 @@ variable "appgw_plan" {
   }
 }
 
-variable "appgw_custom_domain" {
-  type        = bool
-  default     = false
-  description = "Si `true`, `appgw_hostname` est un domaine client (CNAME requis avant apply). Sinon sous-domaine auto."
+variable "appgw_acme_challenge" {
+  type        = string
+  default     = "http01"
+  description = <<-EOT
+    Mode `appgw` : type de challenge ACME (Let's Encrypt) pour le cert TLS du hostname.
+    `http01` (défaut, sous-domaine auto ou CNAME en place) ou `dns01` (domaine client,
+    requiert `appgw_acme_dns_provider` + `appgw_acme_dns_credentials`). `null` = pas de cert.
+  EOT
+
+  validation {
+    condition     = var.appgw_acme_challenge == null ? true : contains(["http01", "dns01"], var.appgw_acme_challenge)
+    error_message = "`appgw_acme_challenge` doit être `http01`, `dns01` ou null."
+  }
+}
+
+variable "appgw_acme_dns_provider" {
+  type        = string
+  default     = null
+  description = "Mode `appgw` + `dns01` : clé du provider DNS (ex. `cloudflare`)."
+}
+
+variable "appgw_acme_dns_credentials" {
+  type        = map(string)
+  default     = null
+  sensitive   = true
+  description = "Mode `appgw` + `dns01` : credentials du provider DNS (write-only)."
 }
 
 variable "appgw_hsts_enabled" {

@@ -49,26 +49,37 @@ variable "tags" {
 
 variable "listeners" {
   description = <<-EOT
-    Map de listeners à exposer. Clé = nom logique (= `name` du listener).
+    Map de listeners à exposer. La clé est un **label purement logique**
+    (lisibilité du HCL / indexation) — elle n'est PAS envoyée à l'API.
 
-    Champs :
-    - `algorithm` : `round_robin` | `least_conn` | `source_ip` (défaut `round_robin`).
-    - `protocol` : `http` | `tcp` (défaut `tcp`).
-    - `frontend_port` : port d'écoute public (1-65535).
+    Champs (alignés sur le schéma `ccp_load_balancer.listener` du provider) :
+    - `protocol` : `tcp` | `http` | `https` (défaut `tcp`). **Immuable**.
+    - `listen_port` : port d'écoute du LB (1-65535). **Immuable**.
+    - `algorithm` : `roundrobin` | `leastconn` | `source` (défaut `roundrobin`). **Immuable**.
+    - `health_check_enabled` : active les health checks backend (défaut `true`).
+    - `health_check_path` : chemin HTTP des health checks (`http`/`https`).
+    - `domain` : FQDN servi par un listener `https`. Requis si `acme_challenge` set. Lowercase.
+    - `acme_challenge` : `http01` | `dns01` — émission auto d'un cert Let's Encrypt.
+        Requiert `protocol = "https"` + `domain`. `dns01` requiert en plus
+        `acme_dns_provider` + `acme_dns_credentials`.
+    - `acme_dns_provider` : clé du provider DNS pour `dns01` (ex. `cloudflare`).
+    - `acme_dns_credentials` : credentials DNS pour `dns01` (sensible, write-only).
     - `backends` : map de backends. Chaque clé = label logique. Valeur :
         - `container_id` (XOR) `vm_instance_id` : UUID du backend.
         - `port` : port destination sur le backend.
-        - `weight` : optionnel, défaut 1.
-
-    Note actuelle : le provider expose `container_id` / `vm_instance_id`
-    uniquement. Pour des backends auto-managés via scale set, attendre
-    provider v0.8.0+ (qui ajoute `scale_set_id`).
+        - `weight` : optionnel, défaut 1 (réconcilié en place).
   EOT
 
   type = map(object({
-    algorithm     = optional(string, "round_robin")
-    protocol      = optional(string, "tcp")
-    frontend_port = number
+    protocol             = optional(string, "tcp")
+    listen_port          = number
+    algorithm            = optional(string, "roundrobin")
+    health_check_enabled = optional(bool, true)
+    health_check_path    = optional(string)
+    domain               = optional(string)
+    acme_challenge       = optional(string)
+    acme_dns_provider    = optional(string)
+    acme_dns_credentials = optional(map(string))
     backends = map(object({
       container_id   = optional(string)
       vm_instance_id = optional(string)
@@ -80,24 +91,48 @@ variable "listeners" {
 
   validation {
     condition = alltrue([
-      for k, v in var.listeners : contains(["round_robin", "least_conn", "source_ip"], v.algorithm)
+      for k, v in var.listeners : contains(["tcp", "http", "https"], v.protocol)
     ])
-    error_message = "algorithm doit être round_robin, least_conn ou source_ip."
+    error_message = "protocol doit être tcp, http ou https."
   }
 
   validation {
     condition = alltrue([
-      for k, v in var.listeners : contains(["http", "tcp"], v.protocol)
+      for k, v in var.listeners : contains(["roundrobin", "leastconn", "source"], v.algorithm)
     ])
-    error_message = "protocol doit être http ou tcp."
+    error_message = "algorithm doit être roundrobin, leastconn ou source."
   }
 
   validation {
     condition = alltrue([
       for k, v in var.listeners :
-      v.frontend_port >= 1 && v.frontend_port <= 65535
+      v.listen_port >= 1 && v.listen_port <= 65535
     ])
-    error_message = "frontend_port doit être entre 1 et 65535."
+    error_message = "listen_port doit être entre 1 et 65535."
+  }
+
+  validation {
+    condition = alltrue([
+      for k, v in var.listeners :
+      v.acme_challenge == null ? true : contains(["http01", "dns01"], v.acme_challenge)
+    ])
+    error_message = "acme_challenge doit être http01 ou dns01 (ou null)."
+  }
+
+  validation {
+    condition = alltrue([
+      for k, v in var.listeners :
+      v.acme_challenge == null || (v.protocol == "https" && v.domain != null)
+    ])
+    error_message = "acme_challenge requiert protocol = \"https\" et un domain non-null."
+  }
+
+  validation {
+    condition = alltrue([
+      for k, v in var.listeners :
+      v.acme_challenge != "dns01" || (v.acme_dns_provider != null && v.acme_dns_credentials != null)
+    ])
+    error_message = "acme_challenge = \"dns01\" requiert acme_dns_provider et acme_dns_credentials."
   }
 
   validation {

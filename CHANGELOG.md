@@ -4,6 +4,58 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.23.0] — 2026-06-02
+
+Aligné sur le provider `cetic-group/ccp` **v4.1.0**. Cascade : contrainte
+`>= 4.0.0` → **`>= 4.1.0`** sur tous les `versions.tf`, le README racine et les
+exemples.
+
+### Added — `network/public-ip` : `quantity` / `label` / `description`
+
+- Nouvelles variables `quantity` (1-8, défaut 1), `label` (max 100 chars) et
+  `description`. Quand `quantity > 1`, le `label` est automatiquement suffixé
+  `-1`, `-2`, … La ressource passe en `count = var.quantity`.
+- Outputs singuliers (`id`, `ip_address`, `status`, `attached_to_id`,
+  `attached_to_type`) **rétro-compatibles** — pointent désormais sur la 1re IP
+  (`ccp_public_ip.this[0]`). Ajout de `label` + `description` singuliers.
+- Nouveaux outputs **liste** : `ids`, `ip_addresses`, `labels`.
+- Tests `tests/public_ip.tftest.hcl` (quantité, suffixage du label, rejet
+  `quantity = 9`).
+
+### Changed — `exposure/load-balancer` : schéma listener aligné + ACME (BREAKING)
+
+- La variable `listeners` est réécrite pour matcher le schéma réel
+  `ccp_load_balancer.listener` du provider :
+  * `protocol` accepte désormais `tcp` | `http` | **`https`**.
+  * `frontend_port` → **`listen_port`**.
+  * `algorithm` : `round_robin`/`least_conn`/`source_ip` → **`roundrobin`/`leastconn`/`source`**.
+  * Ajout de `health_check_enabled`, `health_check_path`, `domain`,
+    `acme_challenge` (`http01`/`dns01`), `acme_dns_provider`,
+    `acme_dns_credentials` (sensible) — certificats Let's Encrypt automatiques.
+  * Le `name` du listener est supprimé (la clé de map reste un label purement
+    logique, non envoyé à l'API).
+- Output `created_at` ajouté ; `status` documenté `provisioning`/`active`/`updating`/`error`.
+- **Migration consumer** : renommer `frontend_port` → `listen_port`, et les
+  valeurs d'`algorithm` (`round_robin` → `roundrobin`, etc.). Retirer tout
+  `name` de listener.
+
+### Changed — `atomic/appgw-listener` : ACME, retrait de `custom_domain` (BREAKING)
+
+- La variable `custom_domain` (bool, no-op côté provider v4.1.0) est remplacée
+  par `acme_challenge` (`http01`/`dns01`/`null`), `acme_dns_provider` et
+  `acme_dns_credentials` (sensible) — câblés sur `ccp_appgw_listener`.
+- Outputs : retrait de `custom_domain` ; ajout de `acme_challenge`,
+  `acme_issued_at`, `acme_renew_after`.
+- Les modules composites `exposure/web-app-with-appgw` et
+  `managed/application-gateway` exposent désormais les mêmes champs ACME
+  (`acme_challenge` défaut `http01`) à la place de `custom_domain`.
+- Landing-zones : `basic-web-app` (`appgw_custom_domain` → `appgw_acme_challenge`
+  + `appgw_acme_dns_provider`/`appgw_acme_dns_credentials`) et `web-app-with-tls`
+  (`custom_domain = true` → `acme_challenge = "http01"`) mis à jour.
+- **Migration consumer** : remplacer `custom_domain = true` par
+  `acme_challenge = "dns01"` (+ `acme_dns_provider`/`acme_dns_credentials`) ou
+  `acme_challenge = "http01"` selon le mode de validation souhaité.
+
 ## [0.22.0] — 2026-06-01
 
 ### Changed — provider renamed to `cetic-group/ccp` (local name `ccp`)

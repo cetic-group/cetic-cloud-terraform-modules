@@ -77,8 +77,8 @@ module "web_app" {
   exposure_type  = "appgw"
   appgw_plan     = "medium"
   appgw_hostname = "app.example.com"
-  appgw_custom_domain = true
-  appgw_hsts_enabled  = true
+  appgw_acme_challenge = "http01" # cert Let's Encrypt — CNAME requis avant apply
+  appgw_hsts_enabled   = true
   appgw_rate_limit_per_sec = 500
 }
 
@@ -104,7 +104,9 @@ output "url" {
 | `expose_https` | bool | `false` | Mode `lb` uniquement : listener TCP/443 supplémentaire. |
 | `appgw_hostname` | string | `null` | Mode `appgw` : FQDN exposé (auto si null). |
 | `appgw_plan` | string | `"small"` | Mode `appgw` : `small` / `medium` / `large`. |
-| `appgw_custom_domain` | bool | `false` | Mode `appgw` : `true` = domaine client (CNAME requis). |
+| `appgw_acme_challenge` | string | `"http01"` | Mode `appgw` : `http01` / `dns01` / `null` (pas de cert). |
+| `appgw_acme_dns_provider` | string | `null` | Mode `appgw` + `dns01` : clé provider DNS. |
+| `appgw_acme_dns_credentials` | map(string) | `null` | Mode `appgw` + `dns01` : credentials DNS (sensible). |
 | `appgw_hsts_enabled` | bool | `true` | Mode `appgw` : active HSTS. |
 | `appgw_rate_limit_per_sec` | number | `null` | Mode `appgw` : rate limit global par IP. |
 | `enable_database` | bool | `true` | Provisionne PostgreSQL managé. |
@@ -139,4 +141,4 @@ output "url" {
 - **CIDRs hardcodés** (`10.0.1.0/24` web, `10.0.2.0/24` data). Pour les modifier, copier la landing zone localement et l'ajuster — ces CIDRs sont volontairement opinionnated pour garder le composant démarrable en quelques lignes. Pour des topologies custom, utiliser directement le module `network/vpc`.
 - **`db_replicas` immutable** : pour upgrader `dev → prod`, snapshot + nouvelle instance + restore. Pas de migration in-place.
 - **Migration `lb` → `appgw`** : changer `exposure_type` reconstruit l'exposition (destroy LB + create AppGW) — l'IP publique est conservée (même ressource `ccp_public_ip`). Prévoir une fenêtre de migration brève.
-- **Mode `appgw` + `custom_domain=true`** : le CNAME doit être en place **avant** l'apply (sinon ACME challenge échoue). Mode `appgw` + sous-domaine auto = pas de pré-requis DNS.
+- **Mode `appgw` + `appgw_acme_challenge = "http01"`** : le hostname doit résoudre vers l'IP publique de la gateway (CNAME/A) **avant** l'apply (sinon le challenge ACME échoue). Utiliser `dns01` (+ `appgw_acme_dns_provider`/`appgw_acme_dns_credentials`) pour éviter le pré-requis DNS A/CNAME.

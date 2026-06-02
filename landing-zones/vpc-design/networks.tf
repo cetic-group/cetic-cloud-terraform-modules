@@ -1,5 +1,5 @@
 module "vpc_prod" {
-  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/network/vpc?ref=v0.3.4"
+  source = "../../modules/network/vpc"
 
   for_each = var.vpc_map
 

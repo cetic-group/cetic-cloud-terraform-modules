@@ -7,6 +7,7 @@ mock_provider "ccp" {
       vip_address       = "10.0.1.10"
       public_ip_address = null
       status            = "active"
+      created_at        = "2026-06-02T08:00:00Z"
     }
   }
 }

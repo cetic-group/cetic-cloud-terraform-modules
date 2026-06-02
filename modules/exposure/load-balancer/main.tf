@@ -10,10 +10,15 @@ resource "ccp_load_balancer" "this" {
   dynamic "listener" {
     for_each = var.listeners
     content {
-      name          = listener.key
-      algorithm     = listener.value.algorithm
-      protocol      = listener.value.protocol
-      frontend_port = listener.value.frontend_port
+      protocol             = listener.value.protocol
+      listen_port          = listener.value.listen_port
+      algorithm            = listener.value.algorithm
+      health_check_enabled = listener.value.health_check_enabled
+      health_check_path    = listener.value.health_check_path
+      domain               = listener.value.domain
+      acme_challenge       = listener.value.acme_challenge
+      acme_dns_provider    = listener.value.acme_dns_provider
+      acme_dns_credentials = listener.value.acme_dns_credentials
 
       dynamic "backend" {
         for_each = listener.value.backends

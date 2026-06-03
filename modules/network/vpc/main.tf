@@ -2,6 +2,7 @@ resource "ccp_vpc" "this" {
   provider = ccp
   name     = var.name
   region   = var.region
+  cidr     = var.cidr
   tags     = var.tags
 }
 

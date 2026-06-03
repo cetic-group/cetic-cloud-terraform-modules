@@ -265,4 +265,35 @@ run "outputs_are_indexed_by_logical_key" {
   }
 }
 
+# ── 8. Bloc CIDR du VPC (#240) — passthrough vers ccp_vpc + rejet invalide ───
+run "vpc_with_cidr_block" {
+  command = plan
+
+  variables {
+    name   = "cidr-test"
+    region = "RNN"
+    cidr   = "10.1.0.0/16"
+    vnets = {
+      web = { cidr = "10.1.1.0/24", snat = true }
+    }
+  }
+
+  assert {
+    condition     = ccp_vpc.this.cidr == "10.1.0.0/16"
+    error_message = "Le `cidr` du VPC doit être propagé à la ressource ccp_vpc."
+  }
+}
+
+run "rejects_invalid_vpc_cidr" {
+  command = plan
+
+  variables {
+    name   = "bad-cidr"
+    region = "RNN"
+    cidr   = "pas-un-cidr"
+  }
+
+  expect_failures = [var.cidr]
+}
+
 # ── 8. (retiré en v0.3.0) — peering est maintenant via `modules/network/vnet-peering` ─

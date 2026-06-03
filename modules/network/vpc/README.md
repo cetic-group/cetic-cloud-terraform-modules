@@ -54,6 +54,7 @@ output "web_vnet_id" {
 |------|------|---------|-------------|
 | `name` | string | — | Nom du VPC. |
 | `region` | string | — | `RNN`, `PAR` ou `ABJ`. |
+| `cidr` | string | `null` | Bloc d'adressage privé du VPC (RFC1918, /16 à /24). Auto-alloué si `null`. Les `vnets[*].cidr` doivent en être des sous-réseaux. Immutable. |
 | `tags` | list(string) | `[]` | Tags du VPC. |
 | `vnets` | map(object) | `{}` | Map de VNets (clé = nom logique). Voir le schema ci-dessous. |
 | `peering_vpc_ids` | list(string) | `[]` | IDs de VPCs avec qui établir un peering (même région). |

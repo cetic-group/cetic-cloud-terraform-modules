@@ -18,6 +18,21 @@ variable "region" {
   }
 }
 
+variable "cidr" {
+  type        = string
+  default     = null
+  description = <<-EOT
+    Bloc d'adressage privé du VPC (RFC1918, masque /16 à /24). Auto-alloué par
+    la plateforme si `null`. Les `vnets[*].cidr` doivent être des sous-réseaux
+    de ce bloc. Immutable après création.
+  EOT
+
+  validation {
+    condition     = var.cidr == null || can(cidrhost(var.cidr, 0))
+    error_message = "Le `cidr` du VPC doit être un CIDR valide (ex. `10.0.0.0/16`) ou `null`."
+  }
+}
+
 variable "tags" {
   type        = list(string)
   default     = []

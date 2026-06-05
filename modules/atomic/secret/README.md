@@ -80,7 +80,7 @@ Une fois le secret créé, déployer une `CCPSecret` dans le namespace cible.
 spécifié dans `spec.target.type` au niveau de la CRD :
 
 ```yaml
-apiVersion: ccp.cloud/v1
+apiVersion: cetic-group.com/v1
 kind: CCPSecret
 metadata:
   name: wildcard-cetic-tls

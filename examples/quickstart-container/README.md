@@ -5,7 +5,7 @@ L'exemple le plus minimal : un container Ubuntu 24.04 exposé sur internet via u
 ## Usage
 
 ```bash
-export TF_VAR_ccp_api_key="cl_live_xxxxxxxxxxxx"
+export TF_VAR_ccp_api_key="ccp_live_xxxxxxxxxxxx"
 
 terraform init
 terraform plan

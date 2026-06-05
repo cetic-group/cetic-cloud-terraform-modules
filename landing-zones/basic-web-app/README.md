@@ -40,9 +40,10 @@ Composants créés :
 module "web_app" {
   source = "github.com/cetic-group/cetic-cloud-terraform-modules//landing-zones/basic-web-app?ref=v0.1.0"
 
-  org_prefix     = "acme"
-  region         = "RNN"
-  ssh_public_key = file("~/.ssh/id_ed25519.pub")
+  org_prefix        = "acme"
+  region            = "RNN"
+  ssh_public_key    = file("~/.ssh/id_ed25519.pub")
+  app_root_password = var.app_root_password
 
   app_replicas    = 3
   app_listen_port = 8080
@@ -50,16 +51,15 @@ module "web_app" {
 
   enable_database = true
   db_plan         = "small"
-  db_tier         = "prod"
+  db_replicas     = 3
 }
 
 output "url" {
   value = module.web_app.public_url
 }
 
-output "db_uri" {
-  value     = module.web_app.database_uri
-  sensitive = true
+output "db_endpoint" {
+  value = module.web_app.database_endpoint
 }
 ```
 

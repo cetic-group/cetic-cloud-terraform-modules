@@ -101,11 +101,11 @@ Ou plus simple : `landing-zones/basic-web-app` qui compose tout :
 module "web_app" {
   source = "github.com/cetic-group/cetic-cloud-terraform-modules//landing-zones/basic-web-app?ref=v0.8.0"
 
-  org_prefix    = "acme"
-  region        = "RNN"
-  ssh_key_path  = "~/.ssh/id_ed25519.pub"
-  app_replicas  = 3
-  app_image_url = "https://acme.example.com/app.tar.gz"
+  org_prefix        = "acme"
+  region            = "RNN"
+  ssh_public_key    = file("~/.ssh/id_ed25519.pub")
+  app_root_password = var.app_root_password
+  app_replicas      = 3
 }
 
 output "url" {

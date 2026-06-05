@@ -12,8 +12,7 @@ terraform {
 }
 
 provider "ccp" {
-  endpoint = "https://api.cloud.cetic-group.com"
-  api_key  = var.ccp_api_key
+  api_key = var.ccp_api_key
 }
 
 variable "ccp_api_key" {
@@ -48,11 +47,6 @@ module "vpc" {
   }
 }
 
-resource "ccp_public_ip" "this" {
-  provider = ccp
-  region   = "RNN"
-}
-
 resource "ccp_container_instance" "hello" {
   provider      = ccp
   name          = "hello-world"
@@ -61,8 +55,14 @@ resource "ccp_container_instance" "hello" {
   template      = "ubuntu-24.04"
   vnet_id       = module.vpc.vnet_ids.main
   ssh_key_ids   = [module.ssh_key.id]
-  public_ip_id  = ccp_public_ip.this.id
   root_password = var.root_password
+}
+
+resource "ccp_public_ip" "this" {
+  provider         = ccp
+  region           = "RNN"
+  attached_to_id   = ccp_container_instance.hello.id
+  attached_to_type = "container"
 }
 
 output "ssh_command" {

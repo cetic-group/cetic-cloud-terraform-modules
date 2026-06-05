@@ -7,8 +7,7 @@
 
 ```hcl
 module "budget" {
-  source  = "cetic-group/cetic-cloud-platform/ccp//modules/managed/billing-budget"
-  version = ">= 0.10.0"
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/managed/billing-budget?ref=v0.23.2"
 
   monthly_budget_eur = 50          # plafond en euros (converti en cents)
   hard_stop_at_100   = true        # bloque création de ressources à 100%
@@ -20,7 +19,7 @@ module "budget" {
 
 ```hcl
 module "budget_with_yearly_commit" {
-  source = "cetic-group/cetic-cloud-platform/ccp//modules/managed/billing-budget"
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/managed/billing-budget?ref=v0.23.2"
 
   monthly_budget_eur = 200
   commit_type        = "yearly"    # -20% sur tous les usages

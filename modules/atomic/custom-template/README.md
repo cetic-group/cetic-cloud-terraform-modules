@@ -16,12 +16,13 @@ module "tpl_app_baseline" {
 
 # Réutilisation dans une nouvelle instance
 resource "ccp_container_instance" "app" {
-  name        = "app-from-template"
-  region      = "RNN"
-  plan        = "small"
-  template    = module.tpl_app_baseline.id  # UUID du custom template
-  vnet_id     = module.vpc.vnet_ids.web
-  ssh_key_ids = [module.ssh_key.id]
+  name          = "app-from-template"
+  region        = "RNN"
+  plan          = "small"
+  template      = module.tpl_app_baseline.id  # UUID du custom template
+  vnet_id       = module.vpc.vnet_ids.web
+  root_password = var.root_password
+  ssh_key_ids   = [module.ssh_key.id]
 }
 ```
 
@@ -41,6 +42,6 @@ Exactement un de `source_container_id` / `source_vm_id` est requis.
 | Name | Description |
 |------|-------------|
 | `id` | UUID du template. |
-| `template_type` | `lxc` ou `vm`. |
+| `template_type` | `container` ou `vm`. |
 | `region` | Région du template. |
 | `disk_gb` | Taille du disque. |

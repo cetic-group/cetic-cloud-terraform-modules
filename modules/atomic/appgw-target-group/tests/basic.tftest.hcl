@@ -142,7 +142,7 @@ run "rejects_invalid_algorithm" {
   variables {
     appgw_id  = "00000000-0000-0000-0000-00000000a001"
     name      = "bad-algo"
-    algorithm = "random"
+    algorithm = "bogus"
   }
   expect_failures = [
     var.algorithm,

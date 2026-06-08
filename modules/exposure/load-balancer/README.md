@@ -95,7 +95,7 @@ module "lb" {
 |-------|------|---------|-------------|
 | `protocol` | string | `"tcp"` | `tcp` / `http` / `https`. **Immuable**. |
 | `listen_port` | number | required | Port d'écoute du LB (1-65535). **Immuable**. |
-| `algorithm` | string | `"roundrobin"` | `roundrobin` / `leastconn` / `source`. **Immuable**. |
+| `algorithm` | string | `"roundrobin"` | `roundrobin` / `leastconn` / `source` / `random`. **Immuable**. |
 | `health_check_enabled` | bool | `true` | Active les health checks backend. |
 | `health_check_path` | string | `null` | Chemin HTTP des health checks (`http`/`https`). |
 | `domain` | string | `null` | FQDN servi par un listener `https`. Requis si `acme_challenge` set. Lowercase. |

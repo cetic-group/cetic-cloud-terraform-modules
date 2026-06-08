@@ -16,11 +16,11 @@ variable "name" {
 variable "algorithm" {
   type        = string
   default     = "roundrobin"
-  description = "Algorithme L7 : `roundrobin` / `leastconn` / `source`."
+  description = "Algorithme L7 : `roundrobin` / `leastconn` / `source` / `random`."
 
   validation {
-    condition     = contains(["roundrobin", "leastconn", "source"], var.algorithm)
-    error_message = "`algorithm` doit être `roundrobin`, `leastconn` ou `source`."
+    condition     = contains(["roundrobin", "leastconn", "source", "random"], var.algorithm)
+    error_message = "`algorithm` doit être `roundrobin`, `leastconn`, `source` ou `random`."
   }
 }
 

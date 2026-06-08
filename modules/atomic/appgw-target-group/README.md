@@ -63,7 +63,7 @@ module "tg_legacy" {
 |------|------|----------|---------|-------------|
 | `appgw_id` | string | yes | — | UUID de l'AppGW parente. |
 | `name` | string | yes | — | Nom du target group, unique par AppGW. |
-| `algorithm` | string | no | `"roundrobin"` | `roundrobin` / `leastconn` / `source`. |
+| `algorithm` | string | no | `"roundrobin"` | `roundrobin` / `leastconn` / `source` / `random`. |
 | `health_check` | object | no | `{}` (défauts) | Voir schéma. |
 | `sticky_enabled` | bool | no | `false` | Cookie-based session affinity. |
 | `sticky_cookie_name` | string | no | `null` | Requis si `sticky_enabled=true`. |

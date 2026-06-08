@@ -131,7 +131,7 @@ variable "target_groups" {
     Au moins une entrée requise (typiquement `default`).
 
     Champs :
-    - `algorithm` : `roundrobin` / `leastconn` / `source` (défaut `roundrobin`).
+    - `algorithm` : `roundrobin` / `leastconn` / `source` / `random` (défaut `roundrobin`).
     - `health_check` : object (cf. atomic/appgw-target-group).
     - `sticky_enabled` / `sticky_cookie_name` : optionnels.
     - `members` : map(object) (cf. atomic/appgw-target-group).

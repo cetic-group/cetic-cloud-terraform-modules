@@ -55,7 +55,7 @@ variable "listeners" {
     Champs (alignés sur le schéma `ccp_load_balancer.listener` du provider) :
     - `protocol` : `tcp` | `http` | `https` (défaut `tcp`). **Immuable**.
     - `listen_port` : port d'écoute du LB (1-65535). **Immuable**.
-    - `algorithm` : `roundrobin` | `leastconn` | `source` (défaut `roundrobin`). **Immuable**.
+    - `algorithm` : `roundrobin` | `leastconn` | `source` | `random` (défaut `roundrobin`). **Immuable**.
     - `health_check_enabled` : active les health checks backend (défaut `true`).
     - `health_check_path` : chemin HTTP des health checks (`http`/`https`).
     - `domain` : FQDN servi par un listener `https`. Requis si `acme_challenge` set. Lowercase.
@@ -98,9 +98,9 @@ variable "listeners" {
 
   validation {
     condition = alltrue([
-      for k, v in var.listeners : contains(["roundrobin", "leastconn", "source"], v.algorithm)
+      for k, v in var.listeners : contains(["roundrobin", "leastconn", "source", "random"], v.algorithm)
     ])
-    error_message = "algorithm doit être roundrobin, leastconn ou source."
+    error_message = "algorithm doit être roundrobin, leastconn, source ou random."
   }
 
   validation {

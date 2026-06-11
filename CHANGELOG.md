@@ -4,6 +4,35 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.27.0] — 2026-06-11
+
+Aligné sur le provider `cetic-group/ccp` **v4.7.0** (support VPN site-à-site).
+
+### Added — `managed/vpn-gateway` : peers site-à-site (`peer_type` + `site_cidrs`)
+
+Le provider v4.7.0 ajoute à `ccp_vpn_peer` les attributs `peer_type`
+(`client` | `site`, défaut `client`) et `site_cidrs` (sous-réseaux distants,
+obligatoire pour un peer `site`). Le module les expose désormais :
+
+- **`variables.tf`** : l'objet `peers` gagne `peer_type` (optional, défaut
+  `client`) et `site_cidrs` (optional, défaut `[]`). Trois validations ajoutées :
+  `peer_type ∈ {client, site}` ; un peer `site` exige au moins un `site_cidrs`
+  tandis qu'un `client` doit le laisser vide ; chaque `site_cidrs` doit être un
+  CIDR IPv4 valide.
+- **`main.tf`** : `peer_type` et `site_cidrs` câblés sur chaque `ccp_vpn_peer`
+  (`site_cidrs` envoyé uniquement pour les peers `site`).
+- **`outputs.tf`** : l'output `peers` inclut `peer_type` et `site_cidrs`.
+- **`README.md`** : documentation des deux types (client = appareil unique /
+  nomade ; site = réseau distant en site-à-site) + exemple d'usage avec un peer
+  `site`. Notes d'immutabilité (`peer_type`/`site_cidrs` forcent le remplacement).
+- **`tests/`** : `mock_provider` aliasé `site` + 4 runs ajoutés (création peer
+  `site`, rejet `site` sans `site_cidrs`, rejet `client` avec `site_cidrs`, rejet
+  `peer_type` invalide) ; assertion `peer_type` défaut `client` sur le run multi.
+
+Contrainte provider **`>= 4.7.0`** sur `versions.tf` du module (le champ
+`site_cidrs` requiert le provider v4.7.0). Rétro-compatible : les peers existants
+sans `peer_type` restent des `client`.
+
 ## [0.23.2] — 2026-06-02
 
 ### Fixed — plans AppGW : clés canoniques `appgw-*` (alias `small`/`medium`/`large`)

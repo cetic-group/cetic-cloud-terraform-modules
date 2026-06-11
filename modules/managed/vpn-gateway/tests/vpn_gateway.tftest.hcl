@@ -18,6 +18,29 @@ mock_provider "ccp" {
   }
 }
 
+# Mock dédié aux peers de type `site` : pas d'`ip` assignée, mais des `site_cidrs`.
+mock_provider "ccp" {
+  alias = "site"
+  mock_resource "ccp_vpn_gateway" {
+    defaults = {
+      id                = "00000000-0000-0000-0000-000000000001"
+      status            = "active"
+      endpoint_host     = "vpn-rnn-aabbccdd.cloud.cetic-group.com"
+      endpoint_port     = 51820
+      public_key        = "GatewayPublicKeyBase64Example="
+      public_ip_address = "203.0.113.10"
+    }
+  }
+  mock_resource "ccp_vpn_peer" {
+    defaults = {
+      id         = "00000000-0000-0000-0000-0000000000bb"
+      peer_type  = "site"
+      site_cidrs = ["192.168.50.0/24", "192.168.60.0/24"]
+      config     = "[Interface]\nPrivateKey = ...\n"
+    }
+  }
+}
+
 run "creates_gateway_with_single_vpc" {
   command = plan
   variables {
@@ -70,6 +93,86 @@ run "creates_gateway_with_multi_vpc_and_peers" {
     condition     = ccp_vpn_peer.this["alice"].public_key == "AlicePublicKeyBase64Example="
     error_message = "client-provided public key should propagate"
   }
+  assert {
+    condition     = ccp_vpn_peer.this["alice"].peer_type == "client"
+    error_message = "peer_type should default to client"
+  }
+}
+
+run "creates_site_to_site_peer" {
+  command = plan
+  providers = {
+    ccp = ccp.site
+  }
+  variables {
+    name   = "s2s"
+    region = "RNN"
+    vpc_id = "00000000-0000-0000-0000-0000000000ff"
+    peers = {
+      branch-office = {
+        peer_type         = "site"
+        site_cidrs        = ["192.168.50.0/24", "192.168.60.0/24"]
+        managed           = true
+        store_private_key = true
+      }
+    }
+  }
+  assert {
+    condition     = ccp_vpn_peer.this["branch-office"].peer_type == "site"
+    error_message = "site peer_type should propagate"
+  }
+  assert {
+    condition     = ccp_vpn_peer.this["branch-office"].site_cidrs == tolist(["192.168.50.0/24", "192.168.60.0/24"])
+    error_message = "site_cidrs should propagate to the peer"
+  }
+}
+
+run "rejects_site_peer_without_cidrs" {
+  command = plan
+  variables {
+    name   = "bad"
+    region = "RNN"
+    vpc_id = "00000000-0000-0000-0000-0000000000ff"
+    peers = {
+      branch = {
+        peer_type = "site"
+        managed   = true
+      }
+    }
+  }
+  expect_failures = [var.peers]
+}
+
+run "rejects_client_peer_with_site_cidrs" {
+  command = plan
+  variables {
+    name   = "bad"
+    region = "RNN"
+    vpc_id = "00000000-0000-0000-0000-0000000000ff"
+    peers = {
+      laptop = {
+        site_cidrs = ["192.168.50.0/24"]
+        managed    = true
+      }
+    }
+  }
+  expect_failures = [var.peers]
+}
+
+run "rejects_invalid_peer_type" {
+  command = plan
+  variables {
+    name   = "bad"
+    region = "RNN"
+    vpc_id = "00000000-0000-0000-0000-0000000000ff"
+    peers = {
+      weird = {
+        peer_type = "gateway"
+        managed   = true
+      }
+    }
+  }
+  expect_failures = [var.peers]
 }
 
 run "rejects_invalid_plan" {

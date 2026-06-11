@@ -31,6 +31,8 @@ resource "ccp_vpn_peer" "this" {
 
   gateway_id        = ccp_vpn_gateway.this.id
   name              = coalesce(each.value.name, each.key)
+  peer_type         = each.value.peer_type
+  site_cidrs        = each.value.peer_type == "site" ? each.value.site_cidrs : null
   public_key        = each.value.public_key
   store_private_key = each.value.managed ? each.value.store_private_key : null
   one_time          = each.value.managed ? each.value.one_time : null

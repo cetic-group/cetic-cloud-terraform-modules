@@ -29,11 +29,13 @@ output "public_ip_address" {
 }
 
 output "peers" {
-  description = "Map keyed par label de peer → { id, ip } (adresse privée assignée au client)."
+  description = "Map keyed par label de peer → { id, ip, peer_type, site_cidrs }. `ip` = adresse privée assignée (peers `client`) ; `site_cidrs` = sous-réseaux distants (peers `site`)."
   value = {
     for k, p in ccp_vpn_peer.this : k => {
-      id = p.id
-      ip = p.ip
+      id         = p.id
+      ip         = p.ip
+      peer_type  = p.peer_type
+      site_cidrs = p.site_cidrs
     }
   }
 }

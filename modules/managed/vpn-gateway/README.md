@@ -2,12 +2,22 @@
 
 Module Terraform pour une passerelle d'**accès VPN privé** CETIC Cloud Platform (CCP).
 
-La passerelle expose les ressources privées d'un ou plusieurs VPC à des clients
+La passerelle expose les ressources privées d'un ou plusieurs VPC à des pairs
 distants via un tunnel chiffré, sans avoir à publier ces ressources sur Internet.
-Vous enregistrez vos clients (« peers ») et la plateforme gère le point d'entrée
+Vous enregistrez vos pairs (« peers ») et la plateforme gère le point d'entrée
 public, le routage vers vos VPC et l'allocation des adresses privées.
 
-Deux modèles d'enrôlement des clients sont supportés :
+Deux **types** de peer sont supportés (`peer_type`) :
+
+- **`client`** (défaut) : un appareil unique nomade (poste de travail, téléphone,
+  serveur isolé). Il se connecte à la passerelle et reçoit une seule adresse
+  privée dans la plage des clients.
+- **`site`** : un **site distant** raccordé en **site-à-site**. Le routeur du site
+  distant termine le tunnel et annonce ses sous-réseaux locaux, listés via
+  `site_cidrs`. La plateforme route alors le trafic entre vos VPC et ces
+  sous-réseaux distants.
+
+Deux modèles d'enrôlement des peers sont supportés (orthogonaux au type) :
 
 - **Clé fournie par le client** : le client génère son couple de clés et vous ne
   transmettez que sa clé publique. Aucune clé privée ne transite par la plateforme
@@ -31,12 +41,20 @@ module "vpn" {
   tags           = ["env:prod", "team:ops"]
 
   peers = {
-    # Modèle « clé fournie par le client » : seule la clé publique est transmise.
+    # Peer `client` (défaut), modèle « clé fournie » : seule la clé publique transite.
     alice = {
       public_key = "abcd1234ExamplePublicKeyBase64="
     }
-    # Modèle « clé générée par la plateforme » : config retournée (sensible).
+    # Peer `client`, modèle « clé générée par la plateforme » : config retournée (sensible).
     laptop-ci = {
+      managed           = true
+      store_private_key = true
+    }
+    # Peer `site` (site-à-site) : raccorde un réseau distant via son routeur.
+    # La plateforme génère la config à charger sur le routeur du site distant.
+    branch-office = {
+      peer_type         = "site"
+      site_cidrs        = ["192.168.50.0/24", "192.168.60.0/24"]
       managed           = true
       store_private_key = true
     }
@@ -77,13 +95,21 @@ Map keyed par label logique → objet :
 | Champ | Type | Default | Description |
 |---|---|---|---|
 | `name` | string | clé de la map | Nom affiché du peer. |
+| `peer_type` | string | `client` | `client` (appareil unique) ou `site` (réseau distant en site-à-site). |
+| `site_cidrs` | list(string) | `[]` | Sous-réseaux distants joignables via le tunnel site-à-site. **Obligatoire si `peer_type = site`**, doit rester vide pour un `client`. |
 | `public_key` | string | `null` | Clé publique du client (modèle « clé fournie »). |
 | `managed` | bool | `false` | La plateforme génère le couple de clés (modèle « clé générée »). |
 | `store_private_key` | bool | `false` | Stocke la config générée dans le state (modèle « clé générée »). |
 | `one_time` | bool | `false` | Config à usage unique, invalidée après la 1ère récupération (modèle « clé générée »). |
 
-Chaque peer doit fournir **soit** `public_key` **soit** `managed = true`, jamais
-les deux ni aucun (validation).
+Validations sur `peers` :
+
+- Chaque peer doit fournir **soit** `public_key` **soit** `managed = true`, jamais
+  les deux ni aucun.
+- `peer_type` doit valoir `client` ou `site`.
+- Un peer `site` doit lister **au moins un** `site_cidrs` ; un peer `client` ne
+  doit **pas** définir `site_cidrs`.
+- Chaque entrée de `site_cidrs` doit être un CIDR IPv4 valide.
 
 ## Outputs
 
@@ -95,7 +121,7 @@ les deux ni aucun (validation).
 | `endpoint_port` | no | Port UDP du point d'entrée. |
 | `public_key` | no | Clé publique de la passerelle (à mettre dans la config client). |
 | `public_ip_address` | no | IP publique du point d'entrée. |
-| `peers` | no | Map `label → { id, ip }` (adresse privée assignée au client). |
+| `peers` | no | Map `label → { id, ip, peer_type, site_cidrs }` (adresse privée pour un `client`, sous-réseaux distants pour un `site`). |
 | `peer_configs` | yes | Map `label → config` cliente complète (`null` pour les peers « clé fournie »). |
 
 ## Notes
@@ -108,11 +134,16 @@ les deux ni aucun (validation).
 - Au moins un VPC doit être rattaché. Pour exposer plusieurs VPC depuis une seule
   passerelle, utilisez `vpc_ids = [...]`.
 - Le `peer_pool_cidr` ne doit pas chevaucher les CIDR de vos VPC ni de vos VNets.
+- Pour un peer `site`, les `site_cidrs` (sous-réseaux distants) ne doivent pas
+  chevaucher les CIDR de vos VPC/VNets ni le `peer_pool_cidr`, sinon le routage
+  est ambigu.
+- `peer_type` et `site_cidrs` sont **immuables** : les modifier force le
+  remplacement du peer (recréation).
 
 ## Versions
 
 | Composant | Version |
 |---|---|
-| Module | `>= 0.24.0` |
-| Provider `cetic-group/ccp` | `>= 4.4.0` |
+| Module | `>= 0.27.0` |
+| Provider `cetic-group/ccp` | `>= 4.7.0` |
 | Terraform | `>= 1.7` |

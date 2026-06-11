@@ -299,7 +299,7 @@ le binaire local — pratique pour itérer sur des modifs schema avant release.
 
 ## Versionnage
 
-SemVer aligné conceptuellement avec le provider. **Latest : `v0.23.2`** (compatible provider `>= 4.1.1` pour les modules AppGW, `>= 4.1.0` ailleurs).
+SemVer aligné conceptuellement avec le provider. **Latest : `v0.27.0`** (compatible provider `>= 4.7.0` pour `managed/vpn-gateway` site-à-site ; `>= 4.1.1` pour les modules AppGW, `>= 4.1.0` ailleurs).
 
 - `v0.1.x` : compatible provider `>= 0.7.1`
 - `v0.2.x` : compatible provider `>= 0.8.0` (nouveaux champs scale-set / DB credentials)
@@ -318,5 +318,6 @@ SemVer aligné conceptuellement avec le provider. **Latest : `v0.23.2`** (compat
 - `v0.23.0` (2026-06-02) : compatible provider **`>= 4.1.0`**. `network/public-ip` quantity/label/description ; alignement ACME LB + AppGW (`acme_challenge` http01/dns01, retrait `custom_domain` no-op). PR #27.
 - `v0.23.1` (2026-06-02) : fix `landing-zones/vpc-design*` — refs de modules alignées sur le repo courant (ancien `?ref=v0.3.4` + ancienne adresse provider). PR #28.
 - `v0.23.2` (2026-06-02) : fix plans AppGW — clés canoniques **`appgw-*`** acceptées + alias courts normalisés dans `atomic/application-gateway` (les validations en dur small/medium/large rejetaient les seules clés que l'API accepte → 422 systématique). Contrainte **`>= 4.1.1`** sur les 5 modules AppGW (le provider v4.1.1 retire sa validation client-side). PR #29.
+- `v0.27.0` (2026-06-11) : compatible provider **`>= 4.7.0`** pour `managed/vpn-gateway`. La var `peers` expose `peer_type` (`client` défaut / `site`) + `site_cidrs` → support VPN **site-à-site** (peer `site` = réseau distant raccordé via son routeur ; `client` = appareil unique). 4 validations (XOR clé/managed déjà présent + `peer_type` ∈ {client,site} + `site`⇒`site_cidrs` non vide / `client`⇒vide + CIDR valides). Output `peers` enrichi (`peer_type`, `site_cidrs`). 4 tests `tftest` ajoutés (mock aliasé `site`). Aligné sur provider v4.7.0 (`ccp_vpn_peer.peer_type`/`site_cidrs`).
 
 **Convention** : on bump le provider constraint dès qu'une feature client (matérialisée par un changement de schéma upstream) requiert la nouvelle version. Les patch-only du provider (docs, anti-leak, sub-cent pricing seed) n'imposent pas un bump module sauf si une migration aliase est en jeu (cas v0.18.0 vs provider v2.0.0).

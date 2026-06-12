@@ -67,3 +67,9 @@ variable "tags" {
   type    = list(string)
   default = []
 }
+
+variable "bastion_access" {
+  type        = bool
+  default     = false
+  description = "Autoriser l'accès SSH via le Bastion du tenant sur chaque réplica (opt-in). Forces new resource."
+}

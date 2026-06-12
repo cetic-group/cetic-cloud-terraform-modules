@@ -1,6 +1,9 @@
 locals {
   # Normalise le rattachement VPC : `vpc_ids` prioritaire, sinon `vpc_id` seul.
   vpc_ids = var.vpc_ids != null ? var.vpc_ids : (var.vpc_id != null ? [var.vpc_id] : [])
+  # Le provider attend `dns` en chaîne (CSV des serveurs poussés au client).
+  # `[]` → null (laisse le provider gérer / pas de DNS poussé).
+  dns = length(var.dns) > 0 ? join(", ", var.dns) : null
 }
 
 # ── 1. Passerelle d'accès VPN privé ───────────────────────────────────────────
@@ -13,7 +16,7 @@ resource "ccp_vpn_gateway" "this" {
   vpc_ids        = local.vpc_ids
   public_ip_id   = var.public_ip_id
   peer_pool_cidr = var.peer_pool_cidr
-  dns            = var.dns
+  dns            = local.dns
   tags           = var.tags
 
   lifecycle {

@@ -15,6 +15,8 @@ module "db_vm" {
   vnet_id     = module.vpc.vnet_ids.data
   ssh_key_ids = [module.ssh_key.id]
   user_data   = file("./bootstrap-db.yaml")
+
+  bastion_access = true # opt-in : accès SSH via le Bastion du tenant
 }
 ```
 

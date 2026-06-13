@@ -4,6 +4,61 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.29.0] — 2026-06-13
+
+Aligné sur le provider `cetic-group/ccp` **v4.9.0** (parité `ccp_bastion` ↔ `ccp_vpn_gateway`).
+
+### Added — `managed/bastion` : nouveau module (bastion SSH standalone)
+
+Le provider v4.9.0 enrichit la ressource `ccp_bastion` (parité avec
+`ccp_vpn_gateway`) : `plan` (`small`/`medium`/`large`, défaut `small`, ForceNew),
+`vpc_ids` (multi-VPC 1–5, Optional+Computed, le `vpc_id` primaire reste Required
+et toujours inclus), `public_ip_id` (Optional+Computed) et `tags` + attribut
+Computed `public_ip_address`. Aucun module n'enveloppait cette ressource
+standalone (alors que `bastion_access` est câblé sur les 4 modules compute, et
+qu'il existe `managed/vpn-gateway`).
+
+Nouveau module **`modules/managed/bastion/`** calqué sur `managed/vpn-gateway` :
+
+- **`variables.tf`** : `name` (1–100 chars, regex), `region` (`RNN`/`PAR`/`ABJ`),
+  `plan` (défaut `small`), `vpc_ids` (liste) **ou** `vpc_id` (raccourci),
+  `public_ip_id` (optionnel), `tags` (optionnel, ≤ 60 × ≤ 50 chars).
+- **`main.tf`** : `ccp_bastion` avec normalisation VPC (`vpc_ids` prioritaire,
+  VPC primaire dérivé, liste transmise uniquement en multi-VPC pour éviter un
+  faux diff) + 2 `precondition` (≥ 1 et ≤ 5 VPC).
+- **`outputs.tf`** : `id`, `status`, `endpoint_host`, `endpoint_port`,
+  `public_ip_address`, `vpc_ids`.
+- **`README.md`** : exemple, tableaux Inputs/Outputs, notes (immutabilité,
+  provisioning asynchrone, ordre de destruction `depends_on = [module.vpc]`,
+  distinction avec `bastion_access` des modules compute).
+- **`tests/bastion.tftest.hcl`** : `mock_provider` + 5 runs nominaux
+  (single-VPC, multi-VPC + plan + tags, public_ip, …) et 5 runs de rejet
+  (region/plan/name/tags invalides, 0 VPC, > 5 VPC).
+
+### Changed — cascade `versions.tf` → `>= 4.9.0`
+
+Bump de **tous** les `versions.tf` (modules / landing-zones) à la contrainte
+provider **`>= 4.9.0`** (40 fichiers : 35 depuis `>= 4.4.0`, 4 compute depuis
+`>= 4.8.0`, 1 vpn-gateway depuis `>= 4.7.0`) — convention de cascade du CLAUDE.md.
+Plus aucun plancher résiduel à 4.4.0 / 4.7.0 / 4.8.0.
+
+## [0.28.0] — 2026-06-12 (rattrapage doc)
+
+Aligné sur le provider `cetic-group/ccp` **v4.8.0** (#343 — stats accès/réseau,
+`bastion_access` write-only sur instances / scale-sets / templates).
+
+### Added — `compute/*` : argument `bastion_access`
+
+Les 4 modules compute (`compute/container`, `compute/vm`,
+`compute/container-scale-set`, `compute/vm-scale-set`) exposent l'argument
+**`bastion_access`** (bool, défaut `false`), câblé sur la ressource sous-jacente.
+Activé, il autorise le bastion du VPC à atteindre l'instance / les membres du
+scale-set en SSH (accès write-only côté provider). Contrainte provider bumpée à
+**`>= 4.8.0`** sur les `versions.tf` de ces 4 modules.
+
+> Note : cette entrée documente après coup le travail livré en arbre sans entrée
+> CHANGELOG (le journal s'arrêtait à 0.27.0).
+
 ## [0.27.0] — 2026-06-11
 
 Aligné sur le provider `cetic-group/ccp` **v4.7.0** (support VPN site-à-site).

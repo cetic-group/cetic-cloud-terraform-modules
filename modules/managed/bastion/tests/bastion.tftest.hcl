@@ -33,11 +33,10 @@ run "creates_bastion_with_single_vpc" {
     condition     = ccp_bastion.this.plan == "small"
     error_message = "plan should default to small"
   }
-  # VPC unique → vpc_ids laissé null (le provider dérive l'ensemble depuis vpc_id).
-  assert {
-    condition     = ccp_bastion.this.vpc_ids == null
-    error_message = "single-VPC bastion should leave vpc_ids null"
-  }
+  # NB : en VPC unique le module laisse `vpc_ids` à null en config, mais
+  # l'attribut provider est Optional+Computed → valeur (unknown) au plan, donc
+  # non assertable ici. Le rattachement primaire est couvert par l'assert vpc_id
+  # ci-dessus ; le passage de la liste est testé dans le run multi-VPC.
 }
 
 run "creates_bastion_multi_vpc_with_plan_and_tags" {

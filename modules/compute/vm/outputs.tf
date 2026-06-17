@@ -17,6 +17,11 @@ output "status" {
   value = ccp_vm_instance.this.status
 }
 
+output "os_family" {
+  description = "Famille d'OS dérivée du template (linux | windows)."
+  value       = ccp_vm_instance.this.os_family
+}
+
 output "cores" {
   value = ccp_vm_instance.this.cores
 }

@@ -73,3 +73,16 @@ variable "bastion_access" {
   default     = false
   description = "Autoriser l'accès SSH via le Bastion du tenant sur chaque réplica (opt-in). Forces new resource."
 }
+
+variable "windows_license_consent" {
+  type        = bool
+  default     = false
+  description = <<-EOT
+    Reconnaître que CETIC Cloud ne fournit pas les licences Windows (vous devez
+    détenir une licence valide par instance membre). Obligatoire (`true`) lorsque
+    `template` est une image système Windows (`win-*`) ou un template custom
+    capturé depuis une VM Windows — l'API renvoie une erreur 422 sinon. Ignoré
+    pour les templates Linux. Un scale set Windows exige aussi un plan `medium`+
+    et un mot de passe administrateur fort (≥ 12 caractères, ≥ 3 catégories). Forces new resource.
+  EOT
+}

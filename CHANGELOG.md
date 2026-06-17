@@ -4,6 +4,29 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.30.0]
+
+Aligné sur le provider `cetic-group/ccp` **v5.0.0** (Windows sur VM/VMSS +
+retrait de la ressource `ccp_windows_instance` legacy).
+
+### Added — support Windows sur `compute/vm` et `compute/vm-scale-set`
+
+- Nouvelle variable **`windows_license_consent`** (bool, défaut `false`) sur
+  `compute/vm` et `compute/vm-scale-set` : reconnaître que CETIC Cloud ne fournit
+  pas les licences Windows. Obligatoire (`true`) quand `template` est une image
+  système Windows (`win-*`) ou un template custom capturé depuis une VM Windows
+  (l'API renvoie 422 sinon). Ignoré pour Linux. Windows exige aussi un plan
+  `medium`+ et un mot de passe administrateur fort (≥ 12 caractères, ≥ 3
+  catégories).
+- Nouvel **output `os_family`** (`linux` | `windows`) sur les deux modules.
+- Nouvel **exemple `examples/windows-vm`** (VM Windows + VM scale set Windows, RDP).
+- Tests `tftest` ajoutés sur `compute/vm` et `compute/vm-scale-set`.
+
+### Changed
+
+- **Cascade `versions.tf` → `>= 5.0.0`** sur les 41 modules / landing-zones /
+  examples (plus aucun `>= 4.x`).
+
 ## [0.29.0] — 2026-06-13
 
 Aligné sur le provider `cetic-group/ccp` **v4.9.0** (parité `ccp_bastion` ↔ `ccp_vpn_gateway`).

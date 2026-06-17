@@ -11,4 +11,6 @@ resource "ccp_vm_instance" "this" {
   root_password  = var.root_password
   bastion_access = var.bastion_access
   tags           = var.tags
+
+  windows_license_consent = var.windows_license_consent
 }

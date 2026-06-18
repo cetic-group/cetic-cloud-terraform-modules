@@ -6,6 +6,7 @@ mock_provider "ccp" {
       id                        = "00000000-0000-0000-0000-000000000010"
       status                    = "provisioning"
       tier                      = "dev"
+      os_image                  = "flatcar"
       api_endpoint              = "10.20.1.10:6443"
       apiserver_internal_ip     = "10.20.1.10"
       ingress_internal_ip       = "10.20.1.11"
@@ -19,7 +20,8 @@ mock_provider "ccp" {
 
   mock_resource "ccp_k8s_node_pool" {
     defaults = {
-      id = "00000000-0000-0000-0000-000000000020"
+      id          = "00000000-0000-0000-0000-000000000020"
+      k8s_version = "v1.31.4"
     }
   }
 }
@@ -284,4 +286,86 @@ run "initial_pool_rejects_invalid_taint_effect" {
   }
 
   expect_failures = [var.initial_pool]
+}
+
+run "os_image_passthrough" {
+  command = plan
+
+  variables {
+    name            = "test-os-image"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    os_image        = "ubuntu"
+  }
+
+  assert {
+    condition     = ccp_k8s_cluster.this.os_image == "ubuntu"
+    error_message = "La famille d'OS des nodes (os_image) doit être transmise au resource."
+  }
+}
+
+run "rejects_invalid_os_image" {
+  command = plan
+
+  variables {
+    name            = "test-bad-os-image"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    os_image        = "windows"
+  }
+
+  expect_failures = [var.os_image]
+}
+
+run "initial_pool_k8s_version_passthrough" {
+  command = plan
+
+  variables {
+    name            = "test-ip-ver"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    k8s_version     = "v1.31.4"
+    initial_pool = {
+      name        = "default"
+      plan        = "small"
+      replicas    = 2
+      k8s_version = "v1.30.4"
+    }
+  }
+
+  assert {
+    condition     = ccp_k8s_cluster.this.initial_pool.k8s_version == "v1.30.4"
+    error_message = "La version worker de l'initial_pool doit être transmise au provider."
+  }
+}
+
+run "additional_pool_k8s_version_passthrough" {
+  command = plan
+
+  variables {
+    name            = "test-ap-ver"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    k8s_version     = "v1.31.4"
+    additional_pools = {
+      older = {
+        plan        = "medium"
+        replicas    = 2
+        k8s_version = "v1.30.4"
+      }
+    }
+  }
+
+  assert {
+    condition     = ccp_k8s_node_pool.additional["older"].k8s_version == "v1.30.4"
+    error_message = "La version worker d'un pool additionnel doit être transmise au node pool."
+  }
 }

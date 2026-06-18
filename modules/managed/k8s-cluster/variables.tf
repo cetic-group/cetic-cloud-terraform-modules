@@ -50,7 +50,27 @@ variable "vnet_id" {
 variable "k8s_version" {
   type        = string
   default     = "v1.31.4"
-  description = "Version Kubernetes du control plane + initial pool."
+  description = <<-EOT
+    Version Kubernetes du **plan de contrôle** du cluster. Sert aussi de version
+    par défaut des workers : chaque pool (initial ou additionnel) qui ne fixe pas
+    sa propre `k8s_version` hérite de celle-ci. La version d'un pool worker doit
+    rester `<=` à celle du plan de contrôle.
+  EOT
+}
+
+variable "os_image" {
+  type        = string
+  default     = null
+  description = <<-EOT
+    Famille de système d'exploitation des nodes du cluster :
+    `flatcar` (défaut), `ubuntu` ou `rocky9`. `null` = laisse la plateforme
+    appliquer son défaut (`flatcar`). **Immuable** (`ForceNew`) — changer la
+    famille d'OS des nodes recrée le cluster.
+  EOT
+  validation {
+    condition     = var.os_image == null || contains(["flatcar", "ubuntu", "rocky9"], coalesce(var.os_image, "flatcar"))
+    error_message = "os_image doit être l'un de : flatcar, ubuntu, rocky9 (ou null pour le défaut plateforme)."
+  }
 }
 
 variable "os_template_key" {
@@ -75,6 +95,9 @@ variable "initial_pool" {
     Initial worker pool créé avec le cluster.
     - `name` / `plan` : immutables post-création.
     - `replicas` : mutable.
+    - `k8s_version` : version Kubernetes des workers de ce pool. Omis = hérite
+      de la version du plan de contrôle (`k8s_version` du cluster). Doit rester
+      `<=` à celle du plan de contrôle. Mutable (montée de version rolling).
     - `labels` : map de labels Kubernetes propagés aux nodes du pool. Mutable.
     - `taints` : liste de taints Kubernetes (`{ key, value?, effect }`,
       `effect` ∈ `NoSchedule`|`PreferNoSchedule`|`NoExecute`). Mutable.
@@ -83,10 +106,11 @@ variable "initial_pool" {
       Retirer les deux désactive l'autoscaler (pool figé à `replicas`).
   EOT
   type = object({
-    name     = optional(string, "default")
-    plan     = optional(string, "small")
-    replicas = optional(number, 1)
-    labels   = optional(map(string), {})
+    name        = optional(string, "default")
+    plan        = optional(string, "small")
+    replicas    = optional(number, 1)
+    k8s_version = optional(string)
+    labels      = optional(map(string), {})
     taints = optional(list(object({
       key    = string
       value  = optional(string)
@@ -125,6 +149,9 @@ variable "additional_pools" {
     Clé = nom du pool. Valeur :
     - `plan` : `nano` … `xlarge`
     - `replicas` : count (Required)
+    - `k8s_version` : version Kubernetes des workers de ce pool. Omis = hérite
+      de la version du plan de contrôle du cluster. Doit rester `<=` à celle du
+      plan de contrôle. Mutable (montée de version rolling).
     - `min_size` / `max_size` : pour autoscaler. Si tous les deux sont set,
       l'autoscaler du cluster gère ce pool.
     - `labels` : map de labels Kubernetes propagés aux nodes via
@@ -133,11 +160,12 @@ variable "additional_pools" {
       `effect` ∈ `NoSchedule` | `PreferNoSchedule` | `NoExecute`.
   EOT
   type = map(object({
-    plan     = string
-    replicas = number
-    min_size = optional(number)
-    max_size = optional(number)
-    labels   = optional(map(string), {})
+    plan        = string
+    replicas    = number
+    k8s_version = optional(string)
+    min_size    = optional(number)
+    max_size    = optional(number)
+    labels      = optional(map(string), {})
     taints = optional(list(object({
       key    = string
       value  = optional(string)

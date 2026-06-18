@@ -4,6 +4,35 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.31.0]
+
+Aligné sur le provider `cetic-group/ccp` **v5.0.0** (la contrainte reste
+`>= 5.0.0` — les nouveaux attributs CCKS ci-dessous font partie de la série v5.0.0).
+
+### Added — choix de l'OS des nodes + version Kubernetes par pool (`managed/k8s-cluster`)
+
+- Nouvelle variable **`os_image`** (Optional, défaut `null`) sur
+  `managed/k8s-cluster` : famille de système d'exploitation des nodes du cluster
+  — `flatcar` (défaut plateforme), `ubuntu` ou `rocky9`. **Immuable** (recrée le
+  cluster). Câblée sur `ccp_k8s_cluster.os_image`. Validation
+  `flatcar|ubuntu|rocky9` (ou `null`). Nouvel **output `os_image`** (famille
+  effective lue en retour).
+- Champ **`k8s_version`** ajouté à l'objet **`initial_pool`** (Optional) et à
+  chaque entrée de **`additional_pools`** (Optional) : version Kubernetes des
+  **workers** de ce pool. Omis = hérite de la version du **plan de contrôle**
+  (la variable `k8s_version` du cluster, dont le sens est désormais explicitement
+  « plan de contrôle »). Doit rester `<=` à la version du plan de contrôle.
+  Mutable (montée de version rolling, **pas** de recréation du pool). Câblé sur
+  `ccp_k8s_cluster.initial_pool.k8s_version` et `ccp_k8s_node_pool.k8s_version`.
+  Nouveaux outputs **`k8s_version`** (plan de contrôle) et
+  **`additional_pool_k8s_versions`** (map nom de pool → version worker effective).
+- `landing-zones/k8s-platform` : nouvelle variable passthrough **`os_image`**
+  (+ output `cluster_os_image`) ; l'objet `additional_pools` expose désormais
+  `k8s_version` par pool. Reste fonctionnel sans `os_image` (défaut plateforme).
+- 4 runs `tftest` ajoutés (`os_image_passthrough`, `rejects_invalid_os_image`,
+  `initial_pool_k8s_version_passthrough`, `additional_pool_k8s_version_passthrough`) ;
+  16 runs au total, tous verts.
+
 ## [0.30.0]
 
 Aligné sur le provider `cetic-group/ccp` **v5.0.0** (Windows sur VM/VMSS +

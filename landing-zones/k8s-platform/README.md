@@ -45,7 +45,8 @@ module "platform" {
   org_prefix = "acme"
   region     = "RNN"
 
-  k8s_version           = "v1.31.4"
+  k8s_version           = "v1.31.4" # version du plan de contrôle
+  os_image              = "ubuntu"  # famille d'OS des nodes (flatcar défaut / ubuntu / rocky9)
   initial_pool_replicas = 2
   initial_pool_plan     = "small"
 
@@ -78,7 +79,8 @@ output "ingress_url" {
 |------|------|---------|-------------|
 | `org_prefix` | string | required | Préfixe métier. |
 | `region` | string | required | `RNN`/`PAR`/`ABJ`. |
-| `k8s_version` | string | `"v1.31.4"` | |
+| `k8s_version` | string | `"v1.31.4"` | Version du plan de contrôle (workers en héritent). |
+| `os_image` | string | `null` | Famille d'OS des nodes : `flatcar` (défaut) / `ubuntu` / `rocky9`. Immuable. |
 | `k8s_tier` | string | `"dev"` | `dev` (single) ou `prod` (HA actif/passif + VIP flottante). Immuable. |
 | `initial_pool_plan` | string | `"small"` | Plan du pool initial. |
 | `initial_pool_replicas` | number | `2` | |
@@ -96,6 +98,7 @@ output "ingress_url" {
 | Name | Description |
 |------|-------------|
 | `cluster_id` / `cluster_name` | |
+| `cluster_os_image` | Famille d'OS effective des nodes. |
 | `api_endpoint` | Récupérer kubeconfig via `cetic k8s kubeconfig <id>`. |
 | `apiserver_public_ip_address` | |
 | `ingress_public_ip_address` / `ingress_internal_ip` | |

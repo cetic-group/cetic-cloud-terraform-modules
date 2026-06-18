@@ -33,6 +33,11 @@ output "cluster_tier" {
   value       = module.k8s.tier
 }
 
+output "cluster_os_image" {
+  description = "Famille d'OS effective des nodes (`flatcar` | `ubuntu` | `rocky9`)."
+  value       = module.k8s.os_image
+}
+
 output "vpc_id" {
   value = module.vpc.vpc_id
 }

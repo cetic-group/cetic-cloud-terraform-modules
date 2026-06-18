@@ -17,8 +17,22 @@ variable "region" {
 
 # ─── K8s ──────────────────────────────────────────────────────────────────────
 variable "k8s_version" {
-  type    = string
-  default = "v1.31.4"
+  type        = string
+  default     = "v1.31.4"
+  description = "Version Kubernetes du plan de contrôle du cluster CCKS (les pools workers en héritent sauf override)."
+}
+
+variable "os_image" {
+  type        = string
+  default     = null
+  description = <<-EOT
+    Famille d'OS des nodes du cluster (`flatcar` défaut / `ubuntu` / `rocky9`).
+    `null` = défaut plateforme (`flatcar`). Immuable — recrée le cluster.
+  EOT
+  validation {
+    condition     = var.os_image == null || contains(["flatcar", "ubuntu", "rocky9"], coalesce(var.os_image, "flatcar"))
+    error_message = "os_image doit être l'un de : flatcar, ubuntu, rocky9 (ou null)."
+  }
 }
 
 variable "k8s_tier" {
@@ -51,11 +65,12 @@ variable "initial_pool_plan" {
 variable "additional_pools" {
   description = "Pools additionnels passés au module managed/k8s-cluster (cf. son README pour le schéma)."
   type = map(object({
-    plan     = string
-    replicas = number
-    min_size = optional(number)
-    max_size = optional(number)
-    labels   = optional(map(string), {})
+    plan        = string
+    replicas    = number
+    k8s_version = optional(string)
+    min_size    = optional(number)
+    max_size    = optional(number)
+    labels      = optional(map(string), {})
     taints = optional(list(object({
       key    = string
       value  = optional(string)

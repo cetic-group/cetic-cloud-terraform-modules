@@ -7,6 +7,7 @@ resource "ccp_k8s_cluster" "this" {
   vpc_id          = var.vpc_id
   vnet_id         = var.vnet_id
   k8s_version     = var.k8s_version
+  os_image        = var.os_image
   os_template_key = var.os_template_key
   pod_cidr        = var.pod_cidr
   service_cidr    = var.service_cidr
@@ -15,6 +16,9 @@ resource "ccp_k8s_cluster" "this" {
     name     = var.initial_pool.name
     plan     = var.initial_pool.plan
     replicas = var.initial_pool.replicas
+    # Version Kubernetes des workers du pool initial (provider v5.0.0+). Omis
+    # (null) → hérite de la version du plan de contrôle. Doit rester <= control plane.
+    k8s_version = var.initial_pool.k8s_version
     # Labels + taints sur l'initial pool (provider v3.2.0+), parité avec
     # additional_pools. `taints`/`labels` sont des attributs (assignés avec `=`),
     # pas des blocs. [] / {} = omis.
@@ -52,8 +56,11 @@ resource "ccp_k8s_node_pool" "additional" {
   name       = each.key
   plan       = each.value.plan
   replicas   = each.value.replicas
-  min_size   = each.value.min_size
-  max_size   = each.value.max_size
-  labels     = each.value.labels
-  taints     = each.value.taints
+  # Version worker du pool (provider v5.0.0+). Omis → hérite du control plane.
+  # Mutable (montée de version rolling, PAS ForceNew). Doit rester <= control plane.
+  k8s_version = each.value.k8s_version
+  min_size    = each.value.min_size
+  max_size    = each.value.max_size
+  labels      = each.value.labels
+  taints      = each.value.taints
 }

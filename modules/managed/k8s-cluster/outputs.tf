@@ -8,6 +8,16 @@ output "name" {
   value       = ccp_k8s_cluster.this.name
 }
 
+output "os_image" {
+  description = "Famille d'OS effective des nodes du cluster (`flatcar` | `ubuntu` | `rocky9`)."
+  value       = ccp_k8s_cluster.this.os_image
+}
+
+output "k8s_version" {
+  description = "Version Kubernetes du plan de contrôle du cluster."
+  value       = ccp_k8s_cluster.this.k8s_version
+}
+
 output "api_endpoint" {
   description = "Endpoint apiserver (host:port). Privé par défaut, public si `apiserver_public_ip_id` est fourni."
   value       = ccp_k8s_cluster.this.api_endpoint
@@ -36,6 +46,11 @@ output "ingress_public_ip_address" {
 output "additional_pool_ids" {
   description = "Map keyed par nom de pool → UUID."
   value       = { for k, v in ccp_k8s_node_pool.additional : k => v.id }
+}
+
+output "additional_pool_k8s_versions" {
+  description = "Map keyed par nom de pool → version Kubernetes worker effective (héritée du control plane si non fixée)."
+  value       = { for k, v in ccp_k8s_node_pool.additional : k => v.k8s_version }
 }
 
 output "status" {

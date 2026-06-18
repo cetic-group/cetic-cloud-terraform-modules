@@ -51,6 +51,7 @@ module "k8s" {
   vpc_id      = module.vpc.vpc_id
   vnet_id     = module.vpc.vnet_ids.workers
   k8s_version = var.k8s_version
+  os_image    = var.os_image
 
   initial_pool = {
     name     = "default"

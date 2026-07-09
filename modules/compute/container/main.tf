@@ -9,6 +9,7 @@ resource "ccp_container_instance" "this" {
   user_data      = var.user_data
   public_ip_id   = var.public_ip_id
   root_password  = var.root_password
+  disk_gb        = var.disk_gb
   bastion_access = var.bastion_access
   tags           = var.tags
 }

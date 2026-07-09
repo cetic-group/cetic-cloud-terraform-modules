@@ -63,6 +63,17 @@ variable "root_password" {
   }
 }
 
+variable "disk_gb" {
+  type        = number
+  default     = null
+  description = <<-EOT
+    Taille du disque racine en GB, appliquée à chaque réplica du scale set.
+    `null` = taille par défaut du plan choisi (`plan`). Grow-only : une valeur
+    supérieure à la taille courante redimensionne le disque en place ; une
+    valeur inférieure est refusée par l'API (422).
+  EOT
+}
+
 variable "tags" {
   type    = list(string)
   default = []

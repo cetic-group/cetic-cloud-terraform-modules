@@ -5,6 +5,7 @@ resource "ccp_registry" "this" {
   expose_public  = var.expose_public
   expose_private = var.expose_private
   image_tag      = var.image_tag
+  storage_gb     = var.storage_gb
   tags           = var.tags
 
   lifecycle {

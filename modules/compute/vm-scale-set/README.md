@@ -14,6 +14,7 @@ module "kafka_brokers" {
   min_instances     = 3
   max_instances     = 7
   desired_instances = 3
+  disk_gb           = 200 # défaut du plan `large` dépassé, appliqué à chaque broker
   tags              = ["kafka"]
 }
 ```
@@ -44,4 +45,4 @@ module "win_pool" {
 }
 ```
 
-Inputs / Outputs : identiques à `compute/container-scale-set`, plus `windows_license_consent` (input) et `os_family` (output).
+Inputs / Outputs : identiques à `compute/container-scale-set` (y compris `disk_gb`, grow-only), plus `windows_license_consent` (input) et `os_family` (output).

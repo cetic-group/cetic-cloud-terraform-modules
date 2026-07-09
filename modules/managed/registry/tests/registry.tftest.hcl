@@ -69,3 +69,18 @@ run "rejects_invalid_region" {
     var.region,
   ]
 }
+
+run "storage_gb_passthrough" {
+  command = plan
+  variables {
+    name           = "big"
+    region         = "RNN"
+    expose_public  = false
+    expose_private = true
+    storage_gb     = 200
+  }
+  assert {
+    condition     = ccp_registry.this.storage_gb == 200
+    error_message = "storage_gb should be propagated to the resource"
+  }
+}

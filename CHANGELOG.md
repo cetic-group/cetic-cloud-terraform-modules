@@ -4,6 +4,79 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.33.0]
+
+**Contrainte `versions.tf` volontairement INCHANGÉE (`>= 5.0.0`)** — le provider
+attendu pour cette feature (`disk_gb`/`storage_gb` Optional+Computed) n'est pas
+encore publié côté Registry à ce commit (dernier tag réel : `v5.4.0`). Bumper le
+plancher `versions.tf` vers un numéro de version qui n'existe pas casse
+`terraform init` sur les **42 modules** (`no available releases match the given
+constraints`), pas seulement `terraform validate` sur les modules touchés — voir
+l'avertissement en fin de section. Le bump de contrainte sera fait dans un commit
+de suivi, une fois la release provider réelle connue.
+
+### Added — dimensionnement disque/stockage à la carte (`disk_gb` / `storage_gb`, #577/#578)
+
+- Nouvelle variable **`disk_gb`** (Optional, `number`, défaut `null`) sur
+  `compute/container`, `compute/vm`, `compute/container-scale-set` et
+  `compute/vm-scale-set` : taille du disque racine (ou de chaque réplica pour
+  les scale sets) en GB. `null` = taille par défaut du plan (`plan`).
+  **Grow-only** : augmenter la valeur redimensionne le disque en place ; une
+  valeur inférieure à la taille courante est refusée par l'API (422). Câblée
+  directement sur l'attribut `disk_gb` de la resource (Optional+Computed côté
+  provider). Nouveaux outputs `disk_gb` sur `compute/container-scale-set` et
+  `compute/vm-scale-set` (parité avec `compute/container`/`compute/vm`, qui
+  l'exposaient déjà en output Computed-only).
+- `managed/k8s-cluster` : la même variable `disk_gb` est ajoutée à l'objet
+  **`initial_pool`** et à chaque entrée de la map **`additional_pools`** —
+  taille du disque racine des **workers** de ce pool, indépendante du disque
+  du control plane. Même sémantique grow-only. Nouvel output
+  **`additional_pool_disk_gb`** (map nom de pool → taille effective, miroir de
+  `additional_pool_k8s_versions`).
+- `managed/registry` : nouvelle variable **`storage_gb`** (Optional, `number`,
+  défaut `null`) — quota de stockage de la registry. `null` = défaut
+  plateforme. Grow-only. Nouvel output `storage_gb` (quota effectif, distinct
+  de `storage_used_gb` déjà existant).
+- Exemples mis à jour : `compute/vm` (README), `compute/container-scale-set`
+  (README), `compute/vm-scale-set` (README), `managed/k8s-cluster` (README,
+  `initial_pool.disk_gb` + `additional_pools.*.disk_gb`), `managed/registry`
+  (README), et `landing-zones/basic-web-app` (le container applicatif fixe
+  `disk_gb` au-delà du défaut du plan).
+- Tests `tftest` ajoutés : `compute/vm` (`disk_gb_passthrough`),
+  `compute/vm-scale-set` (`disk_gb_passthrough`), `managed/k8s-cluster`
+  (`initial_pool_disk_gb_passthrough`, `additional_pool_disk_gb_passthrough`),
+  `managed/registry` (`storage_gb_passthrough`).
+
+⚠️ **Cascade en avance de phase sur le provider** (même situation que
+`network/vpc-peering` en 0.32.0) : au moment de cette release, le provider
+publié sur le Registry (`v5.4.0`) expose encore `disk_gb` en **lecture seule**
+(Computed-only) sur `ccp_vm_instance`/`ccp_container_instance`, et
+`disk_gb`/`storage_gb` n'existent pas du tout sur les scale-sets, le node pool
+K8s et la registry. `terraform validate`/`terraform test` échouent donc sur
+`compute/container`, `compute/vm`, `compute/container-scale-set`,
+`compute/vm-scale-set`, `managed/k8s-cluster` et `managed/registry` (et sur
+`landing-zones/basic-web-app`, qui compose `compute/container`) tant qu'une
+version provider rendant ces attributs Optional+Computed n'est pas publiée —
+cela inclut temporairement des runs `tftest` qui passaient avant ce commit (le
+simple fait de référencer `disk_gb = var.disk_gb` dans une resource où
+l'attribut réel est encore Computed-only fait échouer `terraform validate`
+avant même l'exécution des `run` blocks). `terraform fmt -recursive` reste
+propre. Une fois la version provider réelle publiée : (1) bumper la contrainte
+`versions.tf` (commit de suivi, cf. convention de bump plus haut dans
+`CLAUDE.md`), (2) tout redevient vert sans autre changement de ce repo.
+
+## [0.32.0]
+
+Nouveau module **`network/vpc-peering`**, wrappant la resource
+`ccp_vpc_peering` (peering VPC↔VPC, pendant de `network/vnet-peering` pour les
+VNets). Variables `vpc_a_id`/`vpc_b_id`, outputs `id`/`status`. Contrainte
+provider inchangée `>= 5.0.0`. **Shippé en avance de phase** : `ccp_vpc_peering`
+n'existe pas encore côté Registry à ce commit, donc pas de `tests/` (rien de
+mockable tant que la resource n'est pas définie) ; `terraform validate` sur ce
+module reste rouge jusqu'à la release provider correspondante. Entrée de
+rattrapage — absente à tort du CHANGELOG initial (commit `0eff084`, tag
+`v0.32.0` déjà posé sur `main`).
+
 ## [0.31.0]
 
 Aligné sur le provider `cetic-group/ccp` **v5.0.0** (la contrainte reste

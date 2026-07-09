@@ -47,6 +47,7 @@ module "web_app" {
 
   app_replicas    = 3
   app_listen_port = 8080
+  app_disk_gb     = 40 # défaut du plan `small` dépassé ; grow-only par la suite
   expose_https    = false
 
   enable_database = true
@@ -99,6 +100,7 @@ output "url" {
 | `app_template` | string | `"ubuntu-24.04"` | Template OS. |
 | `app_replicas` | number | `2` | Nombre de containers (1-20). |
 | `app_listen_port` | number | `8080` | Port d'écoute de l'app sur le container. |
+| `app_disk_gb` | number | `null` | Taille du disque racine (GB) de chaque container. `null` = défaut du plan (`app_plan`). Grow-only. |
 | `exposure_type` | string | `"lb"` | `"lb"` (L4) ou `"appgw"` (L7). |
 | `lb_plan` | string | `"small"` | Mode `lb` : capacité du LB (`small` / `medium` / `large`). Immuable. |
 | `expose_https` | bool | `false` | Mode `lb` uniquement : listener TCP/443 supplémentaire. |

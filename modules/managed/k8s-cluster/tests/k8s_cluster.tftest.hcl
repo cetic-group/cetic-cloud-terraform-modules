@@ -369,3 +369,50 @@ run "additional_pool_k8s_version_passthrough" {
     error_message = "La version worker d'un pool additionnel doit être transmise au node pool."
   }
 }
+
+run "initial_pool_disk_gb_passthrough" {
+  command = plan
+
+  variables {
+    name            = "test-ip-disk"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    initial_pool = {
+      name     = "default"
+      plan     = "small"
+      replicas = 2
+      disk_gb  = 100
+    }
+  }
+
+  assert {
+    condition     = ccp_k8s_cluster.this.initial_pool.disk_gb == 100
+    error_message = "La taille de disque de l'initial_pool doit être transmise au provider."
+  }
+}
+
+run "additional_pool_disk_gb_passthrough" {
+  command = plan
+
+  variables {
+    name            = "test-ap-disk"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    additional_pools = {
+      big_disk = {
+        plan     = "medium"
+        replicas = 2
+        disk_gb  = 200
+      }
+    }
+  }
+
+  assert {
+    condition     = ccp_k8s_node_pool.additional["big_disk"].disk_gb == 200
+    error_message = "La taille de disque d'un pool additionnel doit être transmise au node pool."
+  }
+}

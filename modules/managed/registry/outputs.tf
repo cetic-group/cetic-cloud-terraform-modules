@@ -49,6 +49,11 @@ output "admin_password" {
   sensitive   = true
 }
 
+output "storage_gb" {
+  description = "Effective storage quota (gigabytes). Platform default when `storage_gb` is omitted."
+  value       = ccp_registry.this.storage_gb
+}
+
 output "storage_used_gb" {
   description = "Approximate storage used by registry blobs (gigabytes)."
   value       = ccp_registry.this.storage_used_gb

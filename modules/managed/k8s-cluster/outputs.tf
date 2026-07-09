@@ -53,6 +53,11 @@ output "additional_pool_k8s_versions" {
   value       = { for k, v in ccp_k8s_node_pool.additional : k => v.k8s_version }
 }
 
+output "additional_pool_disk_gb" {
+  description = "Map keyed par nom de pool → taille de disque racine effective (GB, défaut du plan si non fixée)."
+  value       = { for k, v in ccp_k8s_node_pool.additional : k => v.disk_gb }
+}
+
 output "status" {
   value = ccp_k8s_cluster.this.status
 }

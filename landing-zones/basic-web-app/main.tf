@@ -68,6 +68,7 @@ resource "ccp_container_instance" "app" {
   vnet_id       = module.vpc.vnet_ids.web
   ssh_key_ids   = [module.ssh_key.id]
   root_password = var.app_root_password
+  disk_gb       = var.app_disk_gb
   tags          = concat(["app:web"], local.base_tags)
 }
 

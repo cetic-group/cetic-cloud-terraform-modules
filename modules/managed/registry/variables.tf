@@ -34,6 +34,16 @@ variable "image_tag" {
   default     = null
 }
 
+variable "storage_gb" {
+  description = <<-EOT
+    Storage quota for the registry, in GB. `null` = platform default. Grow-only:
+    raising the value resizes the quota in place; lowering it is rejected by the
+    API (422).
+  EOT
+  type        = number
+  default     = null
+}
+
 variable "tags" {
   description = "Free-form tags (max 60, max 50 chars each)."
   type        = list(string)

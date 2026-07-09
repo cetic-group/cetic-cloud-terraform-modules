@@ -6,14 +6,13 @@ suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.33.0]
 
-**Contrainte `versions.tf` volontairement INCHANGÉE (`>= 5.0.0`)** — le provider
-attendu pour cette feature (`disk_gb`/`storage_gb` Optional+Computed) n'est pas
-encore publié côté Registry à ce commit (dernier tag réel : `v5.4.0`). Bumper le
-plancher `versions.tf` vers un numéro de version qui n'existe pas casse
-`terraform init` sur les **42 modules** (`no available releases match the given
-constraints`), pas seulement `terraform validate` sur les modules touchés — voir
-l'avertissement en fin de section. Le bump de contrainte sera fait dans un commit
-de suivi, une fois la release provider réelle connue.
+**Contrainte `versions.tf` bumpée à `>= 5.5.0`** sur les **42 modules** — la
+feature (`disk_gb`/`storage_gb` Optional+Computed + resize grow-only) nécessite le
+provider `cetic-group/ccp` **v5.5.0** (PR terraform-provider-ccp#58).
+⚠️ **Ordre de merge cross-dépôts** : merger + publier le provider **v5.5.0**
+AVANT ces modules — tant que v5.5.0 n'est pas sur le Registry, `terraform init`
+échoue (`no available releases match the given constraints`). C'est une release
+coordonnée (même précédent que network/vpc-peering #516).
 
 ### Added — dimensionnement disque/stockage à la carte (`disk_gb` / `storage_gb`, #577/#578)
 

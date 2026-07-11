@@ -28,5 +28,6 @@ module "api_workers" {
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
 | `disk_gb` | number | `null` | Taille du disque racine en GB, appliquée à chaque réplica. `null` = défaut du plan. Grow-only. |
+| `docker` | bool | `false` | Activer Docker (nesting) sur chaque réplica. Désactivé = réplicas durcis contre la fuite de topologie de l'hôte. Forces new resource. |
 
 (Autres inputs : cf. `compute/container`, mêmes options hors `ssh_key_ids`/`public_ip_id`, plus `min_instances`/`max_instances`/`desired_instances`/`auto_repair`.)

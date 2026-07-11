@@ -82,3 +82,9 @@ variable "bastion_access" {
   default     = false
   description = "Autoriser l'accès SSH via le Bastion du tenant (opt-in). Forces new resource."
 }
+
+variable "docker" {
+  type        = bool
+  default     = false
+  description = "Activer Docker (nesting) dans le conteneur (opt-in). Désactivé = conteneur durci contre la fuite de topologie de l'hôte. Forces new resource."
+}

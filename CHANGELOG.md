@@ -6,13 +6,14 @@ suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.33.0]
 
-**Contrainte `versions.tf` bumpée à `>= 5.5.0`** sur les **42 modules** — la
-feature (`disk_gb`/`storage_gb` Optional+Computed + resize grow-only) nécessite le
-provider `cetic-group/ccp` **v5.5.0** (PR terraform-provider-ccp#58).
-⚠️ **Ordre de merge cross-dépôts** : merger + publier le provider **v5.5.0**
-AVANT ces modules — tant que v5.5.0 n'est pas sur le Registry, `terraform init`
-échoue (`no available releases match the given constraints`). C'est une release
-coordonnée (même précédent que network/vpc-peering #516).
+**Contrainte `versions.tf` bumpée à `>= 6.0.0`** sur les **42 modules** — la
+feature (`disk_gb`/`storage_gb` Optional + resize grow-only) est livrée par le
+provider `cetic-group/ccp` **v6.0.0** (PR terraform-provider-ccp#58), publié sur
+le Registry. Le provider est passé directement de `v5.4.0` à `v6.0.0` (major) ;
+`v5.5.0` n'a jamais existé — le plancher `>= 5.5.0` posé initialement provoquait
+donc `terraform init` : `no available releases match the given constraints`. Le
+plancher correct est **`>= 6.0.0`** (première version publiée exposant `disk_gb`
+en Optional).
 
 ### Added — dimensionnement disque/stockage à la carte (`disk_gb` / `storage_gb`, #577/#578)
 
@@ -46,23 +47,13 @@ coordonnée (même précédent que network/vpc-peering #516).
   (`initial_pool_disk_gb_passthrough`, `additional_pool_disk_gb_passthrough`),
   `managed/registry` (`storage_gb_passthrough`).
 
-⚠️ **Cascade en avance de phase sur le provider** (même situation que
-`network/vpc-peering` en 0.32.0) : au moment de cette release, le provider
-publié sur le Registry (`v5.4.0`) expose encore `disk_gb` en **lecture seule**
-(Computed-only) sur `ccp_vm_instance`/`ccp_container_instance`, et
-`disk_gb`/`storage_gb` n'existent pas du tout sur les scale-sets, le node pool
-K8s et la registry. `terraform validate`/`terraform test` échouent donc sur
-`compute/container`, `compute/vm`, `compute/container-scale-set`,
-`compute/vm-scale-set`, `managed/k8s-cluster` et `managed/registry` (et sur
-`landing-zones/basic-web-app`, qui compose `compute/container`) tant qu'une
-version provider rendant ces attributs Optional+Computed n'est pas publiée —
-cela inclut temporairement des runs `tftest` qui passaient avant ce commit (le
-simple fait de référencer `disk_gb = var.disk_gb` dans une resource où
-l'attribut réel est encore Computed-only fait échouer `terraform validate`
-avant même l'exécution des `run` blocks). `terraform fmt -recursive` reste
-propre. Une fois la version provider réelle publiée : (1) bumper la contrainte
-`versions.tf` (commit de suivi, cf. convention de bump plus haut dans
-`CLAUDE.md`), (2) tout redevient vert sans autre changement de ce repo.
+Le provider **v6.0.0** rend `disk_gb` **Optional** (mutable in-place, grow-only)
+sur `ccp_vm_instance`/`ccp_container_instance` et ajoute `disk_gb` sur les
+scale-sets + le node pool K8s, ainsi que `storage_gb` sur la registry. Avec le
+plancher corrigé à `>= 6.0.0`, `terraform init`/`validate`/`test` passent au vert
+sur tous les modules touchés (`compute/*`, `managed/k8s-cluster`,
+`managed/registry`, `landing-zones/basic-web-app`). `terraform fmt -recursive`
+reste propre.
 
 ## [0.32.0]
 

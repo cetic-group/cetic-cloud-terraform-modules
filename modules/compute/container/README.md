@@ -32,6 +32,7 @@ module "web_01" {
 | `user_data` | string | no | `null` | Cloud-init. |
 | `public_ip_id` | string | no | `null` | IP publique à attacher. |
 | `root_password` | string | no | `null` | Sensible. |
+| `disk_gb` | number | no | `null` | Taille du disque racine en GB. `null` = défaut du plan. Grow-only (l'API refuse une valeur inférieure à la taille courante). |
 | `tags` | list(string) | no | `[]` | |
 
 ## Outputs

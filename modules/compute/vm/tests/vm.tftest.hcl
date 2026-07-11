@@ -54,3 +54,21 @@ run "windows_vm_license_consent_passthrough" {
     error_message = "Le template Windows doit être propagé."
   }
 }
+
+run "disk_gb_passthrough" {
+  command = plan
+
+  variables {
+    name          = "test-disk"
+    region        = "RNN"
+    plan          = "medium"
+    vnet_id       = "00000000-0000-0000-0000-0000000000bb"
+    root_password = "changeme123"
+    disk_gb       = 150
+  }
+
+  assert {
+    condition     = ccp_vm_instance.this.disk_gb == 150
+    error_message = "disk_gb doit être propagé à la ressource."
+  }
+}

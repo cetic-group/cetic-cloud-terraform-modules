@@ -15,6 +15,7 @@ module "db_vm" {
   vnet_id     = module.vpc.vnet_ids.data
   ssh_key_ids = [module.ssh_key.id]
   user_data   = file("./bootstrap-db.yaml")
+  disk_gb     = 120 # défaut du plan `medium` dépassé ; grow-only après coup
 
   bastion_access = true # opt-in : accès SSH via le Bastion du tenant
 }
@@ -45,4 +46,4 @@ module "win_vm" {
 
 L'output `os_family` vaut `windows` pour une VM Windows, `linux` sinon.
 
-Inputs / Outputs : identiques à `compute/container` (mêmes options, ressource différente), plus `windows_license_consent` (input) et `os_family` (output).
+Inputs / Outputs : identiques à `compute/container` (mêmes options, ressource différente — y compris `disk_gb`, grow-only), plus `windows_license_consent` (input) et `os_family` (output).

@@ -104,6 +104,8 @@ variable "initial_pool" {
     - `min_size` / `max_size` : pour l'autoscaler. Si les deux sont set,
       l'autoscaler du cluster gère ce pool (min_size ≥ 0, max_size > min_size).
       Retirer les deux désactive l'autoscaler (pool figé à `replicas`).
+    - `disk_gb` : taille du disque racine des workers de ce pool, en GB. Omis
+      (`null`) = taille par défaut du plan (`plan`). Grow-only.
   EOT
   type = object({
     name        = optional(string, "default")
@@ -118,6 +120,7 @@ variable "initial_pool" {
     })), [])
     min_size = optional(number)
     max_size = optional(number)
+    disk_gb  = optional(number)
   })
   default = {}
 
@@ -158,6 +161,8 @@ variable "additional_pools" {
       MachineDeployment.spec.template.metadata.labels.
     - `taints` : liste de taints Kubernetes. Chaque entrée : `{ key, value?, effect }`.
       `effect` ∈ `NoSchedule` | `PreferNoSchedule` | `NoExecute`.
+    - `disk_gb` : taille du disque racine des workers de ce pool, en GB. Omis
+      (`null`) = taille par défaut du plan. Grow-only.
   EOT
   type = map(object({
     plan        = string
@@ -171,6 +176,7 @@ variable "additional_pools" {
       value  = optional(string)
       effect = string
     })), [])
+    disk_gb = optional(number)
   }))
   default = {}
 

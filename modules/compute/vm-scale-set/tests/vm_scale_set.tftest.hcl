@@ -50,3 +50,24 @@ run "windows_vmss_license_consent_passthrough" {
     error_message = "windows_license_consent doit être propagé à la ressource."
   }
 }
+
+run "disk_gb_passthrough" {
+  command = plan
+
+  variables {
+    name              = "test-disk-pool"
+    region            = "RNN"
+    plan              = "medium"
+    vnet_id           = "00000000-0000-0000-0000-0000000000bb"
+    desired_instances = 2
+    min_instances     = 1
+    max_instances     = 4
+    root_password     = "changeme123"
+    disk_gb           = 150
+  }
+
+  assert {
+    condition     = ccp_vm_scale_set.this.disk_gb == 150
+    error_message = "disk_gb doit être propagé à la ressource."
+  }
+}

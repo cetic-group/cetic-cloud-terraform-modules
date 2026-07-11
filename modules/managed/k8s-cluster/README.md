@@ -24,6 +24,7 @@ module "platform" {
     min_size = 2
     max_size = 4
     # k8s_version omis → workers du pool initial à la version du plan de contrôle.
+    disk_gb = 100 # défaut du plan `small` dépassé pour ce pool
   }
 
   additional_pools = {
@@ -35,6 +36,7 @@ module "platform" {
       labels   = { workload = "cpu" }
       # Workers à une version antérieure au plan de contrôle (montée progressive).
       k8s_version = "v1.30.4"
+      disk_gb     = 150 # grow-only : montée ultérieure acceptée, baisse refusée
     }
     gpu_pool = {
       plan     = "xlarge"
@@ -79,8 +81,8 @@ output "kubeconfig_url" {
 | `os_template_key` | string | `null` | Cf. `data.ccp_k8s_templates`. |
 | `pod_cidr` | string | `"10.244.0.0/16"` | |
 | `service_cidr` | string | `"10.96.0.0/12"` | |
-| `initial_pool` | object({name, plan, replicas, k8s_version?, labels?, taints?, min_size?, max_size?}) | `{}` | Pool initial. `name`/`plan` immutables ; `replicas`/`k8s_version`/`labels`/`taints`/`min_size`/`max_size` mutables. `k8s_version` = version worker du pool (omis = hérite du plan de contrôle, doit rester `<=`). `labels` = map ; `taints` = liste de `{ key, value?, effect }` ; `min_size`+`max_size` (ensemble) activent l'autoscaler. |
-| `additional_pools` | map(object) | `{}` | Pools additionnels via for_each. Chaque objet : `plan`, `replicas`, `k8s_version?`, `min_size?`, `max_size?`, `labels?`, `taints?`. `k8s_version` = version worker (omis = hérite du plan de contrôle, doit rester `<=` ; mutable, montée rolling). |
+| `initial_pool` | object({name, plan, replicas, k8s_version?, labels?, taints?, min_size?, max_size?, disk_gb?}) | `{}` | Pool initial. `name`/`plan` immutables ; `replicas`/`k8s_version`/`labels`/`taints`/`min_size`/`max_size`/`disk_gb` mutables. `k8s_version` = version worker du pool (omis = hérite du plan de contrôle, doit rester `<=`). `labels` = map ; `taints` = liste de `{ key, value?, effect }` ; `min_size`+`max_size` (ensemble) activent l'autoscaler. `disk_gb` = taille du disque racine des workers (omis = défaut du plan, grow-only). |
+| `additional_pools` | map(object) | `{}` | Pools additionnels via for_each. Chaque objet : `plan`, `replicas`, `k8s_version?`, `min_size?`, `max_size?`, `labels?`, `taints?`, `disk_gb?`. `k8s_version` = version worker (omis = hérite du plan de contrôle, doit rester `<=` ; mutable, montée rolling). `disk_gb` = taille du disque racine des workers (omis = défaut du plan, grow-only). |
 | `autoscaler_scale_down_delay_after_add` | string | `"10m"` | |
 | `autoscaler_scale_down_unneeded_time` | string | `"10m"` | |
 | `ingress_controller_enabled` | bool | `true` | |
@@ -105,6 +107,7 @@ output "kubeconfig_url" {
 | `ingress_internal_ip` / `ingress_public_ip_address` | |
 | `additional_pool_ids` | Map UUID des pools additionnels. |
 | `additional_pool_k8s_versions` | Map nom de pool → version Kubernetes worker effective. |
+| `additional_pool_disk_gb` | Map nom de pool → taille de disque racine effective (GB). |
 | `status` | |
 | `tier` | Niveau de service effectif (`dev` / `prod`). |
 | `proxy_secondary_vmid` | VMID du frontal secondaire (tier `prod`, sinon `null`). |
@@ -119,6 +122,7 @@ output "kubeconfig_url" {
 - **`initial_pool`** : `name`/`plan` sont immutables (recréer le cluster pour les changer) ; `replicas`, `labels`, `taints`, `min_size`/`max_size` sont mutables in-place (parité avec `additional_pools`). Définir `min_size` **et** `max_size` active l'autoscaler ; les retirer le désactive (pool figé à `replicas`). `labels`/`taints` nécessitent le provider `>= 3.2.0` ; l'autoscaler `>= 3.1.1`.
 - **`os_image` immutable** : la famille d'OS des nodes (`flatcar`/`ubuntu`/`rocky9`) est figée à la création — la changer recrée le cluster. Laisser `null` applique le défaut plateforme (`flatcar`).
 - **Versions Kubernetes par pool** : `k8s_version` au niveau du cluster fixe le **plan de contrôle** et sert de version par défaut des workers. Chaque pool (initial ou additionnel) peut fixer sa propre `k8s_version` (omettre = hériter du plan de contrôle). La version d'un pool worker doit rester `<=` à celle du plan de contrôle ; modifier `k8s_version` d'un pool déclenche une montée de version rolling (pas de recréation du pool). Pratique pour une montée de version progressive : monter d'abord le plan de contrôle, puis les pools un à un.
+- **Disque des workers par pool** : `disk_gb` (initial ou additionnel) fixe la taille du disque racine des workers de ce pool, indépendamment du disque par défaut du `plan`. Omis = défaut du plan. **Grow-only** : augmenter la valeur redimensionne le disque en place ; une valeur inférieure à la taille courante est refusée par l'API (422).
 - **Ingress en mode `incluster`** : HA inter-worker via Cilium L2 announce, failover ~22s.
 - **Ingress en mode `managed`** : LB dédié devant l'ingress controller — meilleur pour des bursts de connexions externes mais coûte un LB additionnel.
 - Le **kubeconfig** est récupérable via `cetic k8s kubeconfig <id>` (CLI) ou `GET /v1/k8s/clusters/{id}/kubeconfig`. Pas exposé par le provider TF (matière à être ajouté en datasource v0.9+).

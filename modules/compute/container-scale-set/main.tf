@@ -10,6 +10,7 @@ resource "ccp_container_scale_set" "this" {
   desired_instances = var.desired_instances
   auto_repair       = var.auto_repair
   root_password     = var.root_password
+  disk_gb           = var.disk_gb
   bastion_access    = var.bastion_access
   tags              = var.tags
 }

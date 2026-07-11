@@ -28,6 +28,9 @@ resource "ccp_k8s_cluster" "this" {
     # retirés → désactivé (le provider envoie 0/0). Passés tels quels (null = omis).
     min_size = var.initial_pool.min_size
     max_size = var.initial_pool.max_size
+    # Taille du disque racine des workers du pool initial (disk_gb, à venir côté provider).
+    # Omis (null) → défaut du plan. Grow-only côté API.
+    disk_gb = var.initial_pool.disk_gb
   }
 
   autoscaler_scale_down_delay_after_add = var.autoscaler_scale_down_delay_after_add
@@ -63,4 +66,7 @@ resource "ccp_k8s_node_pool" "additional" {
   max_size    = each.value.max_size
   labels      = each.value.labels
   taints      = each.value.taints
+  # Taille du disque racine des workers de ce pool (disk_gb, à venir côté provider). Omis
+  # (null) → défaut du plan. Grow-only côté API.
+  disk_gb = each.value.disk_gb
 }

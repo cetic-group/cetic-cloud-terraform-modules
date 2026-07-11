@@ -63,6 +63,17 @@ variable "app_listen_port" {
   description = "Port d'écoute de l'app sur chaque container (envoyé en `backend.port` au LB)."
 }
 
+variable "app_disk_gb" {
+  type        = number
+  default     = null
+  description = <<-EOT
+    Taille du disque racine (GB) de chaque container d'app. `null` = taille
+    par défaut du plan (`app_plan`). Grow-only : une valeur supérieure à la
+    taille courante redimensionne le disque en place ; une valeur inférieure
+    est refusée par l'API (422).
+  EOT
+}
+
 # ─── Base de données ──────────────────────────────────────────────────────────
 variable "enable_database" {
   type        = bool

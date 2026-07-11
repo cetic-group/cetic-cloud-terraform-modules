@@ -18,6 +18,15 @@ module "api_workers" {
   min_instances     = 2
   max_instances     = 10
   desired_instances = 3
+  disk_gb           = 60 # défaut du plan `small` dépassé, appliqué à chaque réplica
   tags              = ["api", "env:prod"]
 }
 ```
+
+## Inputs
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `disk_gb` | number | `null` | Taille du disque racine en GB, appliquée à chaque réplica. `null` = défaut du plan. Grow-only. |
+
+(Autres inputs : cf. `compute/container`, mêmes options hors `ssh_key_ids`/`public_ip_id`, plus `min_instances`/`max_instances`/`desired_instances`/`auto_repair`.)

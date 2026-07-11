@@ -12,5 +12,6 @@ resource "ccp_container_scale_set" "this" {
   root_password     = var.root_password
   disk_gb           = var.disk_gb
   bastion_access    = var.bastion_access
+  docker            = var.docker
   tags              = var.tags
 }

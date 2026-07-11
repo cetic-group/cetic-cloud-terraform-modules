@@ -4,6 +4,26 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.34.0]
+
+Argument **`docker`** (bool, défaut `false`, Forces new resource) sur
+`compute/container` et `compute/container-scale-set` → active Docker (nesting)
+dans le(s) conteneur(s). Désactivé (défaut) = conteneur **durci** contre la fuite
+de la topologie de l'hôte (disques/volumes des autres tenants, RAM, CPU).
+Câblage direct `docker = var.docker` sur `ccp_container_instance` /
+`ccp_container_scale_set`.
+
+L'attribut `docker` est livré par le provider `cetic-group/ccp` (PR
+terraform-provider-ccp#59) dans la **prochaine release après v6.0.0** (attendue
+`v6.1.0`, minor — nouvel attribut Optional). Le provider est **déjà en v6.0.0**
+(disk_gb inclus, mais pas `docker`) ; la contrainte `versions.tf` du repo
+(`>= 6.0.0`, héritée de #38) résout donc vers v6.0.0 tant que v6.1.0 n'est pas
+publié. ⚠️ **En avance de phase** : tant que la release provider incluant
+`docker` (v6.1.0) n'est pas publiée sur le Registry, `terraform validate`/`test`
+restent rouges sur ces deux modules (référencer un attribut inconnu = erreur de
+`validate`). `terraform fmt` reste propre ; aucun nouveau test ne dépend de la
+résolution amont.
+
 ## [0.33.0]
 
 **Contrainte `versions.tf` bumpée à `>= 6.0.0`** sur les **42 modules** — la

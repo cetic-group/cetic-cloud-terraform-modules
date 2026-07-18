@@ -221,3 +221,44 @@ variable "tags_extra" {
   default     = []
   description = "Tags additionnels propagés à toutes les ressources créées (le module ajoute aussi `landing-zone:basic-web-app`)."
 }
+
+# ── Planificateur marche/arrêt (opt-in) ──
+variable "schedule_windows" {
+  type = list(object({
+    start_day  = number
+    start_hour = number
+    end_day    = number
+    end_hour   = number
+  }))
+  default     = []
+  description = <<-EOT
+    Fenêtres OFF hebdomadaires pour **éteindre les containers de l'app** hors
+    heures d'ouverture (économie sur la facture). **Opt-in** : liste vide
+    (défaut) = aucun planning, comportement rétro-compatible inchangé. Chaque
+    entrée `{ start_day, start_hour, end_day, end_hour }` : jours `0`=Lundi …
+    `6`=Dimanche, heures pleines `0..24`. Exemple nuits + week-ends :
+    `[{ start_day = 4, start_hour = 20, end_day = 0, end_hour = 8 }, ...]`.
+    Un `ccp_schedule` est créé par instance app (`resource_type = "container"`).
+  EOT
+
+  validation {
+    condition     = alltrue([for w in var.schedule_windows : w.start_day >= 0 && w.start_day <= 6 && w.end_day >= 0 && w.end_day <= 6])
+    error_message = "Chaque schedule_windows[*].start_day / end_day doit être entre 0 (Lundi) et 6 (Dimanche)."
+  }
+  validation {
+    condition     = alltrue([for w in var.schedule_windows : w.start_hour >= 0 && w.start_hour <= 24 && w.end_hour >= 0 && w.end_hour <= 24])
+    error_message = "Chaque schedule_windows[*].start_hour / end_hour doit être entre 0 et 24 (heure pleine)."
+  }
+}
+
+variable "schedule_timezone" {
+  type        = string
+  default     = "Europe/Paris"
+  description = "Timezone IANA d'interprétation des `schedule_windows`. Ignoré si `schedule_windows` est vide."
+}
+
+variable "schedule_enabled" {
+  type        = bool
+  default     = true
+  description = "Active le pilotage des plannings de l'app. À `false`, les plannings sont définis mais jamais appliqués. Ignoré si `schedule_windows` est vide."
+}

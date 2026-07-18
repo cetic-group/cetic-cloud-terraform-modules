@@ -92,6 +92,14 @@ mock_provider "ccp" {
       id = "00000000-0000-0000-0000-00000000b001"
     }
   }
+  mock_resource "ccp_schedule" {
+    defaults = {
+      id                          = "00000000-0000-0000-0000-00000000c001"
+      current_state               = "on"
+      last_transition_at          = null
+      estimated_monthly_fee_cents = 250
+    }
+  }
 }
 
 run "default_lb_mode_still_works" {
@@ -187,5 +195,61 @@ run "rejects_invalid_appgw_plan" {
   }
   expect_failures = [
     var.appgw_plan,
+  ]
+}
+
+run "no_schedule_by_default" {
+  command = plan
+  variables {
+    org_prefix        = "acme"
+    region            = "RNN"
+    ssh_public_key    = "ssh-ed25519 AAAA test@example.com"
+    app_root_password = "test-password-123"
+    enable_database   = false
+    app_replicas      = 2
+    # schedule_windows unset → opt-out, rétro-compatible
+  }
+  assert {
+    condition     = length(module.app_schedule) == 0
+    error_message = "no schedule_windows should create zero schedules (opt-in)"
+  }
+}
+
+run "schedule_off_nights_and_weekends" {
+  command = plan
+  variables {
+    org_prefix        = "acme"
+    region            = "RNN"
+    ssh_public_key    = "ssh-ed25519 AAAA test@example.com"
+    app_root_password = "test-password-123"
+    enable_database   = false
+    app_replicas      = 2
+
+    schedule_windows = [
+      { start_day = 4, start_hour = 20, end_day = 0, end_hour = 8 },
+      { start_day = 0, start_hour = 20, end_day = 1, end_hour = 8 },
+    ]
+  }
+  assert {
+    condition     = length(module.app_schedule) == 2
+    error_message = "one ccp_schedule should be created per app container"
+  }
+}
+
+run "rejects_invalid_schedule_day" {
+  command = plan
+  variables {
+    org_prefix        = "acme"
+    region            = "RNN"
+    ssh_public_key    = "ssh-ed25519 AAAA test@example.com"
+    app_root_password = "test-password-123"
+    enable_database   = false
+
+    schedule_windows = [
+      { start_day = 9, start_hour = 20, end_day = 0, end_hour = 8 },
+    ]
+  }
+  expect_failures = [
+    var.schedule_windows,
   ]
 }

@@ -72,6 +72,22 @@ resource "ccp_container_instance" "app" {
   tags          = concat(["app:web"], local.base_tags)
 }
 
+# ─── Planificateur marche/arrêt (opt-in) ──────────────────────────────────────
+# Si `schedule_windows` est non vide, on éteint chaque container app pendant les
+# fenêtres déclarées (nuits/week-ends). Opt-in : liste vide = aucun planning.
+module "app_schedule" {
+  source = "../../modules/atomic/schedule"
+
+  for_each = length(var.schedule_windows) > 0 ? ccp_container_instance.app : {}
+
+  name          = "${each.value.name}-schedule"
+  resource_type = "container"
+  resource_id   = each.value.id
+  timezone      = var.schedule_timezone
+  enabled       = var.schedule_enabled
+  windows       = var.schedule_windows
+}
+
 # ─── Exposition publique ──────────────────────────────────────────────────────
 # Une seule IP publique, partagée entre les deux modes d'exposition.
 resource "ccp_public_ip" "exposure" {

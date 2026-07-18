@@ -4,6 +4,36 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.34.0]
+
+Aligné sur le provider `cetic-group/ccp` **`>= 6.0.0`** (contrainte homogène des 42 modules depuis [0.33.0] ; le provider publie `ccp_schedule` en série v6.x). La ressource `ccp_schedule` est additive.
+
+### Added — module `atomic/schedule` (planificateur marche/arrêt)
+
+- Nouveau module **`modules/atomic/schedule`** : wrapper 1-1 autour de
+  `ccp_schedule`. Éteint une ressource cible pendant des **fenêtres OFF
+  hebdomadaires** et la rallume en dehors (économie sur les charges non-prod).
+  Cible polymorphe via `resource_type` (`vm`, `container`, `vm_scale_set`,
+  `container_scale_set`, `ccks_node_pool`, `db_instance`) + `resource_id`.
+  Inputs : `name`, `resource_type`, `resource_id`, `windows` (Required — liste
+  d'objets `{ start_day, start_hour, end_day, end_hour }`, ≥ 1), `timezone`
+  (défaut `Europe/Paris`), `enabled` (défaut `true`). Validations : jours
+  `0..6`, heures pleines `0..24`, ≥ 1 fenêtre. Outputs : `id`, `current_state`,
+  `last_transition_at`, `estimated_monthly_fee_cents`.
+- **`resource_type` / `resource_id` immuables** (force replace) ; `name`,
+  `timezone`, `enabled`, `windows` mutables in-place. Syntaxe `windows` =
+  `ListNestedAttribute` (`windows = [ { ... } ]`, pas des blocs).
+- `landing-zones/basic-web-app` : nouvelles variables passthrough **opt-in**
+  `schedule_windows` (défaut `[]` = aucun planning, rétro-compatible),
+  `schedule_timezone`, `schedule_enabled`. Quand `schedule_windows` est non
+  vide, un `ccp_schedule` (`resource_type = "container"`) est créé par instance
+  app. Nouveaux outputs `schedule_ids` et
+  `schedule_estimated_monthly_fee_cents`. 3 runs `tftest` ajoutés
+  (`no_schedule_by_default`, `schedule_off_nights_and_weekends`,
+  `rejects_invalid_schedule_day`).
+- Nouvel **exemple `examples/scheduled-shutdown`** : VM + VM scale set + pool de
+  nodes CCKS éteints nuits + week-ends via le module `atomic/schedule`.
+
 ## [0.33.0]
 
 **Contrainte `versions.tf` bumpée à `>= 6.0.0`** sur les **42 modules** — la

@@ -64,6 +64,16 @@ output "ssh_key_id" {
   value       = module.ssh_key.id
 }
 
+output "schedule_ids" {
+  description = "Map keyed par nom d'instance → UUID du planning marche/arrêt. Vide si `schedule_windows` non fourni."
+  value       = { for k, m in module.app_schedule : k => m.id }
+}
+
+output "schedule_estimated_monthly_fee_cents" {
+  description = "Somme des frais mensuels estimés du scheduler (centimes) sur tous les containers pilotés. `0` si aucun planning."
+  value       = sum(concat([0], [for m in module.app_schedule : m.estimated_monthly_fee_cents]))
+}
+
 output "database_endpoint" {
   description = "Endpoint PostgreSQL `host:port` (IP privée du VNet data). `null` si DB désactivée."
   value       = var.enable_database ? "${ccp_db_pg_instance.app_db[0].endpoint_vnet_ip}:${ccp_db_pg_instance.app_db[0].endpoint_port}" : null

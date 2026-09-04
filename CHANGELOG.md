@@ -4,6 +4,59 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.35.0]
+
+Aligné sur le provider `cetic-group/ccp` **`>= 6.3.0`** — cascade sur les **50
+déclarations** du dépôt (44 `versions.tf` des modules et landing-zones, les
+`providers.tf` des landing-zones, les `main.tf` des exemples et le Quick Start
+du README). Le plancher était hétérogène : `>= 6.0.0` dans les `versions.tf`,
+mais encore `>= 5.0.0` dans le README et cinq fichiers d'exemples et de
+landing-zones.
+
+### Added — module `network/dns-zone` (DNS privé)
+
+- Nouveau module **`modules/network/dns-zone`** : une zone DNS **répondue
+  uniquement dans le réseau privé du client**, et ses enregistrements. Enveloppe
+  `ccp_dns_zone` + `ccp_dns_record` (`for_each`).
+  Inputs : `name`, `vpc_id` (le **réseau privé**, pas un sous-réseau), `tier`
+  (`dev`/`prod`, `null` = défaut plateforme), `default_ttl` (`null` = réglage
+  plateforme), `dnssec_enabled`, `wait_for_verification`, `records`
+  (`map(object({name, type, ttl?, records}))`, indexé par une clé libre).
+  Outputs : `id`, `name`, `status`, `resolver_addresses`, `resolver_endpoints`,
+  **`resolver_by_vnet`**, `resolver_tier`, `resolver_status`, `ns_hostname`,
+  `ownership_challenge`, `record_ids`, `record_fqdns`.
+
+Trois points portés par le module, parce qu'ils ne se devinent pas :
+
+- **`resolver_by_vnet`** (sous-réseau → adresse) est la sortie à consommer. Le
+  serveur de noms pose une adresse dans CHAQUE sous-réseau du réseau privé :
+  elles répondent toutes les mêmes zones, mais chacune n'est joignable que
+  depuis le sien. Une adresse prise dans le mauvais réseau ne répond pas, et la
+  panne se lit comme une panne du service DNS.
+- **`tier` et `default_ttl` ont `null` pour défaut**, jamais une valeur figée :
+  le réglage de la plateforme reste vivant. ⚠️ `tier` est une propriété du
+  **réseau** — toutes les zones d'un `vpc_id` partagent leur serveur, donc son
+  niveau ; en demander un autre est refusé (409).
+- **`NS` est rejeté au plan.** Celui de l'apex est posé par la plateforme et en
+  lecture seule ; ailleurs c'est une délégation qu'une zone privée refuse (422).
+
+⚠️ **Les machines reçoivent le serveur de noms à leur CRÉATION.** Poser une zone
+sur un réseau déjà peuplé ne la rend pas visible depuis les machines
+existantes : déclarer la zone avant les machines est l'ordre qui marche.
+
+6 runs `tftest` en `mock_provider` : réglages laissés à la plateforme, zone avec
+enregistrements, et quatre refus au plan (`NS`, enregistrement sans valeur, TTL
+hors bornes, `tier` inconnu).
+
+### Changed — plancher provider `>= 6.3.0`
+
+Le provider `v6.3.0` livre le DNS privé (`ccp_dns_zone`, `ccp_dns_record`), la
+messagerie hébergée (`ccp_email_*`) et la documentation des réseaux isolés
+(cetic-group/terraform-provider-ccp#66). Le bump n'est posé qu'**après**
+publication effective sur le Registry — la leçon de [0.33.0] : un plancher
+pointant une version inexistante casse `terraform init` sur TOUS les modules,
+pas seulement ceux touchés.
+
 ## [0.34.0]
 
 Aligné sur le provider `cetic-group/ccp` **`>= 6.0.0`** (contrainte homogène des 42 modules depuis [0.33.0] ; le provider publie `ccp_schedule` en série v6.x). La ressource `ccp_schedule` est additive.

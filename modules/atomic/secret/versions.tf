@@ -3,7 +3,7 @@ terraform {
   required_providers {
     ccp = {
       source  = "cetic-group/ccp"
-      version = ">= 6.0.0"
+      version = ">= 6.3.0"
     }
   }
 }

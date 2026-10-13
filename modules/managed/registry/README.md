@@ -3,7 +3,7 @@
 Module Terraform pour une **CETIC Container Registry (CCR)** — registry privé OCI Docker/Helm hébergé dans votre tenant.
 
 La registry est exposée via les **2 gateways régionales partagées** de la plateforme avec un **hostname unique split-horizon DNS** :
-- Public : DNS IONOS → IP gateway publique
+- Public : DNS public → IP gateway publique
 - Privé : DNS interne CETIC → IP gateway privée (LAN CETIC)
 
 Vous activez l'un, l'autre, ou les deux modes via `expose_public` / `expose_private`.

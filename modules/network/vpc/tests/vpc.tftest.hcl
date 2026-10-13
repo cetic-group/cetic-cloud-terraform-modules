@@ -11,8 +11,6 @@ mock_provider "ccp" {
     defaults = {
       id       = "00000000-0000-0000-0000-000000000001"
       status   = "active"
-      vlan_id  = 100
-      sdn_type = "vxlan"
     }
   }
 

@@ -12,8 +12,6 @@ mock_provider "ccp" {
       ingress_internal_ip       = "10.20.1.11"
       ingress_public_ip_address = null
       public_ip_address         = null
-      proxy_secondary_vmid      = null
-      proxy_secondary_node      = null
       proxy_vip_vnet            = null
     }
   }

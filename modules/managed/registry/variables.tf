@@ -17,7 +17,7 @@ variable "region" {
 }
 
 variable "expose_public" {
-  description = "Expose the registry on the public Internet (DNS public IONOS → public Gateway IP)."
+  description = "Expose the registry on the public Internet (public DNS → public Gateway IP)."
   type        = bool
   default     = false
 }

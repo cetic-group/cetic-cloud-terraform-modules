@@ -38,5 +38,5 @@ Thumbs.db
 tests/*.tfplan
 tests/.terraform/
 
-# Notes internes (ne pas publier)
+# Local notes
 /CLAUDE.md

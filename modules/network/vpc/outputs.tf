@@ -9,16 +9,14 @@ output "vpc_cidr" {
 }
 
 output "vpc" {
-  description = "Objet VPC complet (id, name, region, cidr, status, tags, vlan_id, sdn_type)."
+  description = "Objet VPC complet (id, name, region, cidr, status, tags)."
   value = {
-    id       = ccp_vpc.this.id
-    name     = ccp_vpc.this.name
-    region   = ccp_vpc.this.region
-    cidr     = ccp_vpc.this.cidr
-    status   = ccp_vpc.this.status
-    tags     = ccp_vpc.this.tags
-    vlan_id  = ccp_vpc.this.vlan_id
-    sdn_type = ccp_vpc.this.sdn_type
+    id     = ccp_vpc.this.id
+    name   = ccp_vpc.this.name
+    region = ccp_vpc.this.region
+    cidr   = ccp_vpc.this.cidr
+    status = ccp_vpc.this.status
+    tags   = ccp_vpc.this.tags
   }
 }
 

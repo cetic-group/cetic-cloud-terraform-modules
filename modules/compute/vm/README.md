@@ -1,6 +1,6 @@
 # Module `compute/vm`
 
-Wrapper minimal autour de `ccp_vm_instance` (QEMU). Expose les options classiques (cloud-init, SSH keys, IP publique).
+Wrapper minimal autour de `ccp_vm_instance`. Expose les options classiques (cloud-init, SSH keys, IP publique).
 
 ## Exemple
 

@@ -4,9 +4,22 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.36.0]
+
+Aligné sur le provider `cetic-group/ccp` **`>= 7.0.0`** — cascade sur toutes
+les déclarations du dépôt.
+
+### Removed — BREAKING
+
+- Module **`atomic/ipaas-pool`** : la ressource `ccp_ipaas_pool` est retirée du
+  provider v7.0.0 (API réservée aux opérateurs de la plateforme).
+- Outputs **`proxy_secondary_vmid`** et **`proxy_secondary_node`** du module
+  `managed/k8s-cluster` : attributs retirés du provider v7.0.0.
+  `proxy_vip_vnet` est conservé.
+
 ## [0.35.0]
 
-Aligné sur le provider `cetic-group/ccp` **`>= 6.3.0`** — cascade sur les **50
+Aligné sur le provider `cetic-group/ccp` **`>= 7.0.0`** — cascade sur les **50
 déclarations** du dépôt (44 `versions.tf` des modules et landing-zones, les
 `providers.tf` des landing-zones, les `main.tf` des exemples et le Quick Start
 du README). Le plancher était hétérogène : `>= 6.0.0` dans les `versions.tf`,
@@ -48,7 +61,7 @@ existantes : déclarer la zone avant les machines est l'ordre qui marche.
 enregistrements, et quatre refus au plan (`NS`, enregistrement sans valeur, TTL
 hors bornes, `tier` inconnu).
 
-### Changed — plancher provider `>= 6.3.0`
+### Changed — plancher provider `>= 7.0.0`
 
 Le provider `v6.3.0` livre le DNS privé (`ccp_dns_zone`, `ccp_dns_record`), la
 messagerie hébergée (`ccp_email_*`) et la documentation des réseaux isolés

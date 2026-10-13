@@ -1,6 +1,6 @@
 # Module `compute/container`
 
-Wrapper minimal autour de `ccp_container_instance` (LXC). Toutes les options classiques exposées (cloud-init `user_data`, SSH, IP publique, root password).
+Wrapper minimal autour de `ccp_container_instance`. Toutes les options classiques exposées (cloud-init `user_data`, SSH, IP publique, root password).
 
 ## Exemple
 

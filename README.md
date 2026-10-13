@@ -21,7 +21,6 @@ Modules Terraform officiels pour orchestrer **[CETIC Cloud Platform](https://clo
 │   │   ├── api-key/
 │   │   ├── org-member/
 │   │   ├── custom-template/
-│   │   ├── ipaas-pool/
 │   │   ├── iam-role/
 │   │   ├── iam-role-assignment/
 │   │   ├── service-account/
@@ -69,7 +68,7 @@ terraform {
   required_providers {
     ccp = {
       source  = "cetic-group/ccp"
-      version = ">= 6.3.0"
+      version = ">= 7.0.0"
     }
   }
 }
@@ -170,6 +169,7 @@ Suit le provider `cetic-group/ccp`. Tag SemVer :
 - `v0.23.x` : compatible provider `>= 4.1.0` — `network/public-ip` (`quantity`/`label`/`description` + outputs liste), `exposure/load-balancer` aligné sur le schéma listener réel du provider (`listen_port`/`roundrobin`/… + Let's Encrypt ACME), `atomic/appgw-listener` migre `custom_domain` → `acme_challenge`/`acme_dns_provider`/`acme_dns_credentials`
 - `v0.28.x` : compatible provider `>= 4.8.0` — variable `bastion_access` (bool) sur les 4 modules `compute/*` (opt-in accès SSH via le Bastion, #343/#307)
 - `v0.35.x` : compatible provider `>= 6.3.0` — nouveau module `network/dns-zone` (zone DNS privée + enregistrements ; sortie `resolver_by_vnet` = sous-réseau → adresse du serveur de noms à y utiliser) et plancher provider homogène sur les 50 déclarations du dépôt
+- `v0.36.x` : compatible provider `>= 7.0.0` — retrait du module `atomic/ipaas-pool` et des outputs liés aux attributs retirés du provider v7
 - bump majeur (`v1.0.0`) quand le provider stabilise son API
 
 ## Tests

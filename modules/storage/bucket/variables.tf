@@ -23,7 +23,7 @@ variable "is_public" {
 
 variable "scoped_keys" {
   description = <<-EOT
-    Map de clés S3 scopées à créer (subusers RGW). Clé = label logique.
+    Map de clés S3 scopées à créer. Clé = label logique.
 
     Niveaux d'accès : `read` / `write` / `readwrite` / `full`.
     Les credentials sont sortis dans `output.scoped_keys` (sensitive).

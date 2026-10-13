@@ -1,6 +1,6 @@
 # Module `compute/vm-scale-set`
 
-Wrapper minimal autour de `ccp_vm_scale_set`. Réplicas VM QEMU auto-managés.
+Wrapper minimal autour de `ccp_vm_scale_set`. Réplicas VM auto-managés.
 
 ```hcl
 module "kafka_brokers" {

@@ -4,6 +4,24 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.36.0]
+
+Aligné sur le provider `cetic-group/ccp` **`>= 7.0.0`** — cascade sur toutes
+les déclarations du dépôt.
+
+### Removed — BREAKING
+
+- Module **`atomic/ipaas-pool`** : la ressource `ccp_ipaas_pool` est retirée du
+  provider v7.0.0.
+- Outputs **`proxy_secondary_vmid`** et **`proxy_secondary_node`** du module
+  `managed/k8s-cluster`, et champs `vlan_id` / `sdn_type` de l'output `vpc` du
+  module `network/vpc` : attributs retirés du provider v7.0.0.
+  `proxy_vip_vnet` est conservé.
+
+### Changed
+
+- Documentation harmonisée.
+
 ## [0.35.0]
 
 Aligné sur le provider `cetic-group/ccp` **`>= 6.3.0`** — cascade sur les **50

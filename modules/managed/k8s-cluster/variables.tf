@@ -249,8 +249,8 @@ variable "apiserver_public_ip_id" {
     UUID d'une IP publique pour l'apiserver (kubeconfig public). **Mutable**
     (provider >= 3.0.0) : définir l'UUID attache l'IP, `null` la détache,
     changer la valeur la remplace — le tout **sans recréer le cluster**, à la
-    création comme après coup. L'IP doit être dans la même région, issue d'un
-    pool BYOIP routé, et le VNet du cluster doit avoir SNAT activé.
+    création comme après coup. L'IP doit être dans la même région, de type
+    routé, et le VNet du cluster doit avoir SNAT activé.
   EOT
 }
 

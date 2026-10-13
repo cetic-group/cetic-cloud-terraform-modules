@@ -1,6 +1,6 @@
 # Module `storage/block-volume`
 
-Wrapper minimal autour de `ccp_block_volume` (Ceph RBD). L'attachement est exposé via un object `attach_to = { id, type }` qui simplifie l'usage par rapport aux 2 args séparés du provider.
+Wrapper minimal autour de `ccp_block_volume`. L'attachement est exposé via un object `attach_to = { id, type }` qui simplifie l'usage par rapport aux 2 args séparés du provider.
 
 ## Exemple
 

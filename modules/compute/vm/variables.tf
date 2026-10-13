@@ -21,7 +21,7 @@ variable "plan" {
 variable "template" {
   type        = string
   default     = "ubuntu-24.04"
-  description = "Template QEMU (clé catalogue ou UUID custom)."
+  description = "Template VM (clé catalogue ou UUID custom)."
 }
 
 variable "vnet_id" {

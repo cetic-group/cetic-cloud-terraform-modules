@@ -110,8 +110,6 @@ output "kubeconfig_url" {
 | `additional_pool_disk_gb` | Map nom de pool → taille de disque racine effective (GB). |
 | `status` | |
 | `tier` | Niveau de service effectif (`dev` / `prod`). |
-| `proxy_secondary_vmid` | VMID du frontal secondaire (tier `prod`, sinon `null`). |
-| `proxy_secondary_node` | Hôte du frontal secondaire (tier `prod`, sinon `null`). |
 | `proxy_vip_vnet` | VIP flottante VNet partagée par les deux frontaux (tier `prod`, sinon `null`). |
 
 ## Notes

@@ -9,10 +9,8 @@
 mock_provider "ccp" {
   mock_resource "ccp_vpc" {
     defaults = {
-      id       = "00000000-0000-0000-0000-000000000001"
-      status   = "active"
-      vlan_id  = 100
-      sdn_type = "vxlan"
+      id     = "00000000-0000-0000-0000-000000000001"
+      status = "active"
     }
   }
 

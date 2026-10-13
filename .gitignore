@@ -37,3 +37,6 @@ Thumbs.db
 # Test artifacts
 tests/*.tfplan
 tests/.terraform/
+
+# Local notes
+/CLAUDE.md

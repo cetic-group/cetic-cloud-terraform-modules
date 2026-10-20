@@ -17,3 +17,8 @@ output "estimated_monthly_fee_cents" {
   description = "Frais mensuels estimés du scheduler en centimes (nombre d'instances pilotées × tarif par instance)."
   value       = ccp_schedule.this.estimated_monthly_fee_cents
 }
+
+output "ended_at" {
+  description = "Timestamp RFC 3339 auquel le planning s'est terminé avec sa période de validité, ou null."
+  value       = ccp_schedule.this.ended_at
+}

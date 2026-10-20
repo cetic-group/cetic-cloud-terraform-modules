@@ -6,6 +6,8 @@ resource "ccp_schedule" "this" {
   resource_id   = var.resource_id
   timezone      = var.timezone
   enabled       = var.enabled
+  starts_on     = var.starts_on
+  ends_on       = var.ends_on
 
   windows = [
     for w in var.windows : {

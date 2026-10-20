@@ -4,6 +4,15 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.0]
+
+### Added
+
+- Module **`atomic/schedule`** : variables `starts_on` et `ends_on` (période de
+  validité, dates incluses `AAAA-MM-JJ` lues dans le fuseau du planning) et
+  output `ended_at`. Le module exige le provider `cetic-group/ccp` **`>= 7.2.0`**.
+  Les autres modules restent sur `>= 7.0.0`.
+
 ## [0.36.0]
 
 Aligné sur le provider `cetic-group/ccp` **`>= 7.0.0`** — cascade sur toutes

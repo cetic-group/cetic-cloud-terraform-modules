@@ -78,6 +78,26 @@ module "staging_db_paused" {
 }
 ```
 
+## Exemple — Limiter le planning dans le temps
+
+Tous les lundis de 8h à 20h pendant quatre mois. Avant `starts_on` et après
+`ends_on` (dates incluses), la cible reste allumée ; à la fin, elle est rallumée
+et le planning se termine (`ended_at`).
+
+```hcl
+module "lundis" {
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/atomic/schedule?ref=v0.37.0"
+
+  name          = "lundis-4-mois"
+  resource_type = "vm"
+  resource_id   = ccp_vm_instance.lab.id
+  starts_on     = "2026-10-20"
+  ends_on       = "2027-02-19"
+
+  windows = [{ start_day = 0, start_hour = 8, end_day = 0, end_hour = 20 }]
+}
+```
+
 ## Inputs
 
 | Name | Type | Required | Default | Description |
@@ -88,6 +108,8 @@ module "staging_db_paused" {
 | `windows` | list(object) | yes | — | ≥ 1 fenêtre OFF `{ start_day, start_hour, end_day, end_hour }`. Jours 0..6 (Lun..Dim), heures 0..24. Mutable. |
 | `timezone` | string | no | `Europe/Paris` | Timezone IANA d'interprétation des fenêtres. Mutable. |
 | `enabled` | bool | no | `true` | Si `false`, planning conservé mais jamais appliqué. Mutable. |
+| `starts_on` | string | no | `null` | Premier jour inclus (`AAAA-MM-JJ`, fuseau du planning). Mutable. |
+| `ends_on` | string | no | `null` | Dernier jour inclus ; ensuite cible rallumée et planning terminé. Mutable. |
 
 ## Outputs
 
@@ -97,6 +119,7 @@ module "staging_db_paused" {
 | `current_state` | Dernier état appliqué : `on` ou `off`. |
 | `last_transition_at` | RFC 3339 de la dernière transition, ou null. |
 | `estimated_monthly_fee_cents` | Frais mensuels estimés du scheduler (centimes). |
+| `ended_at` | RFC 3339 de la fin du planning avec sa période de validité, ou null. |
 
 ## Notes
 

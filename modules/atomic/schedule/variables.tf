@@ -99,3 +99,28 @@ variable "windows" {
     error_message = "Les heures des fenêtres doivent être des heures pleines (entiers, HH:00)."
   }
 }
+
+variable "starts_on" {
+  type        = string
+  default     = null
+  description = "Premier jour (inclus, `AAAA-MM-JJ`, dans `timezone`) où le planning s'applique. Avant, la cible reste allumée. `null` = sans borne. Mutable in-place."
+  validation {
+    condition     = var.starts_on == null || can(regex("^\\d{4}-\\d{2}-\\d{2}$", var.starts_on))
+    error_message = "starts_on doit être une date AAAA-MM-JJ."
+  }
+}
+
+variable "ends_on" {
+  type        = string
+  default     = null
+  description = <<-EOT
+    Dernier jour (inclus, `AAAA-MM-JJ`, dans `timezone`) où le planning
+    s'applique. Ensuite la cible est rallumée et le planning se termine (voir
+    l'output `ended_at`). Ne peut pas être passé, ni à plus de trois ans.
+    `null` = sans borne. Repousser la date relance un planning terminé.
+  EOT
+  validation {
+    condition     = var.ends_on == null || can(regex("^\\d{4}-\\d{2}-\\d{2}$", var.ends_on))
+    error_message = "ends_on doit être une date AAAA-MM-JJ."
+  }
+}

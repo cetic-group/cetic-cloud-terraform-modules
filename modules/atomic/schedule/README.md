@@ -98,6 +98,10 @@ module "lundis" {
 }
 ```
 
+Une fois le planning terminé, la plateforme le met en pause : `enabled` n'apparaît
+pas comme une dérive dans le plan. Pour le relancer, repoussez `ends_on` (ou
+passez-le à `null`).
+
 ## Inputs
 
 | Name | Type | Required | Default | Description |

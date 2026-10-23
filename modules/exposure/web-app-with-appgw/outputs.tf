@@ -42,3 +42,13 @@ output "url" {
   description = "URL canonique HTTPS (premier hostname)."
   value       = "https://${var.hostnames[0]}"
 }
+
+output "cache_effective_size_mb" {
+  description = "Budget du cache en Mio."
+  value       = module.gateway.cache_effective_size_mb
+}
+
+output "cache_size_limit_mb" {
+  description = "Budget du cache en Mio."
+  value       = module.gateway.cache_size_limit_mb
+}

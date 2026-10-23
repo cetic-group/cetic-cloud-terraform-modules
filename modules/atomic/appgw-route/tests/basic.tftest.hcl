@@ -167,3 +167,19 @@ run "rejects_empty_user_in_basic_auth" {
     var.basic_auth_users,
   ]
 }
+
+run "cache_configuration" {
+  command = plan
+  variables {
+    appgw_id             = "gw"
+    listener_id          = "listener"
+    target_group_id      = "tg"
+    cache_mode           = "force"
+    cache_default_ttl_s  = 90
+    cache_bypass_cookies = ["session"]
+  }
+  assert {
+    condition     = ccp_appgw_route.this.cache_mode == "force" && ccp_appgw_route.this.cache_default_ttl_s == 90 && ccp_appgw_route.this.cache_bypass_cookies == tolist(["session"])
+    error_message = "Cache configuration was not propagated."
+  }
+}

@@ -91,3 +91,76 @@ module "appgw_internal" {
 - Pour les listeners (hostnames + cert ACME) et routes, créer les ressources `ccp_appgw_listener` et utiliser le module `atomic/appgw-route`.
 - Pour les pools de backends, utiliser `atomic/appgw-target-group`.
 - Le plan détermine routes max / listeners max / rate limit max (voir documentation produit pour les bornes exactes).
+
+## Cache HTTP (provider 7.3+)
+
+Cette version dépend de la publication du provider avec cetic-cloud-platform#1733 et de l’API correspondante. Aucun tag n’est publié par cette feature.
+
+Activez `cache_enabled` sur la passerelle ; `cache_size_mb` est le budget demandé partagé entre les routes, `cache_max_object_kb` limite les objets. Les outputs `cache_effective_size_mb` et `cache_size_limit_mb` exposent le budget appliqué et le plafond après un changement de plan.
+
+Les routes acceptent `cache_mode` (`off`, `respect`, `force`), `cache_default_ttl_s` (60), `cache_max_ttl_s` (3600), `cache_bypass_cookies` (liste vide : exclure tous les cookies) et `cache_debug_headers` (false). Dans les modules composés, ces attributs sont directement sur chaque objet `routes`, au même niveau que `path_match`.
+
+Seuls les GET publics en 200 alimentent le cache ; HEAD peut lire ces entrées. Authorization, Set-Cookie et les directives privées sont toujours exclus. Vary: Accept-Language contourne le cache. Il n’y a pas de ressource Terraform de purge : utiliser l’API, la console ou `cetic appgw cache purge`.
+
+> **EN:** Gateway settings control a shared cache budget; route settings opt public responses into caching. The requested budget remains stable after resizing, while computed outputs report the effective limit. API and provider support for #1733 are required. Purging is an imperative API/CLI action.
+
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.7 |
+| <a name="requirement_ccp"></a> [ccp](#requirement\_ccp) | >= 7.3.0 |
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_ccp"></a> [ccp](#provider\_ccp) | 7.3.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [ccp_application_gateway.this](https://registry.terraform.io/providers/cetic-group/ccp/latest/docs/resources/application_gateway) | resource |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_cache_enabled"></a> [cache\_enabled](#input\_cache\_enabled) | Activer le cache HTTP public de la passerelle. | `bool` | `false` | no |
+| <a name="input_cache_max_object_kb"></a> [cache\_max\_object\_kb](#input\_cache\_max\_object\_kb) | Taille maximale des objets en Kio. | `number` | `512` | no |
+| <a name="input_cache_size_mb"></a> [cache\_size\_mb](#input\_cache\_size\_mb) | Budget demandé en Mio, partagé entre les routes actives et borné par le plan. | `number` | `64` | no |
+| <a name="input_force_https"></a> [force\_https](#input\_force\_https) | Si `true`, redirige automatiquement `:80` vers `:443` (sauf challenges ACME). | `bool` | `true` | no |
+| <a name="input_global_allow_cidrs"></a> [global\_allow\_cidrs](#input\_global\_allow\_cidrs) | Liste de CIDR autorisés globalement. Vide = pas de filtrage allow-list. Exclu mutuellement avec `global_deny_cidrs` au niveau du même CIDR. | `list(string)` | `[]` | no |
+| <a name="input_global_deny_cidrs"></a> [global\_deny\_cidrs](#input\_global\_deny\_cidrs) | Liste de CIDR refusés globalement (priorité sur allow). | `list(string)` | `[]` | no |
+| <a name="input_global_rate_limit_per_sec"></a> [global\_rate\_limit\_per\_sec](#input\_global\_rate\_limit\_per\_sec) | Rate limit global par IP source en requêtes/seconde (`null` = pas de limite globale). Borné par le plan. | `number` | `null` | no |
+| <a name="input_hsts_enabled"></a> [hsts\_enabled](#input\_hsts\_enabled) | Active l'en-tête `Strict-Transport-Security` sur les réponses HTTPS. | `bool` | `false` | no |
+| <a name="input_hsts_max_age"></a> [hsts\_max\_age](#input\_hsts\_max\_age) | Valeur `max-age` HSTS en secondes (défaut 1 an). | `number` | `31536000` | no |
+| <a name="input_name"></a> [name](#input\_name) | Nom de l'Application Gateway (1-100 caractères). | `string` | n/a | yes |
+| <a name="input_plan"></a> [plan](#input\_plan) | Plan de l'AppGW. Clés canoniques de l'API : `appgw-small` / `appgw-medium` / `appgw-large`.<br/>Les formes courtes `small` / `medium` / `large` sont acceptées en alias et normalisées<br/>vers la clé canonique avant l'appel API. Détermine routes max, listeners max, rate limit max, WAF. | `string` | `"appgw-small"` | no |
+| <a name="input_public_ip_id"></a> [public\_ip\_id](#input\_public\_ip\_id) | UUID d'une IP publique (même région) à attacher à l'AppGW. `null` = gateway purement interne (utile pour API privées entre VNets). | `string` | `null` | no |
+| <a name="input_region"></a> [region](#input\_region) | Région CETIC Cloud : `RNN`, `PAR` ou `ABJ`. | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | Liste de tags free-form (max 60, max 50 chars chacun). | `list(string)` | `[]` | no |
+| <a name="input_trust_proxy_headers"></a> [trust\_proxy\_headers](#input\_trust\_proxy\_headers) | Si `true`, accepte les en-têtes `X-Forwarded-For` / `X-Real-IP` en entrée (à activer uniquement si l'AppGW est derrière un autre proxy de confiance). | `bool` | `false` | no |
+| <a name="input_vnet_id"></a> [vnet\_id](#input\_vnet\_id) | UUID du VNet où héberger la VIP de l'AppGW. Les backends doivent être joignables depuis ce VNet. | `string` | n/a | yes |
+| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | UUID du VPC dans lequel héberger la gateway. | `string` | n/a | yes |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_cache_effective_size_mb"></a> [cache\_effective\_size\_mb](#output\_cache\_effective\_size\_mb) | Budget du cache en Mio. |
+| <a name="output_cache_size_limit_mb"></a> [cache\_size\_limit\_mb](#output\_cache\_size\_limit\_mb) | Budget du cache en Mio. |
+| <a name="output_id"></a> [id](#output\_id) | UUID de l'Application Gateway. |
+| <a name="output_name"></a> [name](#output\_name) | Nom de l'AppGW. |
+| <a name="output_plan"></a> [plan](#output\_plan) | Plan effectif appliqué (`small` / `medium` / `large`). |
+| <a name="output_public_ip_address"></a> [public\_ip\_address](#output\_public\_ip\_address) | IP publique attachée, ou `null` si gateway interne. |
+| <a name="output_region"></a> [region](#output\_region) | Région de la gateway. |
+| <a name="output_status"></a> [status](#output\_status) | Statut courant : `creating`, `active`, `error`, `deleting`. |
+| <a name="output_vip_address"></a> [vip\_address](#output\_vip\_address) | VIP privée flottante de la gateway (dans le VNet). |
+<!-- END_TF_DOCS -->

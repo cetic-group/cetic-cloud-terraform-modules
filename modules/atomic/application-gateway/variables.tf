@@ -124,3 +124,32 @@ variable "tags" {
   default     = []
   description = "Liste de tags free-form (max 60, max 50 chars chacun)."
 }
+
+variable "cache_enabled" {
+  type        = bool
+  default     = false
+  description = "Activer le cache HTTP public de la passerelle."
+  nullable    = false
+}
+
+variable "cache_size_mb" {
+  type        = number
+  default     = 64
+  description = "Budget demandé en Mio, partagé entre les routes actives et borné par le plan."
+  nullable    = false
+  validation {
+    condition     = var.cache_size_mb >= 1 && var.cache_size_mb <= 1024 && floor(var.cache_size_mb) == var.cache_size_mb
+    error_message = "cache_size_mb doit être un entier entre 1 et 1024."
+  }
+}
+
+variable "cache_max_object_kb" {
+  type        = number
+  default     = 512
+  description = "Taille maximale des objets en Kio."
+  nullable    = false
+  validation {
+    condition     = var.cache_max_object_kb >= 1 && var.cache_max_object_kb <= 1024 && floor(var.cache_max_object_kb) == var.cache_max_object_kb
+    error_message = "cache_max_object_kb doit être un entier entre 1 et 1024."
+  }
+}

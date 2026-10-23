@@ -32,3 +32,13 @@ output "region" {
   description = "Région de la gateway."
   value       = ccp_application_gateway.this.region
 }
+
+output "cache_effective_size_mb" {
+  description = "Budget du cache en Mio."
+  value       = ccp_application_gateway.this.cache_effective_size_mb
+}
+
+output "cache_size_limit_mb" {
+  description = "Budget du cache en Mio."
+  value       = ccp_application_gateway.this.cache_size_limit_mb
+}

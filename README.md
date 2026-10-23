@@ -181,6 +181,17 @@ make lint         # tflint sur tous les modules
 make test         # terraform test natif (plan-only, pas d'apply)
 ```
 
+### Dépendance provider de la PR #50
+
+La CI de cette PR compile le commit `126eadc00f8a164863bc17db6ebeac10cd01f419` de la [PR provider #100](https://github.com/cetic-group/terraform-provider-ccp/pull/100) dans un miroir Terraform temporaire. Le numéro `7.3.0` du miroir est réservé aux tests, sans publication. Les tests utilisent le schéma réel et des ressources mockées.
+
+```bash
+bash .github/scripts/build-ccp-test-provider.sh /chemin/terraform-provider-ccp /tmp/ccp-provider-test
+TF_CLI_CONFIG_FILE=/tmp/ccp-provider-test/terraform.tfrc make validate test
+```
+
+Avant fusion : publier le provider 7.3.0, retirer les deux étapes `Install AppGW cache provider snapshot`, puis vérifier la CI avec le Registry. Les exécutions sur `main` continuent à utiliser les versions publiées.
+
 ## Contributions
 
 PRs bienvenues. Conventions :

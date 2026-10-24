@@ -8,7 +8,7 @@ runs:
       with:
         repository: cetic-group/terraform-provider-ccp
         # PR #100: cache HTTP AppGW (#1733), never follow a mutable branch.
-        ref: 126eadc00f8a164863bc17db6ebeac10cd01f419
+        ref: bbddec69df9396ae71ca48ca558ff601da37a235
         path: .ci-ccp-provider
         persist-credentials: false
     - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
@@ -23,7 +23,7 @@ runs:
         cat >> "$GITHUB_STEP_SUMMARY" <<'SUMMARY'
         ### Provider used by these integration tests
 
-        Built from `cetic-group/terraform-provider-ccp@126eadc00f8a164863bc17db6ebeac10cd01f419` (PR #100).
+        Built from `cetic-group/terraform-provider-ccp@bbddec69df9396ae71ca48ca558ff601da37a235` (PR #100).
         Version `7.3.0` is a **local mirror slot only**, not a published release.
         Validate and mock tests run against this actual provider schema.
         Before merging PR #50, publish the provider and rerun with the Registry.

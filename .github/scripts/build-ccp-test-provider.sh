@@ -4,7 +4,7 @@ set -euo pipefail
 
 provider_source="${1:?Usage: build-ccp-test-provider.sh SOURCE OUTPUT}"
 output_dir="${2:?Usage: build-ccp-test-provider.sh SOURCE OUTPUT}"
-provider_revision=126eadc00f8a164863bc17db6ebeac10cd01f419
+provider_revision=bbddec69df9396ae71ca48ca558ff601da37a235
 
 if [[ "$(git -C "$provider_source" rev-parse HEAD)" != "$provider_revision" ]]; then
   printf 'Unexpected provider revision; expected %s\n' "$provider_revision" >&2

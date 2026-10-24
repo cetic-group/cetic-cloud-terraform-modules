@@ -113,3 +113,19 @@ run "rejects_invalid_cidr" {
     var.global_allow_cidrs,
   ]
 }
+
+run "cache_configuration" {
+  command = plan
+  variables {
+    name          = "cache"
+    region        = "RNN"
+    vpc_id        = "vpc"
+    vnet_id       = "vnet"
+    cache_enabled = true
+    cache_size_mb = 64
+  }
+  assert {
+    condition     = ccp_application_gateway.this.cache_enabled == true && ccp_application_gateway.this.cache_size_mb == 64
+    error_message = "Cache configuration was not propagated."
+  }
+}

@@ -1,0 +1,30 @@
+name: CCP provider snapshot for integration tests
+description: Build the pinned provider PR dependency in an isolated Terraform mirror.
+runs:
+  using: composite
+  steps:
+    - name: Checkout provider source
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      with:
+        repository: cetic-group/terraform-provider-ccp
+        # PR #100: cache HTTP AppGW (#1733), never follow a mutable branch.
+        ref: bbddec69df9396ae71ca48ca558ff601da37a235
+        path: .ci-ccp-provider
+        persist-credentials: false
+    - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      with:
+        go-version-file: .ci-ccp-provider/go.mod
+        cache-dependency-path: .ci-ccp-provider/go.sum
+    - name: Build provider and configure test mirror
+      shell: bash
+      run: |
+        bash .github/scripts/build-ccp-test-provider.sh "$GITHUB_WORKSPACE/.ci-ccp-provider" "$RUNNER_TEMP/ccp-test-provider"
+        printf 'TF_CLI_CONFIG_FILE=%s/ccp-test-provider/terraform.tfrc\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+        cat >> "$GITHUB_STEP_SUMMARY" <<'SUMMARY'
+        ### Provider used by these integration tests
+
+        Built from `cetic-group/terraform-provider-ccp@bbddec69df9396ae71ca48ca558ff601da37a235` (PR #100).
+        Version `7.3.0` is a **local mirror slot only**, not a published release.
+        Validate and mock tests run against this actual provider schema.
+        Before merging PR #50, publish the provider and rerun with the Registry.
+        SUMMARY

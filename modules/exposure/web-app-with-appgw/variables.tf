@@ -179,13 +179,19 @@ variable "routes" {
   EOT
 
   type = list(object({
-    listener_index   = number
-    target_group_key = string
-    priority         = optional(number, 100)
-    path_match       = optional(string, "/")
-    path_match_type  = optional(string, "prefix")
-    method_match     = optional(list(string), [])
-    strip_prefix     = optional(bool, false)
+    listener_index       = number
+    target_group_key     = string
+    priority             = optional(number, 100)
+    path_match           = optional(string, "/")
+    path_match_type      = optional(string, "prefix")
+    method_match         = optional(list(string), [])
+    strip_prefix         = optional(bool, false)
+    cache_mode           = optional(string, "off")
+    cache_default_ttl_s  = optional(number, 60)
+    cache_max_ttl_s      = optional(number, 3600)
+    cache_bypass_cookies = optional(list(string), [])
+    cache_debug_headers  = optional(bool, false)
+
     header_matches = optional(list(object({
       name  = string
       value = string
@@ -212,5 +218,34 @@ variable "routes" {
   validation {
     condition     = length(var.routes) >= 1
     error_message = "Au moins une route est requise."
+  }
+}
+
+variable "cache_enabled" {
+  type        = bool
+  default     = false
+  description = "Activer le cache HTTP public de la passerelle."
+  nullable    = false
+}
+
+variable "cache_size_mb" {
+  type        = number
+  default     = 64
+  description = "Budget demandé en Mio, partagé entre les routes actives et borné par le plan."
+  nullable    = false
+  validation {
+    condition     = var.cache_size_mb >= 1 && var.cache_size_mb <= 1024 && floor(var.cache_size_mb) == var.cache_size_mb
+    error_message = "cache_size_mb doit être un entier entre 1 et 1024."
+  }
+}
+
+variable "cache_max_object_kb" {
+  type        = number
+  default     = 512
+  description = "Taille maximale des objets en Kio."
+  nullable    = false
+  validation {
+    condition     = var.cache_max_object_kb >= 1 && var.cache_max_object_kb <= 1024 && floor(var.cache_max_object_kb) == var.cache_max_object_kb
+    error_message = "cache_max_object_kb doit être un entier entre 1 et 1024."
   }
 }

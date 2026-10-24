@@ -179,7 +179,7 @@ run "cache_configuration" {
     cache_bypass_cookies = ["session"]
   }
   assert {
-    condition     = ccp_appgw_route.this.cache_mode == "force" && ccp_appgw_route.this.cache_default_ttl_s == 90 && ccp_appgw_route.this.cache_bypass_cookies == tolist(["session"])
+    condition     = ccp_appgw_route.this.cache_mode == "force" && ccp_appgw_route.this.cache_default_ttl_s == 90 && ccp_appgw_route.this.cache_bypass_cookies == toset(["session"])
     error_message = "Cache configuration was not propagated."
   }
 }

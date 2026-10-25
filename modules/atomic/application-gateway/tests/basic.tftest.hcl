@@ -113,3 +113,89 @@ run "rejects_invalid_cidr" {
     var.global_allow_cidrs,
   ]
 }
+
+run "cache_configuration" {
+  command = plan
+  variables {
+    name          = "cache"
+    region        = "RNN"
+    vpc_id        = "vpc"
+    vnet_id       = "vnet"
+    cache_enabled = true
+  }
+  assert {
+    condition     = ccp_application_gateway.this.cache_enabled == true
+    error_message = "Cache configuration was not propagated."
+  }
+}
+
+# Provider intégralement simulé : cet apply de test ne contacte aucune API.
+run "cache_profile_is_read_from_provider" {
+  command = apply
+  variables {
+    name          = "profile"
+    region        = "RNN"
+    vpc_id        = "vpc"
+    vnet_id       = "vnet"
+    plan          = "appgw-medium"
+    cache_enabled = true
+  }
+  override_resource {
+    target = ccp_application_gateway.this
+    values = {
+      cache_size_mb           = 192
+      cache_max_object_kb     = 384
+      cache_effective_size_mb = 192
+      cache_size_limit_mb     = 192
+    }
+  }
+  assert {
+    condition     = output.cache_size_mb == 192 && output.cache_max_object_kb == 384
+    error_message = "Cache dimensions must come from the provider, without a module profile table."
+  }
+  assert {
+    condition     = output.cache_enabled && output.cache_effective_size_mb == 192 && output.cache_size_limit_mb == 192
+    error_message = "Computed cache profile and activation were not propagated."
+  }
+}
+
+run "replica_count_single" {
+  command = plan
+  variables {
+    name          = "single-test"
+    region        = "RNN"
+    vnet_id       = "00000000-0000-0000-0000-000000000020"
+    vpc_id        = "00000000-0000-0000-0000-000000000010"
+    replica_count = 1
+  }
+  assert {
+    condition     = output.replica_count == 1
+    error_message = "Le nombre d'instances doit être propagé jusqu'à la ressource et sa sortie."
+  }
+}
+
+run "replica_count_default_ha" {
+  command = plan
+  variables {
+    name    = "single-test"
+    region  = "RNN"
+    vnet_id = "00000000-0000-0000-0000-000000000020"
+    vpc_id  = "00000000-0000-0000-0000-000000000010"
+  }
+  assert {
+    condition     = output.replica_count == 2
+    error_message = "Le nombre d'instances doit être propagé jusqu'à la ressource et sa sortie."
+  }
+}
+
+run "replica_count_rejects_fraction" {
+  command = plan
+  variables {
+    name          = "single-test"
+    region        = "RNN"
+    vnet_id       = "00000000-0000-0000-0000-000000000020"
+    vpc_id        = "00000000-0000-0000-0000-000000000010"
+    replica_count = 1.5
+  }
+  expect_failures = [var.replica_count]
+}

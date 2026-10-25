@@ -100,12 +100,13 @@ resource "ccp_load_balancer" "this" {
   provider = ccp
   count    = var.exposure_type == "lb" ? 1 : 0
 
-  name         = "${var.org_prefix}-${lower(var.region)}-lb"
-  region       = var.region
-  plan         = var.lb_plan
-  vnet_id      = module.vpc.vnet_ids.web
-  public_ip_id = ccp_public_ip.exposure.id
-  tags         = local.base_tags
+  name          = "${var.org_prefix}-${lower(var.region)}-lb"
+  region        = var.region
+  plan          = var.lb_plan
+  replica_count = var.lb_replica_count
+  vnet_id       = module.vpc.vnet_ids.web
+  public_ip_id  = ccp_public_ip.exposure.id
+  tags          = local.base_tags
 
   listener {
     protocol    = "http"
@@ -150,13 +151,15 @@ module "appgw" {
 
   source = "../../modules/exposure/web-app-with-appgw"
 
-  name         = "${var.org_prefix}-${lower(var.region)}-appgw"
-  region       = var.region
-  plan         = var.appgw_plan
-  vpc_id       = module.vpc.vpc_id
-  vnet_id      = module.vpc.vnet_ids.web
-  public_ip_id = ccp_public_ip.exposure.id
-  tags         = local.base_tags
+  name          = "${var.org_prefix}-${lower(var.region)}-appgw"
+  region        = var.region
+  plan          = var.appgw_plan
+  replica_count = var.appgw_replica_count
+  cache_enabled = var.appgw_cache_enabled
+  vpc_id        = module.vpc.vpc_id
+  vnet_id       = module.vpc.vnet_ids.web
+  public_ip_id  = ccp_public_ip.exposure.id
+  tags          = local.base_tags
 
   hostnames            = [local.appgw_hostname_effective]
   acme_challenge       = var.appgw_acme_challenge
@@ -193,6 +196,7 @@ module "appgw" {
       priority         = 100
       path_match       = "/"
       path_match_type  = "prefix"
+      cache_mode       = var.appgw_cache_mode
     },
   ]
 }

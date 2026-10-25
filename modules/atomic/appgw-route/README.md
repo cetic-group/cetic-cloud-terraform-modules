@@ -160,3 +160,19 @@ output "admin_secret_ref" {
 - **`basic_auth_users` — sensibilité du state** : les mots de passe sont **persistés en clair dans le state Terraform**. Utiliser un backend chiffré (S3+KMS, Vault, Terraform Cloud). La plateforme ne retourne jamais les mots de passe en clair — au `terraform import`, le bloc `basic_auth_user` est vide et un `apply` ultérieur le re-synchronise.
 - **`basic_auth_secret_ref`** : référence opaque générée par la plateforme — ce n'est pas un secret en soi (impossible de l'utiliser hors plateforme) donc l'output est `sensitive=false`. Pratique pour cross-référencer la route dans une `ccp_secret` data source d'inventaire.
 - **`strip_prefix`** : utile quand une app est sous-montée à un préfixe (ex. `/web-app`) alors que son backend sert depuis `/`. La gateway retire `path_match` avant de forwarder. Ignoré si `path_match` est vide ou si `path_match_type = "regex"` (impossible de stripper un motif regex). Compatible avec `prefix` et `exact`.
+
+## Cache HTTP
+
+Les politiques de route nécessitent le provider 7.3.0 ou supérieur. Pour une
+passerelle dont le cache est dimensionné par le plan, utilisez le provider 8.0+
+et les modules de passerelle correspondants.
+
+`cache_mode` (`off` par défaut, `respect` ou `force`) active le cache sur cette
+route. `cache_default_ttl_s` et `cache_max_ttl_s` définissent les durées ;
+`cache_bypass_cookies` exclut les cookies de session (liste vide : exclure tout
+cookie). `cache_debug_headers` expose `X-Cache: HIT` ou `MISS`.
+Le cache doit aussi être activé sur la passerelle. Le plan de cette dernière
+fixe le budget partagé et la taille maximale d'un objet.
+
+> **EN:** Route settings opt public responses into caching. The gateway plan
+> determines cache capacity; route TTLs do not change its memory allocation.

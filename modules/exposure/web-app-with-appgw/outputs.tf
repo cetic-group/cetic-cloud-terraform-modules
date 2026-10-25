@@ -42,3 +42,33 @@ output "url" {
   description = "URL canonique HTTPS (premier hostname)."
   value       = "https://${var.hostnames[0]}"
 }
+
+output "cache_effective_size_mb" {
+  description = "Budget du cache en Mio."
+  value       = module.gateway.cache_effective_size_mb
+}
+
+output "cache_size_limit_mb" {
+  description = "Budget du cache en Mio."
+  value       = module.gateway.cache_size_limit_mb
+}
+
+output "cache_size_mb" {
+  description = "Budget de cache attribué par le plan, en Mio."
+  value       = module.gateway.cache_size_mb
+}
+
+output "cache_max_object_kb" {
+  description = "Taille maximale d'un objet attribuée par le plan, en Kio."
+  value       = module.gateway.cache_max_object_kb
+}
+
+output "cache_enabled" {
+  description = "Activation du cache HTTP de la passerelle."
+  value       = module.gateway.cache_enabled
+}
+
+output "replica_count" {
+  description = "Nombre d'instances provisionnées."
+  value       = module.gateway.replica_count
+}

@@ -87,7 +87,7 @@ module "appgw_internal" {
 ## Notes
 
 - Provisioning asynchrone (3-5 min en moyenne). Le provider attend `status=active`.
-- HA inter-node automatique (failover sans intervention).
+- Haute disponibilité avec bascule automatique quand `replica_count = 2`.
 - Pour les listeners (hostnames + cert ACME) et routes, créer les ressources `ccp_appgw_listener` et utiliser le module `atomic/appgw-route`.
 - Pour les pools de backends, utiliser `atomic/appgw-target-group`.
 - Le plan détermine routes max / listeners max / rate limit max (voir documentation produit pour les bornes exactes).
@@ -128,3 +128,16 @@ nécessite ni suppression d'état ni réimportation.
 > provider 8.0+ once released, and review the plan. Existing state and resource
 > addresses are retained. Upgrade Terraform clients before rolling out the
 > plan-managed API; the 7.3 provider can report inconsistent results with it.
+
+### Nombre d'instances (`replica_count`)
+
+`replica_count` vaut `2` par défaut (haute disponibilité). La valeur `1`
+convient aux environnements qui acceptent une interruption en cas de panne
+ou maintenance de leur instance unique. Le plan fixe la capacité de chaque
+instance ; il ne détermine pas leur nombre. Le modifier recrée la ressource.
+La sortie `replica_count` restitue la valeur provisionnée.
+
+Nécessite le provider **8.0.0** et une plateforme prenant en charge ce champ.
+Mettre la plateforme à jour avant de demander le mode unique. Le provider
+peut être installé auparavant en conservant la valeur historique `2`.
+Aucun tarif réduit n'est calculé par le module.

@@ -108,3 +108,13 @@ output "appgw_cache_max_object_kb" {
   description = "Dimension du cache fixée par le plan (Kio)."
   value       = var.exposure_type == "appgw" ? module.appgw[0].cache_max_object_kb : null
 }
+
+output "lb_replica_count" {
+  description = "Nombre d'instances provisionnées."
+  value       = var.exposure_type == "lb" ? ccp_load_balancer.this[0].replica_count : null
+}
+
+output "appgw_replica_count" {
+  description = "Nombre d'instances provisionnées."
+  value       = var.exposure_type == "appgw" ? module.appgw[0].replica_count : null
+}

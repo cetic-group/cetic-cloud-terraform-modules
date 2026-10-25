@@ -57,3 +57,8 @@ output "cache_enabled" {
   description = "Activation du cache HTTP de la passerelle."
   value       = ccp_application_gateway.this.cache_enabled
 }
+
+output "replica_count" {
+  description = "Nombre d'instances provisionnées."
+  value       = ccp_application_gateway.this.replica_count
+}

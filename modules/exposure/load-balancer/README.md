@@ -84,7 +84,7 @@ module "lb" {
 | `name` | string | yes | — | Nom du LB. |
 | `region` | string | yes | — | `RNN` / `PAR` / `ABJ`. |
 | `vnet_id` | string | yes | — | VNet hébergeant la VIP. |
-| `plan` | string | no | `"small"` | Plan de capacité : `small` (1 vCPU/512 Mo, 4,99 €), `medium` (2 vCPU/1 Go, 11,99 €), `large` (4 vCPU/2 Go, 27,99 €). **Immuable** — `RequiresReplace` côté provider. |
+| `plan` | string | no | `"small"` | Plan de capacité : `small`, `medium` ou `large` ; capacités et tarifs selon le catalogue. **Immuable** — `RequiresReplace` côté provider. |
 | `public_ip_id` | string | no | `null` | IP publique à attacher. |
 | `tags` | list(string) | no | `[]` | |
 | `listeners` | map(object) | no | `{}` | Voir schéma ci-dessous. La clé est un label logique (non envoyé à l'API). |
@@ -131,3 +131,16 @@ Exactement un de `container_id` / `vm_instance_id` est requis.
 - **Listeners immuables** : tout changement d'un champ listener autre que ses backends (protocol, port, algorithm, domain, réglages ACME) force un remplacement complet du LB.
 - **Backends réconciliés en place** : ajout/retrait/changement de `weight` d'un backend ne remplace pas le LB.
 - **ACME** requiert `protocol = "https"` + `domain`. Pour `dns01`, fournir aussi `acme_dns_provider` + `acme_dns_credentials`. Découvrir les providers DNS supportés via la data source `ccp_acme_dns_providers`.
+
+### Nombre d'instances (`replica_count`)
+
+`replica_count` vaut `2` par défaut (haute disponibilité). La valeur `1`
+convient aux environnements qui acceptent une interruption en cas de panne
+ou maintenance de leur instance unique. Le plan fixe la capacité de chaque
+instance ; il ne détermine pas leur nombre. Le modifier recrée la ressource.
+La sortie `replica_count` restitue la valeur provisionnée.
+
+Nécessite le provider **8.0.0** et une plateforme prenant en charge ce champ.
+Mettre la plateforme à jour avant de demander le mode unique. Le provider
+peut être installé auparavant en conservant la valeur historique `2`.
+Aucun tarif réduit n'est calculé par le module.

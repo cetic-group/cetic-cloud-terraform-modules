@@ -70,6 +70,7 @@ module "appgw" {
   name          = local.appgw_name
   region        = var.region
   plan          = var.appgw_plan
+  replica_count = var.appgw_replica_count
   cache_enabled = var.appgw_cache_enabled
   vpc_id        = module.vpc.vpc_id
   vnet_id       = module.vpc.vnet_ids.web

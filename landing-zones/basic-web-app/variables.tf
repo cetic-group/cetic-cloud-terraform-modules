@@ -280,3 +280,25 @@ variable "appgw_cache_mode" {
     error_message = "appgw_cache_mode doit valoir off, respect ou force."
   }
 }
+
+variable "lb_replica_count" {
+  type        = number
+  default     = 2
+  nullable    = false
+  description = "Nombre d'instances : 1 sans redondance ou 2 en haute disponibilité (défaut). Indépendant du plan ; le modifier remplace la ressource."
+  validation {
+    condition     = contains([1, 2], var.lb_replica_count)
+    error_message = "lb_replica_count doit valoir 1 ou 2."
+  }
+}
+
+variable "appgw_replica_count" {
+  type        = number
+  default     = 2
+  nullable    = false
+  description = "Nombre d'instances : 1 sans redondance ou 2 en haute disponibilité (défaut). Indépendant du plan ; le modifier remplace la ressource."
+  validation {
+    condition     = contains([1, 2], var.appgw_replica_count)
+    error_message = "appgw_replica_count doit valoir 1 ou 2."
+  }
+}

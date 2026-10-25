@@ -4,6 +4,16 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased — choix du nombre d'instances AppGW et LB
+
+- `replica_count` sur les modules AppGW et Load Balancer ; `appgw_replica_count`
+  et `lb_replica_count` sur les landing zones concernées. Valeurs : 1 ou 2,
+  défaut 2. Modifier ce choix remplace la ressource. La valeur effective est
+  également exposée en sortie.
+- Provider 8.0.0 et plateforme compatible nécessaires. Le mode unique n'offre
+  pas de redondance ; la capacité et le cache par instance restent ceux du plan.
+- Suivi : cetic-group/cetic-cloud-platform#1748 ; dépendance de cache #1746.
+
 ## Unreleased
 
 - Cache HTTP des Application Gateways : activation par passerelle et politiques

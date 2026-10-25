@@ -3,7 +3,7 @@
 set -euo pipefail
 provider_source="${1:?Usage: build-ccp-test-provider.sh SOURCE OUTPUT}"
 output_dir="${2:?Usage: build-ccp-test-provider.sh SOURCE OUTPUT}"
-provider_revision=ad85f83800ee981918bfb2c1deb0608558b5876b
+provider_revision=ce6fb0e6a6e9048355e35fc0fb6f76f2b0a90116
 if [[ "$(git -C "$provider_source" rev-parse HEAD)" != "$provider_revision" ]]; then
   printf 'Unexpected provider revision; expected %s\n' "$provider_revision" >&2
   exit 1
@@ -15,7 +15,7 @@ mirror="$output_dir/mirror"
 package_dir="$mirror/registry.terraform.io/cetic-group/ccp/8.0.0/$platform"
 mkdir -p "$package_dir"
 go -C "$provider_source" build -trimpath -mod=readonly \
-  -ldflags='-X main.version=8.0.0-dev.1746' \
+  -ldflags='-X main.version=8.0.0-dev.1748' \
   -o "$package_dir/terraform-provider-ccp_v8.0.0" .
 cat > "$output_dir/terraform.tfrc" <<EOF
 provider_installation {

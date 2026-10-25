@@ -1,4 +1,4 @@
-name: CCP provider snapshot for cache plan tests
+name: CCP provider snapshot for gateway tests
 description: Build the exact provider dependency in an isolated Terraform mirror.
 runs:
   using: composite
@@ -7,8 +7,8 @@ runs:
       uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       with:
         repository: cetic-group/terraform-provider-ccp
-        # Plan-managed cache dependency, tracked in cetic-cloud-platform#1746.
-        ref: ad85f83800ee981918bfb2c1deb0608558b5876b
+        # Cache and instance-count dependency, tracked in cetic-cloud-platform#1746 and #1748.
+        ref: ce6fb0e6a6e9048355e35fc0fb6f76f2b0a90116
         path: .ci-ccp-provider
         persist-credentials: false
     - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
@@ -23,9 +23,9 @@ runs:
         cat >> "$GITHUB_STEP_SUMMARY" <<'SUMMARY'
         ### Provider used by these integration tests
 
-        Source: `cetic-group/terraform-provider-ccp@ad85f83800ee981918bfb2c1deb0608558b5876b`.
+        Source: `cetic-group/terraform-provider-ccp@ce6fb0e6a6e9048355e35fc0fb6f76f2b0a90116`.
         `8.0.0` is a local mirror slot for tests, not a published release.
-        Tests use the actual computed-only cache schema and mocked resources.
+        Tests use the actual cache and replica-count schemas with mocked resources.
         Publish provider 8.0.0, remove this temporary snapshot and rerun with
         the Registry before merging/releasing these modules.
         SUMMARY

@@ -58,3 +58,8 @@ output "appgw_cache_max_object_kb" {
   description = "Dimension du cache fixée par le plan (Kio)."
   value       = module.appgw.cache_max_object_kb
 }
+
+output "appgw_replica_count" {
+  description = "Nombre d'instances provisionnées."
+  value       = module.appgw.replica_count
+}

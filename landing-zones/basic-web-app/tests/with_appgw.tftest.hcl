@@ -280,3 +280,97 @@ run "cache_dimensions_follow_provider_profile" {
     error_message = "Gateway activation and server profile must propagate through the landing zone."
   }
 }
+
+run "lb_replica_count_single" {
+  command = plan
+  variables {
+    org_prefix        = "acme"
+    region            = "RNN"
+    ssh_public_key    = "ssh-ed25519 AAAA test@example.com"
+    app_root_password = "test-password-123"
+    enable_database   = false
+    exposure_type     = "lb"
+    lb_replica_count  = 1
+  }
+  assert {
+    condition     = output.lb_replica_count == 1
+    error_message = "Le nombre d'instances doit être propagé jusqu'à la ressource et sa sortie."
+  }
+}
+
+run "lb_replica_count_default_ha" {
+  command = plan
+  variables {
+    org_prefix        = "acme"
+    region            = "RNN"
+    ssh_public_key    = "ssh-ed25519 AAAA test@example.com"
+    app_root_password = "test-password-123"
+    enable_database   = false
+    exposure_type     = "lb"
+  }
+  assert {
+    condition     = output.lb_replica_count == 2
+    error_message = "Le nombre d'instances doit être propagé jusqu'à la ressource et sa sortie."
+  }
+}
+
+run "lb_replica_count_rejects_fraction" {
+  command = plan
+  variables {
+    org_prefix        = "acme"
+    region            = "RNN"
+    ssh_public_key    = "ssh-ed25519 AAAA test@example.com"
+    app_root_password = "test-password-123"
+    enable_database   = false
+    exposure_type     = "lb"
+    lb_replica_count  = 1.5
+  }
+  expect_failures = [var.lb_replica_count]
+}
+
+run "appgw_replica_count_single" {
+  command = plan
+  variables {
+    org_prefix          = "acme"
+    region              = "RNN"
+    ssh_public_key      = "ssh-ed25519 AAAA test@example.com"
+    app_root_password   = "test-password-123"
+    enable_database     = false
+    exposure_type       = "appgw"
+    appgw_replica_count = 1
+  }
+  assert {
+    condition     = output.appgw_replica_count == 1
+    error_message = "Le nombre d'instances doit être propagé jusqu'à la ressource et sa sortie."
+  }
+}
+
+run "appgw_replica_count_default_ha" {
+  command = plan
+  variables {
+    org_prefix        = "acme"
+    region            = "RNN"
+    ssh_public_key    = "ssh-ed25519 AAAA test@example.com"
+    app_root_password = "test-password-123"
+    enable_database   = false
+    exposure_type     = "appgw"
+  }
+  assert {
+    condition     = output.appgw_replica_count == 2
+    error_message = "Le nombre d'instances doit être propagé jusqu'à la ressource et sa sortie."
+  }
+}
+
+run "appgw_replica_count_rejects_fraction" {
+  command = plan
+  variables {
+    org_prefix          = "acme"
+    region              = "RNN"
+    ssh_public_key      = "ssh-ed25519 AAAA test@example.com"
+    app_root_password   = "test-password-123"
+    enable_database     = false
+    exposure_type       = "appgw"
+    appgw_replica_count = 1.5
+  }
+  expect_failures = [var.appgw_replica_count]
+}

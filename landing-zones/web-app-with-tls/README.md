@@ -140,3 +140,16 @@ Les dimensions ne se configurent pas séparément.
 > **EN:** Enable gateway and route caching independently. The selected AppGW
 > plan determines both cache dimensions; the outputs report the server values.
 > Requires provider 8.0+ and the matching API.
+
+### Nombre d'instances (`appgw_replica_count`)
+
+`appgw_replica_count` vaut `2` par défaut (haute disponibilité). La valeur `1`
+convient aux environnements qui acceptent une interruption en cas de panne
+ou maintenance de leur instance unique. Le plan fixe la capacité de chaque
+instance ; il ne détermine pas leur nombre. Le modifier recrée la ressource.
+La sortie `appgw_replica_count` restitue la valeur provisionnée.
+
+Nécessite le provider **8.0.0** et une plateforme prenant en charge ce champ.
+Mettre la plateforme à jour avant de demander le mode unique. Le provider
+peut être installé auparavant en conservant la valeur historique `2`.
+Aucun tarif réduit n'est calculé par le module.

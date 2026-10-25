@@ -97,3 +97,8 @@ output "cache_enabled" {
   description = "Activation du cache HTTP de la passerelle."
   value       = module.gateway.cache_enabled
 }
+
+output "replica_count" {
+  description = "Nombre d'instances provisionnées."
+  value       = module.gateway.replica_count
+}

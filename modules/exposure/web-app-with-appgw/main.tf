@@ -6,12 +6,13 @@ locals {
 module "gateway" {
   source = "../../atomic/application-gateway"
 
-  name         = var.name
-  region       = var.region
-  plan         = var.plan
-  vpc_id       = var.vpc_id
-  vnet_id      = var.vnet_id
-  public_ip_id = var.public_ip_id
+  name          = var.name
+  region        = var.region
+  plan          = var.plan
+  replica_count = var.replica_count
+  vpc_id        = var.vpc_id
+  vnet_id       = var.vnet_id
+  public_ip_id  = var.public_ip_id
 
   cache_enabled = var.cache_enabled
 

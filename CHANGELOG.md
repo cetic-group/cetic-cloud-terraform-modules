@@ -4,6 +4,13 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased — tarifs du catalogue et option cache
+
+- Les tarifs Single et haute disponibilité sont indépendants et couvrent déjà
+  toutes les instances du mode retenu. Aucun calcul de prix côté module.
+- Le cache HTTP AppGW reste activable/désactivable ; son supplément optionnel
+  est publié dans le catalogue sous `appgw_cache`, selon le plan et le mode.
+
 ## Unreleased — choix du nombre d'instances AppGW et LB
 
 - `replica_count` sur les modules AppGW et Load Balancer ; `appgw_replica_count`

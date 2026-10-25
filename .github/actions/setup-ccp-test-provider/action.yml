@@ -8,7 +8,7 @@ runs:
       with:
         repository: cetic-group/terraform-provider-ccp
         # Cache and instance-count dependency, tracked in cetic-cloud-platform#1746 and #1748.
-        ref: ce6fb0e6a6e9048355e35fc0fb6f76f2b0a90116
+        ref: 4bb7592663aa6a32247e178d6c148b4e1972b95b
         path: .ci-ccp-provider
         persist-credentials: false
     - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
@@ -23,7 +23,7 @@ runs:
         cat >> "$GITHUB_STEP_SUMMARY" <<'SUMMARY'
         ### Provider used by these integration tests
 
-        Source: `cetic-group/terraform-provider-ccp@ce6fb0e6a6e9048355e35fc0fb6f76f2b0a90116`.
+        Source: `cetic-group/terraform-provider-ccp@4bb7592663aa6a32247e178d6c148b4e1972b95b`.
         `8.0.0` is a local mirror slot for tests, not a published release.
         Tests use the actual cache and replica-count schemas with mocked resources.
         Publish provider 8.0.0, remove this temporary snapshot and rerun with

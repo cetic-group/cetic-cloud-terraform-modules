@@ -143,4 +143,6 @@ La sortie `replica_count` restitue la valeur provisionnée.
 Nécessite le provider **8.0.0** et une plateforme prenant en charge ce champ.
 Mettre la plateforme à jour avant de demander le mode unique. Le provider
 peut être installé auparavant en conservant la valeur historique `2`.
-Aucun tarif réduit n'est calculé par le module.
+Le catalogue définit des tarifs distincts pour une et deux instances. Chaque
+montant couvre déjà toutes les instances du mode choisi ; le module ne
+multiplie pas ce montant.

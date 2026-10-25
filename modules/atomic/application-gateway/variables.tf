@@ -128,7 +128,7 @@ variable "tags" {
 variable "cache_enabled" {
   type        = bool
   default     = false
-  description = "Activer le cache HTTP public de la passerelle."
+  description = "Activer l’option cache HTTP payante de la passerelle ; supplément selon le catalogue."
   nullable    = false
 }
 

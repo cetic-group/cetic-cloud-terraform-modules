@@ -267,7 +267,7 @@ variable "appgw_cache_enabled" {
   type        = bool
   default     = false
   nullable    = false
-  description = "Active le cache de la passerelle ; le plan fixe ses dimensions."
+  description = "Active l’option cache payante selon le catalogue ; le plan fixe ses dimensions."
 }
 
 variable "appgw_cache_mode" {

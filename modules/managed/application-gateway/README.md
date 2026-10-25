@@ -214,4 +214,21 @@ La sortie `replica_count` restitue la valeur provisionnée.
 Nécessite le provider **8.0.0** et une plateforme prenant en charge ce champ.
 Mettre la plateforme à jour avant de demander le mode unique. Le provider
 peut être installé auparavant en conservant la valeur historique `2`.
-Aucun tarif réduit n'est calculé par le module.
+Le catalogue définit des tarifs distincts pour une et deux instances. Chaque
+montant couvre déjà toutes les instances du mode choisi ; le module ne
+multiplie pas ce montant.
+
+### Option cache payante
+
+`cache_enabled` active ou désactive l'option cache HTTP. Le catalogue publie
+son supplément sous `appgw_cache` pour le plan et le nombre d'instances choisis.
+Ce supplément s'ajoute au tarif de base ; aucun montant n'est fixé ou calculé
+par le module. Le budget et la taille maximale d'objet restent ceux du plan.
+Consulter l'estimation de la plateforme avant activation, par exemple :
+
+```bash
+cetic billing estimate appgw --plan small --replica-count 1 --cache-enabled
+```
+
+Le tarif de la combinaison doit être disponible sur la plateforme pour activer
+l'option. La désactivation du cache reste possible.

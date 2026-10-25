@@ -4,6 +4,15 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+- Cache HTTP des Application Gateways : activation par passerelle et politiques
+  par route dans les modules atomiques et composés. Les dimensions sont des
+  outputs déterminés par le plan, sans saisie libre ni budget mémorisé.
+- Les modules de passerelle exigent le provider 8.0.0+ (à publier avant ces
+  modules). Les configurations expérimentales doivent retirer les deux tailles
+  explicites ; aucun changement d'adresse de ressource n'est nécessaire.
+
 ## [0.37.0]
 
 ### Added

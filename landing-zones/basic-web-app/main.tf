@@ -150,13 +150,14 @@ module "appgw" {
 
   source = "../../modules/exposure/web-app-with-appgw"
 
-  name         = "${var.org_prefix}-${lower(var.region)}-appgw"
-  region       = var.region
-  plan         = var.appgw_plan
-  vpc_id       = module.vpc.vpc_id
-  vnet_id      = module.vpc.vnet_ids.web
-  public_ip_id = ccp_public_ip.exposure.id
-  tags         = local.base_tags
+  name          = "${var.org_prefix}-${lower(var.region)}-appgw"
+  region        = var.region
+  plan          = var.appgw_plan
+  cache_enabled = var.appgw_cache_enabled
+  vpc_id        = module.vpc.vpc_id
+  vnet_id       = module.vpc.vnet_ids.web
+  public_ip_id  = ccp_public_ip.exposure.id
+  tags          = local.base_tags
 
   hostnames            = [local.appgw_hostname_effective]
   acme_challenge       = var.appgw_acme_challenge
@@ -193,6 +194,7 @@ module "appgw" {
       priority         = 100
       path_match       = "/"
       path_match_type  = "prefix"
+      cache_mode       = var.appgw_cache_mode
     },
   ]
 }

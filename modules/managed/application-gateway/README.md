@@ -165,3 +165,40 @@ output "acme_status" {
 - **ACME** : `http01` exige que le hostname résolve vers l'IP publique de la gateway (CNAME/A) **avant** apply. `dns01` exige `acme_dns_provider` + `acme_dns_credentials`. `acme_challenge = null` n'émet aucun certificat.
 - **`basic_auth_users` — sensibilité state** : les mots de passe sont persistés en clair. Utiliser un backend chiffré (S3+KMS, Vault, TFC). La plateforme ne les rend jamais ; au `terraform import`, les blocs sont vides et un `apply` les re-synchronise.
 - **Migration depuis `exposure/web-app-with-appgw`** : signature identique côté inputs (à l'exception du nom du chemin source). Permuter `source` suffit ; pas de breaking change ni de drift d'état attendu.
+
+## Cache HTTP déterminé par le plan (provider 8.0+)
+
+Activez `cache_enabled` sur la passerelle et le cache sur les routes souhaitées.
+Le plan attribue automatiquement le budget partagé et la taille maximale des
+objets, y compris après un changement de plan. Consultez les outputs
+`cache_size_mb`, `cache_max_object_kb`, `cache_effective_size_mb` et
+`cache_size_limit_mb`. Les dimensions ne sont pas des variables du module.
+
+Les routes acceptent `cache_mode` (`off`, `respect`, `force`),
+`cache_default_ttl_s` (60), `cache_max_ttl_s` (3600), `cache_bypass_cookies`
+(liste vide : toute requête avec cookie contourne le cache) et
+`cache_debug_headers` (false). Dans les modules composés, ces attributs se
+placent directement sur chaque objet `routes`, à côté de `path_match`.
+
+Seuls les GET publics en 200 alimentent le cache ; HEAD peut lire ces entrées.
+Authorization, Set-Cookie et les réponses privées restent exclus.
+La purge est disponible dans la console, l'API ou `cetic appgw cache purge`.
+
+### Migration
+
+Cette version nécessite le provider 8.0.0 ou supérieur et l'API avec le cache
+piloté par le plan. Le provider doit être publié avant l'utilisation de ces
+modules. Les tests de la PR utilisent un binaire de développement isolé.
+
+Si vous utilisiez la branche expérimentale de cache, retirez les arguments
+`cache_size_mb` et `cache_max_object_kb` de vos appels de module. Conservez
+`cache_enabled`, `plan` et les règles des routes. Mettez à jour la contrainte
+provider puis exécutez `terraform init -upgrade` et examinez `terraform plan`.
+La migration garde les adresses de ressources et les clés d'état ; elle ne
+nécessite ni suppression d'état ni réimportation.
+
+> **EN:** The selected plan owns both cache dimensions. Only enablement and
+> route policies are configurable. Remove legacy size arguments, upgrade to
+> provider 8.0+ once released, and review the plan. Existing state and resource
+> addresses are retained. Upgrade Terraform clients before rolling out the
+> plan-managed API; the 7.3 provider can report inconsistent results with it.

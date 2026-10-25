@@ -201,3 +201,50 @@ variable "strip_prefix" {
     ou si `path_match_type = "regex"`.
   EOT
 }
+
+variable "cache_mode" {
+  type        = string
+  default     = "off"
+  description = "Politique de cache : off, respect ou force."
+  nullable    = false
+  validation {
+    condition     = contains(["off", "respect", "force"], var.cache_mode)
+    error_message = "cache_mode doit valoir off, respect ou force."
+  }
+}
+
+variable "cache_default_ttl_s" {
+  type        = number
+  default     = 60
+  description = "Durée par défaut du mode force, en secondes."
+  nullable    = false
+  validation {
+    condition     = var.cache_default_ttl_s >= 1 && var.cache_default_ttl_s <= 3600 && floor(var.cache_default_ttl_s) == var.cache_default_ttl_s
+    error_message = "cache_default_ttl_s doit être un entier entre 1 et 3600."
+  }
+}
+
+variable "cache_max_ttl_s" {
+  type        = number
+  default     = 3600
+  description = "Durée maximale des entrées en secondes."
+  nullable    = false
+  validation {
+    condition     = var.cache_max_ttl_s >= 1 && var.cache_max_ttl_s <= 3600 && floor(var.cache_max_ttl_s) == var.cache_max_ttl_s
+    error_message = "cache_max_ttl_s doit être un entier entre 1 et 3600."
+  }
+}
+
+variable "cache_bypass_cookies" {
+  type        = list(string)
+  default     = []
+  description = "Cookies de session exclus ; liste vide = tout cookie contourne le cache."
+  nullable    = false
+}
+
+variable "cache_debug_headers" {
+  type        = bool
+  default     = false
+  description = "Exposer X-Cache: HIT ou MISS."
+  nullable    = false
+}

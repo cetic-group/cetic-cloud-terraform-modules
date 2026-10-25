@@ -124,3 +124,10 @@ variable "tags" {
   default     = []
   description = "Liste de tags free-form (max 60, max 50 chars chacun)."
 }
+
+variable "cache_enabled" {
+  type        = bool
+  default     = false
+  description = "Activer le cache HTTP public de la passerelle."
+  nullable    = false
+}

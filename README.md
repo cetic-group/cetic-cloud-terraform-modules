@@ -192,3 +192,22 @@ PRs bienvenues. Conventions :
 ## Licence
 
 Apache 2.0 — voir [LICENSE](LICENSE).
+
+## Cache HTTP des Application Gateways
+
+Les modules `atomic/application-gateway`, `managed/application-gateway` et
+`exposure/web-app-with-appgw` exposent `cache_enabled`. Le plan détermine
+`cache_size_mb` et `cache_max_object_kb`, disponibles uniquement en outputs.
+Les politiques des routes sont exposées par `atomic/appgw-route` et les
+modules composés. Changer de plan ajuste automatiquement les dimensions.
+
+Cette évolution nécessite le provider **8.0.0+** et l'API correspondante.
+Le provider corrigé doit être publié avant la publication de ces modules.
+Retirez les anciennes dimensions explicites des configurations expérimentales,
+mettez à jour les contraintes, puis lancez `terraform init -upgrade` et
+`terraform plan`. Conservez les ressources existantes dans l'état.
+Le provider 7.3 peut signaler un résultat incohérent avec la nouvelle API :
+coordonnez la mise à jour des clients avant son déploiement.
+
+> **EN:** Cache dimensions are plan-managed outputs. Upgrade to provider 8.0+
+> once available and remove legacy size inputs before using the updated API.

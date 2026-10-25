@@ -253,3 +253,30 @@ run "rejects_invalid_schedule_day" {
     var.schedule_windows,
   ]
 }
+
+# Toutes les ressources sont simulées par mock_provider.
+run "cache_dimensions_follow_provider_profile" {
+  command = apply
+  variables {
+    org_prefix          = "cache"
+    region              = "RNN"
+    ssh_public_key      = "ssh-ed25519 AAAA test@example.com"
+    app_root_password   = "test-password-123"
+    appgw_plan          = "medium"
+    appgw_cache_enabled = true
+    appgw_cache_mode    = "respect"
+    exposure_type       = "appgw"
+    enable_database     = false
+  }
+  override_resource {
+    target = module.appgw[0].module.gateway.ccp_application_gateway.this
+    values = {
+      cache_size_mb       = 192
+      cache_max_object_kb = 384
+    }
+  }
+  assert {
+    condition     = module.appgw[0].cache_enabled && output.appgw_cache_size_mb == 192 && output.appgw_cache_max_object_kb == 384
+    error_message = "Gateway activation and server profile must propagate through the landing zone."
+  }
+}

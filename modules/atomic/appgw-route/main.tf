@@ -19,6 +19,12 @@ resource "ccp_appgw_route" "this" {
 
   method_match = var.method_match
 
+  cache_mode           = var.cache_mode
+  cache_default_ttl_s  = var.cache_default_ttl_s
+  cache_max_ttl_s      = var.cache_max_ttl_s
+  cache_bypass_cookies = var.cache_bypass_cookies
+  cache_debug_headers  = var.cache_debug_headers
+
   # Policies
   rate_limit_per_sec = var.rate_limit_per_sec
   allow_cidrs        = var.allow_cidrs
@@ -45,6 +51,10 @@ resource "ccp_appgw_route" "this" {
   }
 
   lifecycle {
+    precondition {
+      condition     = var.cache_default_ttl_s <= var.cache_max_ttl_s
+      error_message = "La durée par défaut du cache doit être inférieure ou égale au maximum."
+    }
     precondition {
       condition     = !(var.cors_credentials && contains(var.cors_origins, "*"))
       error_message = "CORS : `cors_credentials=true` est incompatible avec `cors_origins=[\"*\"]` (les navigateurs refusent ce combo)."

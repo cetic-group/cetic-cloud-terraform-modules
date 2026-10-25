@@ -262,3 +262,21 @@ variable "schedule_enabled" {
   default     = true
   description = "Active le pilotage des plannings de l'app. À `false`, les plannings sont définis mais jamais appliqués. Ignoré si `schedule_windows` est vide."
 }
+
+variable "appgw_cache_enabled" {
+  type        = bool
+  default     = false
+  nullable    = false
+  description = "Active le cache de la passerelle ; le plan fixe ses dimensions."
+}
+
+variable "appgw_cache_mode" {
+  type        = string
+  default     = "off"
+  nullable    = false
+  description = "Cache de la route publique : off, respect ou force."
+  validation {
+    condition     = contains(["off", "respect", "force"], var.appgw_cache_mode)
+    error_message = "appgw_cache_mode doit valoir off, respect ou force."
+  }
+}

@@ -14,6 +14,8 @@ resource "ccp_application_gateway" "this" {
   vnet_id      = var.vnet_id
   public_ip_id = var.public_ip_id
 
+  cache_enabled = var.cache_enabled
+
   force_https               = var.force_https
   hsts_enabled              = var.hsts_enabled
   hsts_max_age              = var.hsts_max_age

@@ -179,13 +179,19 @@ variable "routes" {
   EOT
 
   type = list(object({
-    listener_index   = number
-    target_group_key = string
-    priority         = optional(number, 100)
-    path_match       = optional(string, "/")
-    path_match_type  = optional(string, "prefix")
-    method_match     = optional(list(string), [])
-    strip_prefix     = optional(bool, false)
+    listener_index       = number
+    target_group_key     = string
+    priority             = optional(number, 100)
+    path_match           = optional(string, "/")
+    path_match_type      = optional(string, "prefix")
+    method_match         = optional(list(string), [])
+    strip_prefix         = optional(bool, false)
+    cache_mode           = optional(string, "off")
+    cache_default_ttl_s  = optional(number, 60)
+    cache_max_ttl_s      = optional(number, 3600)
+    cache_bypass_cookies = optional(list(string), [])
+    cache_debug_headers  = optional(bool, false)
+
     header_matches = optional(list(object({
       name  = string
       value = string
@@ -213,4 +219,11 @@ variable "routes" {
     condition     = length(var.routes) >= 1
     error_message = "Au moins une route est requise."
   }
+}
+
+variable "cache_enabled" {
+  type        = bool
+  default     = false
+  description = "Activer le cache HTTP public de la passerelle."
+  nullable    = false
 }

@@ -67,13 +67,14 @@ resource "ccp_container_instance" "app" {
 module "appgw" {
   source = "../../modules/managed/application-gateway"
 
-  name         = local.appgw_name
-  region       = var.region
-  plan         = var.appgw_plan
-  vpc_id       = module.vpc.vpc_id
-  vnet_id      = module.vpc.vnet_ids.web
-  public_ip_id = module.public_ip.id
-  tags         = local.base_tags
+  name          = local.appgw_name
+  region        = var.region
+  plan          = var.appgw_plan
+  cache_enabled = var.appgw_cache_enabled
+  vpc_id        = module.vpc.vpc_id
+  vnet_id       = module.vpc.vnet_ids.web
+  public_ip_id  = module.public_ip.id
+  tags          = local.base_tags
 
   hostnames      = [local.effective_host]
   acme_challenge = "http01" # cert Let's Encrypt — un CNAME vers la gateway doit être en place avant apply
@@ -106,6 +107,7 @@ module "appgw" {
       priority         = 100
       path_match       = "/"
       path_match_type  = "prefix"
+      cache_mode       = var.appgw_cache_mode
       policies = {
         waf_preset       = var.waf_preset
         basic_auth_users = var.basic_auth_users

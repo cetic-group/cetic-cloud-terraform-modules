@@ -144,3 +144,19 @@ output "url" {
 - **`db_replicas` immutable** : pour upgrader `dev → prod`, snapshot + nouvelle instance + restore. Pas de migration in-place.
 - **Migration `lb` → `appgw`** : changer `exposure_type` reconstruit l'exposition (destroy LB + create AppGW) — l'IP publique est conservée (même ressource `ccp_public_ip`). Prévoir une fenêtre de migration brève.
 - **Mode `appgw` + `appgw_acme_challenge = "http01"`** : le hostname doit résoudre vers l'IP publique de la gateway (CNAME/A) **avant** l'apply (sinon le challenge ACME échoue). Utiliser `dns01` (+ `appgw_acme_dns_provider`/`appgw_acme_dns_credentials`) pour éviter le pré-requis DNS A/CNAME.
+
+## Cache HTTP de la passerelle
+
+`appgw_cache_enabled = true` active le cache de la passerelle ;
+`appgw_cache_mode = "respect"` active le cache des réponses publiques de la route.
+Les deux valeurs sont désactivées par défaut. Le plan `appgw_plan` fixe les
+budgets et la taille maximale des objets, exposés dans `appgw_cache_size_mb`
+et `appgw_cache_max_object_kb` (null en mode LB dans `basic-web-app`).
+
+Nécessite le provider 8.0+ une fois publié et l'API avec le cache par plan.
+Mettre à jour les clients Terraform avant le déploiement de cette API.
+Les dimensions ne se configurent pas séparément.
+
+> **EN:** Enable gateway and route caching independently. The selected AppGW
+> plan determines both cache dimensions; the outputs report the server values.
+> Requires provider 8.0+ and the matching API.

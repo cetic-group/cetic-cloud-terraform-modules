@@ -212,6 +212,27 @@ variable "routes" {
   EOT
 
   type = list(object({
+    l7_policy = optional(object({
+      enabled = optional(bool)
+      policies = optional(map(object({
+        scope = optional(object({ path = optional(object({ op = string, value = string })) }))
+        allow_rules = optional(map(object({ match = object({
+          source_cidrs = optional(list(string))
+          path         = optional(object({ op = string, value = string }))
+          methods      = optional(list(string))
+          headers      = optional(list(object({ name = string, op = string, values = optional(list(string)) })))
+          match_all    = optional(bool)
+        }) })))
+        deny_rules = optional(map(object({ match = object({
+          source_cidrs = optional(list(string))
+          path         = optional(object({ op = string, value = string }))
+          methods      = optional(list(string))
+          headers      = optional(list(object({ name = string, op = string, values = optional(list(string)) })))
+          match_all    = optional(bool)
+        }) })))
+        required_headers = optional(map(object({ name = string, op = string, values = optional(list(string)) })))
+      })))
+    }))
     listener_index       = number
     target_group_key     = string
     priority             = optional(number, 100)

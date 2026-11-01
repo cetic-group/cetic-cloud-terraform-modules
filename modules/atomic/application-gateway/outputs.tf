@@ -62,3 +62,28 @@ output "replica_count" {
   description = "Nombre d'instances provisionnées."
   value       = ccp_application_gateway.this.replica_count
 }
+
+output "l7_policy" {
+  value       = ccp_application_gateway.this.l7_policy
+  description = "État de politique lu sur la ressource (l7_policy)."
+}
+
+output "security_revision" {
+  value       = ccp_application_gateway.this.security_revision
+  description = "État de politique lu sur la ressource (security_revision)."
+}
+
+output "l4_policy" {
+  value       = ccp_application_gateway.this.l4_policy
+  description = "État de politique lu sur la ressource (l4_policy)."
+}
+
+output "client_ip_policy" {
+  value       = ccp_application_gateway.this.client_ip_policy
+  description = "État de politique lu sur la ressource (client_ip_policy)."
+}
+
+output "access_policy_state" {
+  value       = ccp_application_gateway.this.access_policy_state
+  description = "État de politique lu sur la ressource (access_policy_state)."
+}

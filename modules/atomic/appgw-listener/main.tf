@@ -1,5 +1,6 @@
 resource "ccp_appgw_listener" "this" {
-  provider = ccp
+  l7_policy = var.l7_policy
+  provider  = ccp
 
   appgw_id             = var.appgw_id
   hostname             = var.hostname

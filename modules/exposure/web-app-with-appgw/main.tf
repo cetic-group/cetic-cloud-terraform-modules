@@ -14,7 +14,11 @@ module "gateway" {
   vnet_id       = var.vnet_id
   public_ip_id  = var.public_ip_id
 
-  cache_enabled = var.cache_enabled
+  cache_enabled    = var.cache_enabled
+  l4_policy        = var.l4_policy
+  l7_policy        = var.l7_policy
+  client_ip_policy = var.client_ip_policy
+
 
   force_https               = var.force_https
   hsts_enabled              = var.hsts_enabled
@@ -33,6 +37,7 @@ resource "ccp_appgw_listener" "this" {
 
   appgw_id             = module.gateway.id
   hostname             = each.value
+  l7_policy            = lookup(var.listener_l7_policies, each.value, null)
   acme_challenge       = var.acme_challenge
   acme_dns_provider    = var.acme_dns_provider
   acme_dns_credentials = var.acme_dns_credentials
@@ -62,6 +67,7 @@ module "routes" {
   listener_id     = ccp_appgw_listener.this[tostring(var.routes[count.index].listener_index)].id
   target_group_id = module.target_groups[var.routes[count.index].target_group_key].id
 
+  l7_policy            = var.routes[count.index].l7_policy
   priority             = var.routes[count.index].priority
   path_match           = var.routes[count.index].path_match
   path_match_type      = var.routes[count.index].path_match_type

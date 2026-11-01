@@ -72,3 +72,28 @@ output "replica_count" {
   description = "Nombre d'instances provisionnées."
   value       = module.gateway.replica_count
 }
+
+output "l4_policy" {
+  value       = module.gateway.l4_policy
+  description = "Politique ou état courant de la passerelle."
+}
+
+output "l7_policy" {
+  value       = module.gateway.l7_policy
+  description = "Politique ou état courant de la passerelle."
+}
+
+output "client_ip_policy" {
+  value       = module.gateway.client_ip_policy
+  description = "Politique ou état courant de la passerelle."
+}
+
+output "security_revision" {
+  value       = module.gateway.security_revision
+  description = "Politique ou état courant de la passerelle."
+}
+
+output "access_policy_state" {
+  value       = module.gateway.access_policy_state
+  description = "Politique ou état courant de la passerelle."
+}

@@ -8,7 +8,7 @@ runs:
       with:
         repository: cetic-group/terraform-provider-ccp
         # Access policy dependency, tracked in cetic-cloud-platform#1828.
-        ref: 50cd0ed02b337626b387655a0d5067ceefc9e423
+        ref: 400cf09a8d9bc517817808f1e7565ebdfc2ba52f
         path: .ci-ccp-provider
         persist-credentials: false
     - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
@@ -23,7 +23,7 @@ runs:
         cat >> "$GITHUB_STEP_SUMMARY" <<'SUMMARY'
         ### Provider used by these integration tests
 
-        Source: `cetic-group/terraform-provider-ccp@50cd0ed02b337626b387655a0d5067ceefc9e423`.
+        Source: `cetic-group/terraform-provider-ccp@400cf09a8d9bc517817808f1e7565ebdfc2ba52f`.
         `8.1.0` is a local mirror slot for tests, not a published release.
         Tests use the actual access policy, cache and replica-count schemas with mocked resources.
         Publish provider 8.1.0, remove this temporary snapshot and rerun with

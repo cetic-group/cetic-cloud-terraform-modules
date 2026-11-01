@@ -113,3 +113,118 @@ run "rejects_invalid_cidr" {
     var.global_allow_cidrs,
   ]
 }
+
+run "cache_configuration" {
+  command = plan
+  variables {
+    name          = "cache"
+    region        = "RNN"
+    vpc_id        = "vpc"
+    vnet_id       = "vnet"
+    cache_enabled = true
+  }
+  assert {
+    condition     = ccp_application_gateway.this.cache_enabled == true
+    error_message = "Cache configuration was not propagated."
+  }
+}
+
+# Provider intégralement simulé : cet apply de test ne contacte aucune API.
+run "cache_profile_is_read_from_provider" {
+  command = apply
+  variables {
+    name          = "profile"
+    region        = "RNN"
+    vpc_id        = "vpc"
+    vnet_id       = "vnet"
+    plan          = "appgw-medium"
+    cache_enabled = true
+  }
+  override_resource {
+    target = ccp_application_gateway.this
+    values = {
+      cache_size_mb           = 192
+      cache_max_object_kb     = 384
+      cache_effective_size_mb = 192
+      cache_size_limit_mb     = 192
+    }
+  }
+  assert {
+    condition     = output.cache_size_mb == 192 && output.cache_max_object_kb == 384
+    error_message = "Cache dimensions must come from the provider, without a module profile table."
+  }
+  assert {
+    condition     = output.cache_enabled && output.cache_effective_size_mb == 192 && output.cache_size_limit_mb == 192
+    error_message = "Computed cache profile and activation were not propagated."
+  }
+}
+
+run "replica_count_single" {
+  command = plan
+  variables {
+    name          = "single-test"
+    region        = "RNN"
+    vnet_id       = "00000000-0000-0000-0000-000000000020"
+    vpc_id        = "00000000-0000-0000-0000-000000000010"
+    replica_count = 1
+  }
+  assert {
+    condition     = output.replica_count == 1
+    error_message = "Le nombre d'instances doit être propagé jusqu'à la ressource et sa sortie."
+  }
+}
+
+run "replica_count_default_ha" {
+  command = plan
+  variables {
+    name    = "single-test"
+    region  = "RNN"
+    vnet_id = "00000000-0000-0000-0000-000000000020"
+    vpc_id  = "00000000-0000-0000-0000-000000000010"
+  }
+  assert {
+    condition     = output.replica_count == 2
+    error_message = "Le nombre d'instances doit être propagé jusqu'à la ressource et sa sortie."
+  }
+}
+
+run "replica_count_rejects_fraction" {
+  command = plan
+  variables {
+    name          = "single-test"
+    region        = "RNN"
+    vnet_id       = "00000000-0000-0000-0000-000000000020"
+    vpc_id        = "00000000-0000-0000-0000-000000000010"
+    replica_count = 1.5
+  }
+  expect_failures = [var.replica_count]
+}
+
+run "typed_security_policy" {
+  command = plan
+  variables {
+    name      = "policy-test"
+    region    = "RNN"
+    vpc_id    = "vpc"
+    vnet_id   = "vnet"
+    l7_policy = { enabled = true, policies = { partners = { required_headers = { id = { name = "X-Partner", op = "in", values = ["a", "b"] } } } } }
+  }
+  assert {
+    condition     = ccp_application_gateway.this.l7_policy.policies.partners.required_headers.id.values == tolist(["a", "b"])
+    error_message = "Typed mandatory header policy must reach the provider unchanged."
+  }
+}
+run "explicit_security_reset" {
+  command = plan
+  variables {
+    name      = "policy-test"
+    region    = "RNN"
+    vpc_id    = "vpc"
+    vnet_id   = "vnet"
+    l7_policy = {}
+  }
+  assert {
+    condition     = ccp_application_gateway.this.l7_policy != null && ccp_application_gateway.this.l7_policy.enabled == null && ccp_application_gateway.this.l7_policy.policies == null
+    error_message = "Explicit empty object must be distinct from an omitted policy."
+  }
+}

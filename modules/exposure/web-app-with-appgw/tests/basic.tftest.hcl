@@ -167,3 +167,87 @@ run "rejects_invalid_hostname" {
     var.hostnames,
   ]
 }
+
+run "replica_count_single" {
+  command = plan
+  variables {
+    name          = "single-test"
+    region        = "RNN"
+    vnet_id       = "00000000-0000-0000-0000-000000000020"
+    vpc_id        = "00000000-0000-0000-0000-000000000010"
+    target_groups = { default = { members = { m1 = { container_id = "00000000-0000-0000-0000-00000000c001", port = 8080 } } } }
+    routes        = [{ listener_index = 0, target_group_key = "default" }]
+    hostnames     = ["app.example.com"]
+    replica_count = 1
+  }
+  assert {
+    condition     = output.replica_count == 1
+    error_message = "Le nombre d'instances doit être propagé jusqu'à la ressource et sa sortie."
+  }
+}
+
+run "replica_count_default_ha" {
+  command = plan
+  variables {
+    name          = "single-test"
+    region        = "RNN"
+    vnet_id       = "00000000-0000-0000-0000-000000000020"
+    vpc_id        = "00000000-0000-0000-0000-000000000010"
+    target_groups = { default = { members = { m1 = { container_id = "00000000-0000-0000-0000-00000000c001", port = 8080 } } } }
+    routes        = [{ listener_index = 0, target_group_key = "default" }]
+    hostnames     = ["app.example.com"]
+  }
+  assert {
+    condition     = output.replica_count == 2
+    error_message = "Le nombre d'instances doit être propagé jusqu'à la ressource et sa sortie."
+  }
+}
+
+run "replica_count_rejects_fraction" {
+  command = plan
+  variables {
+    name          = "single-test"
+    region        = "RNN"
+    vnet_id       = "00000000-0000-0000-0000-000000000020"
+    vpc_id        = "00000000-0000-0000-0000-000000000010"
+    target_groups = { default = { members = { m1 = { container_id = "00000000-0000-0000-0000-00000000c001", port = 8080 } } } }
+    routes        = [{ listener_index = 0, target_group_key = "default" }]
+    hostnames     = ["app.example.com"]
+    replica_count = 1.5
+  }
+  expect_failures = [var.replica_count]
+}
+
+run "policies_on_all_scopes" {
+  command = plan
+  variables {
+    name                 = "policy-test"
+    region               = "RNN"
+    vpc_id               = "vpc"
+    vnet_id              = "vnet"
+    hostnames            = ["app.example.com"]
+    target_groups        = { default = { members = { app = { target_ip = "10.0.0.2", port = 8080 } } } }
+    routes               = [{ listener_index = 0, target_group_key = "default", l7_policy = { enabled = true, policies = { partners = { required_headers = { id = { name = "X-Partner", op = "in", values = ["a", "b"] } } } } } }]
+    l7_policy            = { enabled = true, policies = { partners = { required_headers = { id = { name = "X-Partner", op = "in", values = ["a", "b"] } } } } }
+    listener_l7_policies = { "app.example.com" = { enabled = true, policies = { partners = { required_headers = { id = { name = "X-Partner", op = "in", values = ["a", "b"] } } } } } }
+  }
+  assert {
+    condition     = module.gateway.l7_policy.enabled && ccp_appgw_listener.this["0"].l7_policy.enabled && module.routes[0].l7_policy.enabled
+    error_message = "Gateway, listener and route policies must all propagate."
+  }
+}
+run "reject_unmapped_listener_policy" {
+  command = plan
+  variables {
+    name                 = "policy-test"
+    region               = "RNN"
+    vpc_id               = "vpc"
+    vnet_id              = "vnet"
+    hostnames            = ["app.example.com"]
+    target_groups        = { default = { members = { app = { target_ip = "10.0.0.2", port = 8080 } } } }
+    routes               = [{ listener_index = 0, target_group_key = "default", l7_policy = { enabled = true, policies = { partners = { required_headers = { id = { name = "X-Partner", op = "in", values = ["a", "b"] } } } } } }]
+    l7_policy            = { enabled = true, policies = { partners = { required_headers = { id = { name = "X-Partner", op = "in", values = ["a", "b"] } } } } }
+    listener_l7_policies = { "typo.example.com" = { enabled = true, policies = { partners = { required_headers = { id = { name = "X-Partner", op = "in", values = ["a", "b"] } } } } } }
+  }
+  expect_failures = [var.listener_l7_policies]
+}

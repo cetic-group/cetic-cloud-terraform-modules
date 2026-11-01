@@ -34,3 +34,13 @@ output "basic_auth_secret_ref" {
   value       = ccp_appgw_route.this.basic_auth_secret_ref
   sensitive   = true
 }
+
+output "l7_policy" {
+  value       = ccp_appgw_route.this.l7_policy
+  description = "État de politique lu sur la ressource (l7_policy)."
+}
+
+output "security_revision" {
+  value       = ccp_appgw_route.this.security_revision
+  description = "État de politique lu sur la ressource (security_revision)."
+}

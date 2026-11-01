@@ -1,0 +1,31 @@
+name: CCP provider snapshot for gateway tests
+description: Build the exact provider dependency in an isolated Terraform mirror.
+runs:
+  using: composite
+  steps:
+    - name: Checkout provider source
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      with:
+        repository: cetic-group/terraform-provider-ccp
+        # Access policy dependency, tracked in cetic-cloud-platform#1828.
+        ref: 400cf09a8d9bc517817808f1e7565ebdfc2ba52f
+        path: .ci-ccp-provider
+        persist-credentials: false
+    - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      with:
+        go-version-file: .ci-ccp-provider/go.mod
+        cache-dependency-path: .ci-ccp-provider/go.sum
+    - name: Build provider and configure test mirror
+      shell: bash
+      run: |
+        bash .github/scripts/build-ccp-test-provider.sh "$GITHUB_WORKSPACE/.ci-ccp-provider" "$RUNNER_TEMP/ccp-test-provider"
+        printf 'TF_CLI_CONFIG_FILE=%s/ccp-test-provider/terraform.tfrc\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+        cat >> "$GITHUB_STEP_SUMMARY" <<'SUMMARY'
+        ### Provider used by these integration tests
+
+        Source: `cetic-group/terraform-provider-ccp@400cf09a8d9bc517817808f1e7565ebdfc2ba52f`.
+        `8.1.0` is a local mirror slot for tests, not a published release.
+        Tests use the actual access policy, cache and replica-count schemas with mocked resources.
+        Publish provider 8.1.0, remove this temporary snapshot and rerun with
+        the Registry before merging/releasing these modules.
+        SUMMARY

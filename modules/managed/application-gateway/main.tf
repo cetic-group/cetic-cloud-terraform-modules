@@ -7,12 +7,19 @@ locals {
 module "gateway" {
   source = "../../atomic/application-gateway"
 
-  name         = var.name
-  region       = var.region
-  plan         = var.plan
-  vpc_id       = var.vpc_id
-  vnet_id      = var.vnet_id
-  public_ip_id = var.public_ip_id
+  name          = var.name
+  region        = var.region
+  plan          = var.plan
+  replica_count = var.replica_count
+  vpc_id        = var.vpc_id
+  vnet_id       = var.vnet_id
+  public_ip_id  = var.public_ip_id
+
+  cache_enabled    = var.cache_enabled
+  l4_policy        = var.l4_policy
+  l7_policy        = var.l7_policy
+  client_ip_policy = var.client_ip_policy
+
 
   force_https               = var.force_https
   hsts_enabled              = var.hsts_enabled
@@ -32,6 +39,7 @@ module "listeners" {
 
   appgw_id             = module.gateway.id
   hostname             = each.value
+  l7_policy            = lookup(var.listener_l7_policies, each.value, null)
   acme_challenge       = var.acme_challenge
   acme_dns_provider    = var.acme_dns_provider
   acme_dns_credentials = var.acme_dns_credentials
@@ -61,12 +69,19 @@ module "routes" {
   listener_id     = module.listeners[tostring(var.routes[count.index].listener_index)].id
   target_group_id = module.target_groups[var.routes[count.index].target_group_key].id
 
-  priority        = var.routes[count.index].priority
-  path_match      = var.routes[count.index].path_match
-  path_match_type = var.routes[count.index].path_match_type
-  method_match    = var.routes[count.index].method_match
-  strip_prefix    = var.routes[count.index].strip_prefix
-  header_matches  = var.routes[count.index].header_matches
+  l7_policy            = var.routes[count.index].l7_policy
+  priority             = var.routes[count.index].priority
+  path_match           = var.routes[count.index].path_match
+  path_match_type      = var.routes[count.index].path_match_type
+  method_match         = var.routes[count.index].method_match
+  strip_prefix         = var.routes[count.index].strip_prefix
+  cache_mode           = var.routes[count.index].cache_mode
+  cache_default_ttl_s  = var.routes[count.index].cache_default_ttl_s
+  cache_max_ttl_s      = var.routes[count.index].cache_max_ttl_s
+  cache_bypass_cookies = var.routes[count.index].cache_bypass_cookies
+  cache_debug_headers  = var.routes[count.index].cache_debug_headers
+
+  header_matches = var.routes[count.index].header_matches
 
   rate_limit_per_sec = var.routes[count.index].policies.rate_limit_per_sec
   allow_cidrs        = var.routes[count.index].policies.allow_cidrs

@@ -6,7 +6,7 @@ Compose une stack 3-tier complète prête à servir une application web :
 flowchart TD
     net((Internet))
     pip[Public IP]
-    lb[Load balancer<br/>HA · public]
+    lb[Load balancer<br/>HA par défaut · public]
     cs[Container scale set<br/>N replicas · :8080]
     db[(PostgreSQL managé<br/>isolated)]
 
@@ -144,3 +144,88 @@ output "url" {
 - **`db_replicas` immutable** : pour upgrader `dev → prod`, snapshot + nouvelle instance + restore. Pas de migration in-place.
 - **Migration `lb` → `appgw`** : changer `exposure_type` reconstruit l'exposition (destroy LB + create AppGW) — l'IP publique est conservée (même ressource `ccp_public_ip`). Prévoir une fenêtre de migration brève.
 - **Mode `appgw` + `appgw_acme_challenge = "http01"`** : le hostname doit résoudre vers l'IP publique de la gateway (CNAME/A) **avant** l'apply (sinon le challenge ACME échoue). Utiliser `dns01` (+ `appgw_acme_dns_provider`/`appgw_acme_dns_credentials`) pour éviter le pré-requis DNS A/CNAME.
+
+## Cache HTTP de la passerelle
+
+`appgw_cache_enabled = true` active le cache de la passerelle ;
+`appgw_cache_mode = "respect"` active le cache des réponses publiques de la route.
+Les deux valeurs sont désactivées par défaut. Le plan `appgw_plan` fixe les
+budgets et la taille maximale des objets, exposés dans `appgw_cache_size_mb`
+et `appgw_cache_max_object_kb` (null en mode LB dans `basic-web-app`).
+
+Nécessite le provider 8.0+ une fois publié et l'API avec le cache par plan.
+Mettre à jour les clients Terraform avant le déploiement de cette API.
+Les dimensions ne se configurent pas séparément.
+
+> **EN:** Enable gateway and route caching independently. The selected AppGW
+> plan determines both cache dimensions; the outputs report the server values.
+> Requires provider 8.0+ and the matching API.
+
+### Nombre d'instances (`lb_replica_count`)
+
+`lb_replica_count` vaut `2` par défaut (haute disponibilité). La valeur `1`
+convient aux environnements qui acceptent une interruption en cas de panne
+ou maintenance de leur instance unique. Le plan fixe la capacité de chaque
+instance ; il ne détermine pas leur nombre. Le modifier recrée la ressource.
+La sortie `lb_replica_count` restitue la valeur provisionnée.
+
+Nécessite le provider **8.0.0** et une plateforme prenant en charge ce champ.
+Mettre la plateforme à jour avant de demander le mode unique. Le provider
+peut être installé auparavant en conservant la valeur historique `2`.
+Le catalogue définit des tarifs distincts pour une et deux instances. Chaque
+montant couvre déjà toutes les instances du mode choisi ; le module ne
+multiplie pas ce montant.
+
+### Nombre d'instances (`appgw_replica_count`)
+
+`appgw_replica_count` vaut `2` par défaut (haute disponibilité). La valeur `1`
+convient aux environnements qui acceptent une interruption en cas de panne
+ou maintenance de leur instance unique. Le plan fixe la capacité de chaque
+instance ; il ne détermine pas leur nombre. Le modifier recrée la ressource.
+La sortie `appgw_replica_count` restitue la valeur provisionnée.
+
+Nécessite le provider **8.0.0** et une plateforme prenant en charge ce champ.
+Mettre la plateforme à jour avant de demander le mode unique. Le provider
+peut être installé auparavant en conservant la valeur historique `2`.
+Le catalogue définit des tarifs distincts pour une et deux instances. Chaque
+montant couvre déjà toutes les instances du mode choisi ; le module ne
+multiplie pas ce montant.
+
+### Option cache payante
+
+`appgw_cache_enabled` active ou désactive l'option cache HTTP. Le catalogue publie
+son supplément sous `appgw_cache` pour le plan et le nombre d'instances choisis.
+Ce supplément s'ajoute au tarif de base ; aucun montant n'est fixé ou calculé
+par le module. Le budget et la taille maximale d'objet restent ceux du plan.
+Consulter l'estimation de la plateforme avant activation, par exemple :
+
+```bash
+cetic billing estimate appgw --plan small --replica-count 1 --cache-enabled
+```
+
+Le tarif de la combinaison doit être disponible sur la plateforme pour activer
+l'option. La désactivation du cache reste possible.
+
+
+### Politiques d’accès (#1828)
+
+Terraform 1.9 minimum (validation des domaines entre variables).
+
+Les entrées `l4_policy`, `l7_policy` et `client_ip_policy` de la passerelle,
+et `l7_policy` des listeners/routes, utilisent les objets typés du provider
+**8.1.0 minimum** (publication requise avant livraison de ces modules).
+Une valeur omise ou `null` conserve la protection distante, notamment après
+import ; `{}` demande explicitement sa suppression. Les maps `policies`,
+`allow_rules`, `deny_rules` et `required_headers` sont indexées par des clés
+stables. `match.headers` est une liste de critères combinés par ET.
+
+Une autorisation locale ne contourne aucun refus hérité. TCP/80 restrictif
+nécessite DNS-01/certificat importé ; une politique d’en-têtes exige le cache
+`off` sur les routes concernées. Les domaines avec une route regex ne peuvent
+pas activer les politiques L7. Le provider vérifie la capacité de l’API et la
+convergence des instances avant d’annoncer la fin de la modification.
+
+Pour les modules `managed/application-gateway` et `exposure/web-app-with-appgw`, `listener_l7_policies` est une map indexée par
+hostname, et `routes[*].l7_policy` porte les règles propres à la route.
+La landing zone expose les trois politiques de passerelle avec le préfixe `appgw_` ; pour une politique propre à un listener ou une route, utiliser les modules managed/exposure.
+Le filtrage hérité `allow_cidrs` / `deny_cidrs` conserve son sens HTTP.

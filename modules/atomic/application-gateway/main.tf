@@ -6,13 +6,20 @@ locals {
 }
 
 resource "ccp_application_gateway" "this" {
-  provider     = ccp
-  name         = var.name
-  region       = var.region
-  plan         = local.plan_canonical
-  vpc_id       = var.vpc_id
-  vnet_id      = var.vnet_id
-  public_ip_id = var.public_ip_id
+  provider      = ccp
+  name          = var.name
+  region        = var.region
+  plan          = local.plan_canonical
+  replica_count = var.replica_count
+  vpc_id        = var.vpc_id
+  vnet_id       = var.vnet_id
+  public_ip_id  = var.public_ip_id
+
+  cache_enabled    = var.cache_enabled
+  l4_policy        = var.l4_policy
+  l7_policy        = var.l7_policy
+  client_ip_policy = var.client_ip_policy
+
 
   force_https               = var.force_https
   hsts_enabled              = var.hsts_enabled

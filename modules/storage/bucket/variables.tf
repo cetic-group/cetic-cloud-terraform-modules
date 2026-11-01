@@ -45,3 +45,39 @@ variable "tags" {
   type    = list(string)
   default = []
 }
+
+variable "cors_rules" {
+  description = <<-EOT
+    Règles CORS du bucket (liste ordonnée). Vide par défaut : CORS n'est alors
+    pas géré par ce module et une configuration existante est laissée telle quelle.
+
+    Chaque règle : `allowed_origins` (obligatoire), `allowed_methods`
+    (obligatoire : GET, PUT, POST, DELETE, HEAD), `allowed_headers`,
+    `expose_headers`, `max_age_seconds` (défaut 3600), `description`.
+  EOT
+  type = list(object({
+    allowed_origins = set(string)
+    allowed_methods = set(string)
+    allowed_headers = optional(set(string))
+    expose_headers  = optional(set(string))
+    max_age_seconds = optional(number)
+    description     = optional(string)
+  }))
+  default = []
+
+  validation {
+    condition = alltrue([
+      for r in var.cors_rules :
+      length(r.allowed_origins) > 0 && length(r.allowed_methods) > 0
+    ])
+    error_message = "Chaque règle CORS doit avoir au moins une origine et une méthode."
+  }
+
+  validation {
+    condition = alltrue([
+      for r in var.cors_rules :
+      alltrue([for m in r.allowed_methods : contains(["GET", "PUT", "POST", "DELETE", "HEAD"], m)])
+    ])
+    error_message = "Méthodes CORS permises : GET, PUT, POST, DELETE, HEAD."
+  }
+}

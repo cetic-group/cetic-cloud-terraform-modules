@@ -4,6 +4,22 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Module **`managed/database/pg`** : variables `allowed_extensions`,
+  `preload_libraries` et `cron_database` (modifiables en place, défaut `null` =
+  réglages existants inchangés) et outputs `extensions_available` et
+  `extensions_status`. Le module exige le provider `cetic-group/ccp`
+  **`>= 7.3.0`**.
+
+### Changed
+
+- Landing zone **`k8s-platform`**, qui appelle `managed/database/pg` : version
+  minimale du provider `cetic-group/ccp` relevée de `>= 7.0.0` à **`>= 7.3.0`**.
+- CI : les workflows tournent aussi sur les push et pull requests vers `develop`.
+
 ## [0.37.0]
 
 ### Added

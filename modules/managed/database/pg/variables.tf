@@ -56,3 +56,21 @@ variable "tags" {
   type    = list(string)
   default = []
 }
+
+variable "allowed_extensions" {
+  type        = set(string)
+  default     = null
+  description = "Extensions du catalogue (`data.ccp_db_pg_extensions`) que le propriétaire de la base peut créer avec `CREATE EXTENSION`. Lister aussi leurs dépendances. Retirer une extension est refusé tant qu'elle est installée dans une base. `null` (défaut) : inchangé ; `[]` : aucune autorisée. Exige que les extensions soient activées sur l'instance (output `extensions_available`)."
+}
+
+variable "preload_libraries" {
+  type        = set(string)
+  default     = null
+  description = "Bibliothèques chargées au démarrage, requises par certaines extensions (`pg_cron`, `pg_stat_statements`). Un changement redémarre l'instance, un replica à la fois. `null` (défaut) : inchangé ; `[]` : aucune."
+}
+
+variable "cron_database" {
+  type        = string
+  default     = null
+  description = "Base dans laquelle `pg_cron` exécute les tâches planifiées. Exige `pg_cron` dans `preload_libraries`. `null` (défaut) : inchangé (base initiale de l'instance à la création)."
+}

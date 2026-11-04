@@ -34,3 +34,13 @@ output "admin_database" {
 output "status" {
   value = ccp_db_pg_instance.this.status
 }
+
+output "extensions_available" {
+  description = "`true` si des extensions peuvent être autorisées sur l'instance (activation préalable par le support)."
+  value       = ccp_db_pg_instance.this.extensions_available
+}
+
+output "extensions_status" {
+  description = "`applied` quand l'instance tourne avec ses réglages d'extensions, `pending` pendant l'application d'un changement."
+  value       = ccp_db_pg_instance.this.extensions_status
+}

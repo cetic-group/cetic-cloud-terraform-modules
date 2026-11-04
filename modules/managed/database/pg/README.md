@@ -17,6 +17,11 @@ module "app_db" {
   replicas       = 3       # tier "prod"
   engine_version = "16"
   tags           = ["env:prod"]
+
+  # Extensions (instance où elles ont été activées par le support)
+  allowed_extensions = ["pg_cron", "pg_stat_statements"]
+  preload_libraries  = ["pg_cron", "pg_stat_statements"]
+  cron_database      = "app"
 }
 
 output "db_endpoint" {
@@ -37,6 +42,9 @@ output "db_endpoint" {
 | `replicas` | number | no | `1` | `1` (dev) ou `3` (prod). Le `tier` est dérivé. |
 | `engine_version` | string | no | `"16"` | Version majeure PG. |
 | `tags` | list(string) | no | `[]` | |
+| `allowed_extensions` | set(string) | no | `null` | Extensions du catalogue autorisées (`CREATE EXTENSION`). `null` : inchangé ; `[]` : aucune. |
+| `preload_libraries` | set(string) | no | `null` | Bibliothèques chargées au démarrage (`pg_cron`, `pg_stat_statements`). Un changement redémarre l'instance. `null` : inchangé ; `[]` : aucune. |
+| `cron_database` | string | no | `null` | Base des tâches `pg_cron` (exige `pg_cron` dans `preload_libraries`). `null` : inchangé. |
 
 ## Outputs
 
@@ -47,9 +55,12 @@ output "db_endpoint" {
 | `endpoint_host` / `endpoint_port` / `endpoint` | Connexion. |
 | `admin_username` / `admin_database` | |
 | `status` | |
+| `extensions_available` | `true` si des extensions peuvent être autorisées sur l'instance. |
+| `extensions_status` | `applied` ou `pending` (changement en cours d'application). |
 
 ## Notes
 
+- **Extensions** : `allowed_extensions`, `preload_libraries` et `cron_database` se modifient en place (pas de recréation) ; `terraform apply` attend `extensions_status = "applied"`. Elles exigent le provider `cetic-group/ccp >= 7.3.0` et que les extensions soient activées sur l'instance (`extensions_available = true`). Par défaut (`null`) le module ne touche pas aux réglages existants.
 - **Password** : pas exposé par le provider (cf. backlog v0.8.0 — datasource `ccp_db_pg_credentials`). Récupérer via `cetic db pg credentials <id>` (CLI) ou `GET /v1/db/pg/{id}/credentials` (API) en attendant.
 - `replicas` est immutable — pour passer dev → prod, recréer une instance et restore depuis snapshot.
 - `engine_version` immutable — upgrades majeurs via dump/restore.

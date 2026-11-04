@@ -7,7 +7,7 @@ mock_provider "ccp" {
       endpoint_port        = 5432
       admin_username       = "admin"
       admin_database       = "app"
-      status               = "running"
+      status               = "active"
       extensions_available = true
       extensions_status    = "applied"
     }

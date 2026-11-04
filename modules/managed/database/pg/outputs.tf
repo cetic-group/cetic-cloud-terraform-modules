@@ -36,7 +36,7 @@ output "status" {
 }
 
 output "extensions_available" {
-  description = "`true` si des extensions peuvent être autorisées sur l'instance (activation préalable par le support)."
+  description = "`true` si des extensions peuvent être autorisées sur l'instance. Une instance créée dans une région qui propose les extensions les a dès sa création ; pour une instance plus ancienne, leur activation est à demander."
   value       = ccp_db_pg_instance.this.extensions_available
 }
 

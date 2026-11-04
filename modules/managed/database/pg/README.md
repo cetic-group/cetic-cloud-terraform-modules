@@ -18,7 +18,7 @@ module "app_db" {
   engine_version = "16"
   tags           = ["env:prod"]
 
-  # Extensions (instance où elles ont été activées par le support)
+  # Extensions (région qui les propose ; instance plus ancienne : activation à demander)
   allowed_extensions = ["pg_cron", "pg_stat_statements"]
   preload_libraries  = ["pg_cron", "pg_stat_statements"]
   cron_database      = "app"

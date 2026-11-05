@@ -26,6 +26,31 @@ output "ci_creds" {
 }
 ```
 
+## CORS
+
+Pour qu'une page web envoie ou lise des fichiers directement depuis le bucket :
+
+```hcl
+module "uploads" {
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/storage/bucket?ref=vX.Y.Z"
+
+  name   = "acme-user-uploads"
+  region = "RNN"
+
+  cors_rules = [
+    {
+      allowed_origins = ["https://app.example.com"]
+      allowed_methods = ["PUT", "POST"]
+      allowed_headers = ["Content-Type"]
+      expose_headers  = ["ETag"]
+    },
+  ]
+}
+```
+
+Ce module exige le provider `cetic-group/ccp` **`>= 7.4.0`**. Sans `cors_rules`,
+une configuration CORS posée depuis la console ou le CLI n'est pas modifiée.
+
 ## Inputs
 
 | Name | Type | Required | Default | Description |
@@ -34,6 +59,7 @@ output "ci_creds" {
 | `region` | string | yes | — | `RNN`/`PAR`/`ABJ`. |
 | `is_public` | bool | no | `false` | Lecture anonyme. |
 | `scoped_keys` | map(object({access_level})) | no | `{}` | `read` / `write` / `readwrite` / `full`. |
+| `cors_rules` | list(object) | no | `[]` | Règles CORS (origines, méthodes, en-têtes, durée). Vide = CORS non géré. Voir ci-dessous. |
 | `tags` | list(string) | no | `[]` | |
 
 ## Outputs

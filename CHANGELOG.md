@@ -13,6 +13,10 @@ suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   réglages existants inchangés) et outputs `extensions_available` et
   `extensions_status`. Le module exige le provider `cetic-group/ccp`
   **`>= 7.3.0`**.
+- Module **`storage/bucket`** : variable `cors_rules` (règles CORS du bucket,
+  liste ordonnée, vide par défaut = CORS non géré). Le module exige le
+  provider `cetic-group/ccp` **`>= 7.4.0`**. Les autres modules restent sur
+  `>= 7.0.0`.
 
 ### Changed
 

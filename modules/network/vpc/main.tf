@@ -4,6 +4,10 @@ resource "ccp_vpc" "this" {
   region   = var.region
   cidr     = var.cidr
   tags     = var.tags
+
+  # IP de sortie dédiée (option facturée comme une IP publique). Modifiable
+  # en place ; repasser à false rend l'IP au pool immédiatement.
+  dedicated_egress_ip = var.dedicated_egress_ip
 }
 
 resource "ccp_vnet" "this" {

@@ -68,7 +68,7 @@ terraform {
   required_providers {
     ccp = {
       source  = "cetic-group/ccp"
-      version = ">= 7.0.0"
+      version = ">= 7.3.2"
     }
   }
 }
@@ -201,13 +201,12 @@ Les modules `atomic/application-gateway`, `managed/application-gateway` et
 Les politiques des routes sont exposées par `atomic/appgw-route` et les
 modules composés. Changer de plan ajuste automatiquement les dimensions.
 
-Cette évolution nécessite le provider **8.0.0+** et l'API correspondante.
-Le provider corrigé doit être publié avant la publication de ces modules.
+Cette évolution nécessite le provider **7.3.2+** et l'API correspondante.
 Retirez les anciennes dimensions explicites des configurations expérimentales,
 mettez à jour les contraintes, puis lancez `terraform init -upgrade` et
 `terraform plan`. Conservez les ressources existantes dans l'état.
-Le provider 7.3 peut signaler un résultat incohérent avec la nouvelle API :
+Les providers 7.3.1 et antérieurs peuvent signaler un résultat incohérent avec la nouvelle API :
 coordonnez la mise à jour des clients avant son déploiement.
 
-> **EN:** Cache dimensions are plan-managed outputs. Upgrade to provider 8.0+
-> once available and remove legacy size inputs before using the updated API.
+> **EN:** Cache dimensions are plan-managed outputs. Upgrade to provider 7.3.2+
+> and remove legacy size inputs before using the updated API.

@@ -23,5 +23,5 @@ variable "l7_policy" {
     })))
   })
   default     = null
-  description = "Politique d’accès typée. null/omise conserve la protection distante ; {} la supprime explicitement. Requiert la capacité API v1 et le provider 8.1.0."
+  description = "Politique d’accès typée. null/omise conserve la protection distante ; {} la supprime explicitement. Requiert la capacité API v1 et le provider 7.3.2."
 }

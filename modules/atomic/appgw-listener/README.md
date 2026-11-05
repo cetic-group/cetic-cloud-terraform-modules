@@ -96,7 +96,7 @@ Terraform 1.9 minimum (validation des domaines entre variables).
 
 Les entrées `l4_policy`, `l7_policy` et `client_ip_policy` de la passerelle,
 et `l7_policy` des listeners/routes, utilisent les objets typés du provider
-**8.1.0 minimum** (publication requise avant livraison de ces modules).
+**7.3.2 minimum**.
 Une valeur omise ou `null` conserve la protection distante, notamment après
 import ; `{}` demande explicitement sa suppression. Les maps `policies`,
 `allow_rules`, `deny_rules` et `required_headers` sont indexées par des clés

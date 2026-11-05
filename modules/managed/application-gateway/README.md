@@ -166,7 +166,7 @@ output "acme_status" {
 - **`basic_auth_users` — sensibilité state** : les mots de passe sont persistés en clair. Utiliser un backend chiffré (S3+KMS, Vault, TFC). La plateforme ne les rend jamais ; au `terraform import`, les blocs sont vides et un `apply` les re-synchronise.
 - **Migration depuis `exposure/web-app-with-appgw`** : signature identique côté inputs (à l'exception du nom du chemin source). Permuter `source` suffit ; pas de breaking change ni de drift d'état attendu.
 
-## Cache HTTP déterminé par le plan (provider 8.0+)
+## Cache HTTP déterminé par le plan (provider 7.3.2+)
 
 Activez `cache_enabled` sur la passerelle et le cache sur les routes souhaitées.
 Le plan attribue automatiquement le budget partagé et la taille maximale des
@@ -186,9 +186,8 @@ La purge est disponible dans la console, l'API ou `cetic appgw cache purge`.
 
 ### Migration
 
-Cette version nécessite le provider 8.0.0 ou supérieur et l'API avec le cache
-piloté par le plan. Le provider doit être publié avant l'utilisation de ces
-modules. Les tests de la PR utilisent un binaire de développement isolé.
+Cette version nécessite le provider 7.3.2 ou supérieur et l'API avec le cache
+piloté par le plan.
 
 Si vous utilisiez la branche expérimentale de cache, retirez les arguments
 `cache_size_mb` et `cache_max_object_kb` de vos appels de module. Conservez
@@ -199,9 +198,9 @@ nécessite ni suppression d'état ni réimportation.
 
 > **EN:** The selected plan owns both cache dimensions. Only enablement and
 > route policies are configurable. Remove legacy size arguments, upgrade to
-> provider 8.0+ once released, and review the plan. Existing state and resource
+> provider 7.3.2+, and review the plan. Existing state and resource
 > addresses are retained. Upgrade Terraform clients before rolling out the
-> plan-managed API; the 7.3 provider can report inconsistent results with it.
+> plan-managed API; providers 7.3.1 and earlier can report inconsistent results with it.
 
 ### Nombre d'instances (`replica_count`)
 
@@ -211,7 +210,7 @@ ou maintenance de leur instance unique. Le plan fixe la capacité de chaque
 instance ; il ne détermine pas leur nombre. Le modifier recrée la ressource.
 La sortie `replica_count` restitue la valeur provisionnée.
 
-Nécessite le provider **8.0.0** et une plateforme prenant en charge ce champ.
+Nécessite le provider **7.3.2** et une plateforme prenant en charge ce champ.
 Mettre la plateforme à jour avant de demander le mode unique. Le provider
 peut être installé auparavant en conservant la valeur historique `2`.
 Le catalogue définit des tarifs distincts pour une et deux instances. Chaque
@@ -240,7 +239,7 @@ Terraform 1.9 minimum (validation des domaines entre variables).
 
 Les entrées `l4_policy`, `l7_policy` et `client_ip_policy` de la passerelle,
 et `l7_policy` des listeners/routes, utilisent les objets typés du provider
-**8.1.0 minimum** (publication requise avant livraison de ces modules).
+**7.3.2 minimum**.
 Une valeur omise ou `null` conserve la protection distante, notamment après
 import ; `{}` demande explicitement sa suppression. Les maps `policies`,
 `allow_rules`, `deny_rules` et `required_headers` sont indexées par des clés

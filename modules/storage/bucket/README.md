@@ -48,7 +48,7 @@ module "uploads" {
 }
 ```
 
-Ce module exige le provider `cetic-group/ccp` **`>= 7.4.0`**. Sans `cors_rules`,
+Ce module exige le provider `cetic-group/ccp` **`>= 7.3.2`**. Sans `cors_rules`,
 une configuration CORS posée depuis la console ou le CLI n'est pas modifiée.
 
 ## Inputs

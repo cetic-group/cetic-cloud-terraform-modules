@@ -7,7 +7,7 @@ variable "l4_policy" {
     tcp_443 = optional(object({ allow_cidrs = optional(list(string)), deny_cidrs = optional(list(string)) }))
   })
   default     = null
-  description = "Politique d’accès typée. null/omise conserve la protection distante ; {} la supprime explicitement. Requiert la capacité API v1 et le provider 8.1.0."
+  description = "Politique d’accès typée. null/omise conserve la protection distante ; {} la supprime explicitement. Requiert la capacité API v1 et le provider 7.3.2."
 }
 
 variable "l7_policy" {
@@ -33,13 +33,13 @@ variable "l7_policy" {
     })))
   })
   default     = null
-  description = "Politique d’accès typée. null/omise conserve la protection distante ; {} la supprime explicitement. Requiert la capacité API v1 et le provider 8.1.0."
+  description = "Politique d’accès typée. null/omise conserve la protection distante ; {} la supprime explicitement. Requiert la capacité API v1 et le provider 7.3.2."
 }
 
 variable "client_ip_policy" {
   type        = object({ mode = optional(string), trusted_proxy_cidrs = optional(list(string)) })
   default     = null
-  description = "Politique d’accès typée. null/omise conserve la protection distante ; {} la supprime explicitement. Requiert la capacité API v1 et le provider 8.1.0."
+  description = "Politique d’accès typée. null/omise conserve la protection distante ; {} la supprime explicitement. Requiert la capacité API v1 et le provider 7.3.2."
 }
 
 variable "listener_l7_policies" {

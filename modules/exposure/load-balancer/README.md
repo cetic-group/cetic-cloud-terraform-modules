@@ -140,7 +140,7 @@ ou maintenance de leur instance unique. Le plan fixe la capacité de chaque
 instance ; il ne détermine pas leur nombre. Le modifier recrée la ressource.
 La sortie `replica_count` restitue la valeur provisionnée.
 
-Nécessite le provider **8.0.0** et une plateforme prenant en charge ce champ.
+Nécessite le provider **7.3.2** et une plateforme prenant en charge ce champ.
 Mettre la plateforme à jour avant de demander le mode unique. Le provider
 peut être installé auparavant en conservant la valeur historique `2`.
 Le catalogue définit des tarifs distincts pour une et deux instances. Chaque

@@ -295,3 +295,33 @@ run "rejects_invalid_vpc_cidr" {
 }
 
 # ── 8. (retiré en v0.3.0) — peering est maintenant via `modules/network/vnet-peering` ─
+
+# ── 9. IP de sortie dédiée (provider >= 7.3.2) ───────────────────────────────
+run "dedicated_egress_ip_off_by_default" {
+  command = plan
+
+  variables {
+    name   = "egress-default"
+    region = "RNN"
+  }
+
+  assert {
+    condition     = ccp_vpc.this.dedicated_egress_ip == false
+    error_message = "Sans `dedicated_egress_ip`, le module doit envoyer false (sortie partagée)."
+  }
+}
+
+run "dedicated_egress_ip_enabled" {
+  command = plan
+
+  variables {
+    name                = "egress-dedie"
+    region              = "RNN"
+    dedicated_egress_ip = true
+  }
+
+  assert {
+    condition     = ccp_vpc.this.dedicated_egress_ip == true
+    error_message = "`dedicated_egress_ip = true` doit être transmis à ccp_vpc."
+  }
+}

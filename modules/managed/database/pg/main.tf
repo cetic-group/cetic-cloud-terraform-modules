@@ -9,4 +9,8 @@ resource "ccp_db_pg_instance" "this" {
   replicas       = var.replicas
   engine_version = var.engine_version
   tags           = var.tags
+
+  allowed_extensions = var.allowed_extensions
+  preload_libraries  = var.preload_libraries
+  cron_database      = var.cron_database
 }

@@ -20,6 +20,26 @@ output "vpc" {
   }
 }
 
+output "dedicated_egress_ip" {
+  description = "Option IP de sortie dédiée active sur le VPC."
+  value       = ccp_vpc.this.dedicated_egress_ip
+}
+
+output "egress_ip" {
+  description = "IP publique de sortie dédiée du VPC (`null` sans l'option)."
+  value       = ccp_vpc.this.egress_ip
+}
+
+output "egress_ip_type" {
+  description = "Type de l'IP de sortie dédiée (`null` sans l'option)."
+  value       = ccp_vpc.this.egress_ip_type
+}
+
+output "egress_ip_status" {
+  description = "État de l'IP de sortie dédiée (`null` sans l'option)."
+  value       = ccp_vpc.this.egress_ip_status
+}
+
 output "vnet_ids" {
   description = "Map keyed par nom logique → UUID du VNet (à passer à d'autres modules)."
   value       = { for k, v in ccp_vnet.this : k => v.id }

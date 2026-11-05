@@ -39,6 +39,20 @@ variable "tags" {
   description = "Tags libres (max 60, max 50 chars chacun)."
 }
 
+variable "dedicated_egress_ip" {
+  type        = bool
+  default     = false
+  nullable    = false
+  description = <<-EOT
+    IP publique de sortie dédiée au VPC (provider `>= 7.3.2`). `false` (défaut) :
+    sortie internet partagée de la plateforme, port TCP 25 sortant bloqué.
+    `true` : la plateforme attribue au VPC sa propre IP de sortie, facturée
+    comme une IP publique. Modifiable en place, sans recréer le VPC.
+    Repasser à `false` rend l'IP au pool immédiatement : elle peut être
+    attribuée à un autre client, et une réactivation donne une autre IP.
+  EOT
+}
+
 variable "vnets" {
   description = <<-EOT
     Map de VNets à créer dans le VPC. Clé = nom logique (immutable, sert de ref interne).

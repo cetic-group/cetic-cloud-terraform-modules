@@ -161,3 +161,73 @@ run "rejects_short_root_password" {
     var.app_root_password,
   ]
 }
+
+# Toutes les ressources sont simulées par mock_provider.
+run "cache_dimensions_follow_provider_profile" {
+  command = apply
+  variables {
+    org_prefix          = "cache"
+    region              = "RNN"
+    ssh_public_key      = "ssh-ed25519 AAAA test@example.com"
+    app_root_password   = "test-password-123"
+    appgw_plan          = "medium"
+    appgw_cache_enabled = true
+    appgw_cache_mode    = "respect"
+    hostname            = "cache.example.com"
+  }
+  override_resource {
+    target = module.appgw.module.gateway.ccp_application_gateway.this
+    values = {
+      cache_size_mb       = 192
+      cache_max_object_kb = 384
+    }
+  }
+  assert {
+    condition     = module.appgw.cache_enabled && output.appgw_cache_size_mb == 192 && output.appgw_cache_max_object_kb == 384
+    error_message = "Gateway activation and server profile must propagate through the landing zone."
+  }
+}
+
+run "appgw_replica_count_single" {
+  command = plan
+  variables {
+    org_prefix          = "acme"
+    region              = "RNN"
+    ssh_public_key      = "ssh-ed25519 AAAA test@example.com"
+    app_root_password   = "test-password-123"
+    hostname            = "app.acme.example.com"
+    appgw_replica_count = 1
+  }
+  assert {
+    condition     = output.appgw_replica_count == 1
+    error_message = "Le nombre d'instances doit être propagé jusqu'à la ressource et sa sortie."
+  }
+}
+
+run "appgw_replica_count_default_ha" {
+  command = plan
+  variables {
+    org_prefix        = "acme"
+    region            = "RNN"
+    ssh_public_key    = "ssh-ed25519 AAAA test@example.com"
+    app_root_password = "test-password-123"
+    hostname          = "app.acme.example.com"
+  }
+  assert {
+    condition     = output.appgw_replica_count == 2
+    error_message = "Le nombre d'instances doit être propagé jusqu'à la ressource et sa sortie."
+  }
+}
+
+run "appgw_replica_count_rejects_fraction" {
+  command = plan
+  variables {
+    org_prefix          = "acme"
+    region              = "RNN"
+    ssh_public_key      = "ssh-ed25519 AAAA test@example.com"
+    app_root_password   = "test-password-123"
+    hostname            = "app.acme.example.com"
+    appgw_replica_count = 1.5
+  }
+  expect_failures = [var.appgw_replica_count]
+}

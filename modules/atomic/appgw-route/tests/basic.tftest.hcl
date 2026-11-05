@@ -167,3 +167,46 @@ run "rejects_empty_user_in_basic_auth" {
     var.basic_auth_users,
   ]
 }
+
+run "cache_configuration" {
+  command = plan
+  variables {
+    appgw_id             = "gw"
+    listener_id          = "listener"
+    target_group_id      = "tg"
+    cache_mode           = "force"
+    cache_default_ttl_s  = 90
+    cache_bypass_cookies = ["session"]
+  }
+  assert {
+    condition     = ccp_appgw_route.this.cache_mode == "force" && ccp_appgw_route.this.cache_default_ttl_s == 90 && ccp_appgw_route.this.cache_bypass_cookies == toset(["session"])
+    error_message = "Cache configuration was not propagated."
+  }
+}
+
+run "typed_security_policy" {
+  command = plan
+  variables {
+    appgw_id        = "00000000-0000-0000-0000-00000000a001"
+    listener_id     = "listener"
+    target_group_id = "target"
+    l7_policy       = { enabled = true, policies = { partners = { required_headers = { id = { name = "X-Partner", op = "in", values = ["a", "b"] } } } } }
+  }
+  assert {
+    condition     = ccp_appgw_route.this.l7_policy.policies.partners.required_headers.id.values == tolist(["a", "b"])
+    error_message = "Typed mandatory header policy must reach the provider unchanged."
+  }
+}
+run "explicit_security_reset" {
+  command = plan
+  variables {
+    appgw_id        = "00000000-0000-0000-0000-00000000a001"
+    listener_id     = "listener"
+    target_group_id = "target"
+    l7_policy       = {}
+  }
+  assert {
+    condition     = ccp_appgw_route.this.l7_policy != null && ccp_appgw_route.this.l7_policy.enabled == null && ccp_appgw_route.this.l7_policy.policies == null
+    error_message = "Explicit empty object must be distinct from an omitted policy."
+  }
+}

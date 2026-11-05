@@ -29,5 +29,5 @@ terraform output -raw vpn_peer_configs
 
 | Composant | Version |
 |---|---|
-| Provider `cetic-group/ccp` | `>= 4.4.0` |
+| Provider `cetic-group/ccp` | `>= 7.3.2` |
 | Terraform | `>= 1.7` |

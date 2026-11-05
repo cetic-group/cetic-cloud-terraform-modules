@@ -68,7 +68,7 @@ terraform {
   required_providers {
     ccp = {
       source  = "cetic-group/ccp"
-      version = ">= 7.0.0"
+      version = ">= 7.3.2"
     }
   }
 }
@@ -170,6 +170,7 @@ Suit le provider `cetic-group/ccp`. Tag SemVer :
 - `v0.28.x` : compatible provider `>= 4.8.0` — variable `bastion_access` (bool) sur les 4 modules `compute/*` (opt-in accès SSH via le Bastion, #343/#307)
 - `v0.35.x` : compatible provider `>= 6.3.0` — nouveau module `network/dns-zone` (zone DNS privée + enregistrements ; sortie `resolver_by_vnet` = sous-réseau → adresse du serveur de noms à y utiliser) et plancher provider homogène sur les 50 déclarations du dépôt
 - `v0.36.x` : compatible provider `>= 7.0.0` — retrait du module `atomic/ipaas-pool` et des outputs liés aux attributs retirés du provider v7
+- `v0.38.x` : compatible provider `>= 7.3.2` (Terraform `>= 1.9` pour les modules AppGW) — cache AppGW par plan, `replica_count` AppGW/LB, politiques d'accès AppGW typées, CORS bucket, IP de sortie dédiée VPC
 - bump majeur (`v1.0.0`) quand le provider stabilise son API
 
 ## Tests
@@ -192,3 +193,21 @@ PRs bienvenues. Conventions :
 ## Licence
 
 Apache 2.0 — voir [LICENSE](LICENSE).
+
+## Cache HTTP des Application Gateways
+
+Les modules `atomic/application-gateway`, `managed/application-gateway` et
+`exposure/web-app-with-appgw` exposent `cache_enabled`. Le plan détermine
+`cache_size_mb` et `cache_max_object_kb`, disponibles uniquement en outputs.
+Les politiques des routes sont exposées par `atomic/appgw-route` et les
+modules composés. Changer de plan ajuste automatiquement les dimensions.
+
+Cette évolution nécessite le provider **7.3.2+** et l'API correspondante.
+Retirez les anciennes dimensions explicites des configurations expérimentales,
+mettez à jour les contraintes, puis lancez `terraform init -upgrade` et
+`terraform plan`. Conservez les ressources existantes dans l'état.
+Les providers 7.3.1 et antérieurs peuvent signaler un résultat incohérent avec la nouvelle API :
+coordonnez la mise à jour des clients avant son déploiement.
+
+> **EN:** Cache dimensions are plan-managed outputs. Upgrade to provider 7.3.2+
+> and remove legacy size inputs before using the updated API.

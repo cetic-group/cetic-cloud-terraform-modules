@@ -20,10 +20,8 @@ variable "plan" {
   type        = string
   default     = "small"
   description = <<-EOT
-    Plan de capacité du LB. Détermine la taille de la paire d'instances LB :
-    - `small`  (défaut) — 1 vCPU / 512 Mo —  4,99 €/mois.
-    - `medium`          — 2 vCPU /   1 Go — 11,99 €/mois.
-    - `large`           — 4 vCPU /   2 Go — 27,99 €/mois.
+    Plan de capacité de chaque instance du LB : `small` (défaut),
+    `medium` ou `large`. Consulter le catalogue pour les capacités et tarifs.
 
     **Immuable** : changer de plan plus tard force un remplacement du LB
     (le provider porte `RequiresReplace` sur cet attribut — pas de
@@ -143,5 +141,16 @@ variable "listeners" {
       ]
     ]))
     error_message = "Chaque backend doit avoir exactement un de `container_id` ou `vm_instance_id`."
+  }
+}
+
+variable "replica_count" {
+  type        = number
+  default     = 2
+  nullable    = false
+  description = "Nombre d'instances : 1 sans redondance ou 2 en haute disponibilité (défaut). Indépendant du plan ; le modifier remplace la ressource."
+  validation {
+    condition     = contains([1, 2], var.replica_count)
+    error_message = "replica_count doit valoir 1 ou 2."
   }
 }

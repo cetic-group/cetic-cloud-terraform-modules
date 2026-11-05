@@ -56,6 +56,7 @@ output "web_vnet_id" {
 | `region` | string | — | `RNN`, `PAR` ou `ABJ`. |
 | `cidr` | string | `null` | Bloc d'adressage privé du VPC (RFC1918, /16 à /24). Auto-alloué si `null`. Les `vnets[*].cidr` doivent en être des sous-réseaux. Immutable. |
 | `tags` | list(string) | `[]` | Tags du VPC. |
+| `dedicated_egress_ip` | bool | `false` | IP publique de sortie dédiée au VPC. `false` : sortie partagée, port TCP 25 sortant bloqué. Modifiable en place ; repasser à `false` rend l'IP au pool immédiatement. Voir ci-dessous. |
 | `vnets` | map(object) | `{}` | Map de VNets (clé = nom logique). Voir le schema ci-dessous. |
 | `peering_vpc_ids` | list(string) | `[]` | IDs de VPCs avec qui établir un peering (même région). |
 
@@ -77,10 +78,41 @@ output "web_vnet_id" {
 |------|------|-------------|
 | `vpc_id` | string | UUID du VPC. |
 | `vpc` | object | VPC complet (id, name, region, status, tags). |
+| `dedicated_egress_ip` | bool | Option IP de sortie dédiée active. |
+| `egress_ip` | string | IP de sortie dédiée (`null` sans l'option). |
+| `egress_ip_type` | string | Type de l'IP de sortie dédiée (`null` sans l'option). |
+| `egress_ip_status` | string | État de l'IP de sortie dédiée (`null` sans l'option). |
 | `vnet_ids` | map(string) | `{<key> => <uuid>}` — passe à d'autres modules. |
 | `vnets` | map(object) | VNets complets (id, name, cidr, gateway, status). |
 | `ip_reservations` | map(object) | `{<vnet_key>:<resv_key> => {id, ip_address}}`. |
 | `peering_ids` | map(string) | `{<accepter_vpc_id> => <peering_uuid>}`. |
+
+## IP de sortie dédiée
+
+```hcl
+module "vpc" {
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/network/vpc?ref=vX.Y.Z"
+
+  name                = "acme-prod"
+  region              = "RNN"
+  dedicated_egress_ip = true
+}
+
+output "ip_sortie" {
+  value = module.vpc.egress_ip
+}
+```
+
+Sans l'option, le VPC sort par l'IP partagée de la plateforme et le port TCP 25
+sortant est bloqué. Avec `dedicated_egress_ip = true`, la plateforme attribue
+au VPC sa propre IP publique de sortie pendant l'apply ; elle est facturée
+comme une IP publique et ne compte pas dans `max_public_ips`. L'option se
+modifie en place (pas de recréation du VPC).
+
+> ⚠️ Repasser à `false` (ou retirer l'option) rend l'IP au pool immédiatement,
+> sans délai de grâce : elle peut être attribuée à un autre client, et une
+> réactivation donne une IP différente. Exige le provider `cetic-group/ccp`
+> **`>= 7.3.2`** et une plateforme qui propose l'option (sinon HTTP 422).
 
 ## Notes
 

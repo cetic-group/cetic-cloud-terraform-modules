@@ -92,3 +92,41 @@ run "rejects_invalid_region" {
     var.region,
   ]
 }
+
+run "replica_count_single" {
+  command = plan
+  variables {
+    name          = "single-test"
+    region        = "RNN"
+    vnet_id       = "00000000-0000-0000-0000-000000000020"
+    replica_count = 1
+  }
+  assert {
+    condition     = output.replica_count == 1
+    error_message = "Le nombre d'instances doit être propagé jusqu'à la ressource et sa sortie."
+  }
+}
+
+run "replica_count_default_ha" {
+  command = plan
+  variables {
+    name    = "single-test"
+    region  = "RNN"
+    vnet_id = "00000000-0000-0000-0000-000000000020"
+  }
+  assert {
+    condition     = output.replica_count == 2
+    error_message = "Le nombre d'instances doit être propagé jusqu'à la ressource et sa sortie."
+  }
+}
+
+run "replica_count_rejects_fraction" {
+  command = plan
+  variables {
+    name          = "single-test"
+    region        = "RNN"
+    vnet_id       = "00000000-0000-0000-0000-000000000020"
+    replica_count = 1.5
+  }
+  expect_failures = [var.replica_count]
+}

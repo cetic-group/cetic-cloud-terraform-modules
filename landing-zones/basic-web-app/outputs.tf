@@ -98,3 +98,23 @@ output "database_tier" {
   description = "Tier PostgreSQL (`dev` / `prod`) calculé automatiquement à partir de `db_replicas`."
   value       = var.enable_database ? ccp_db_pg_instance.app_db[0].tier : null
 }
+
+output "appgw_cache_size_mb" {
+  description = "Dimension du cache fixée par le plan (Mio)."
+  value       = var.exposure_type == "appgw" ? module.appgw[0].cache_size_mb : null
+}
+
+output "appgw_cache_max_object_kb" {
+  description = "Dimension du cache fixée par le plan (Kio)."
+  value       = var.exposure_type == "appgw" ? module.appgw[0].cache_max_object_kb : null
+}
+
+output "lb_replica_count" {
+  description = "Nombre d'instances provisionnées."
+  value       = var.exposure_type == "lb" ? ccp_load_balancer.this[0].replica_count : null
+}
+
+output "appgw_replica_count" {
+  description = "Nombre d'instances provisionnées."
+  value       = var.exposure_type == "appgw" ? module.appgw[0].replica_count : null
+}

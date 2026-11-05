@@ -170,6 +170,7 @@ Suit le provider `cetic-group/ccp`. Tag SemVer :
 - `v0.28.x` : compatible provider `>= 4.8.0` — variable `bastion_access` (bool) sur les 4 modules `compute/*` (opt-in accès SSH via le Bastion, #343/#307)
 - `v0.35.x` : compatible provider `>= 6.3.0` — nouveau module `network/dns-zone` (zone DNS privée + enregistrements ; sortie `resolver_by_vnet` = sous-réseau → adresse du serveur de noms à y utiliser) et plancher provider homogène sur les 50 déclarations du dépôt
 - `v0.36.x` : compatible provider `>= 7.0.0` — retrait du module `atomic/ipaas-pool` et des outputs liés aux attributs retirés du provider v7
+- `v0.38.x` : compatible provider `>= 7.3.2` (Terraform `>= 1.9` pour les modules AppGW) — cache AppGW par plan, `replica_count` AppGW/LB, politiques d'accès AppGW typées, CORS bucket, IP de sortie dédiée VPC
 - bump majeur (`v1.0.0`) quand le provider stabilise son API
 
 ## Tests

@@ -124,3 +124,49 @@ terraform apply \
 - **`basic_auth_users` — sensibilité du state** : les mots de passe sont persistés en clair dans le state Terraform. Utiliser un backend chiffré (S3+KMS, Terraform Cloud, Vault). Cf. doc `modules/atomic/appgw-route` pour les détails.
 - **WAF `permissive` par défaut** : passer à `strict` après validation que l'app ne triggere pas de faux positifs. `off` désactive complètement (déconseillé en prod).
 - **Pas de base de données** : si besoin, ajouter `module.db = managed/database/pg` à côté et l'attacher au VPC. Voir `landing-zones/basic-web-app` pour un exemple 3-tier complet.
+
+## Cache HTTP de la passerelle
+
+`appgw_cache_enabled = true` active le cache de la passerelle ;
+`appgw_cache_mode = "respect"` active le cache des réponses publiques de la route.
+Les deux valeurs sont désactivées par défaut. Le plan `appgw_plan` fixe les
+budgets et la taille maximale des objets, exposés dans `appgw_cache_size_mb`
+et `appgw_cache_max_object_kb` (null en mode LB dans `basic-web-app`).
+
+Nécessite le provider 8.0+ une fois publié et l'API avec le cache par plan.
+Mettre à jour les clients Terraform avant le déploiement de cette API.
+Les dimensions ne se configurent pas séparément.
+
+> **EN:** Enable gateway and route caching independently. The selected AppGW
+> plan determines both cache dimensions; the outputs report the server values.
+> Requires provider 8.0+ and the matching API.
+
+### Nombre d'instances (`appgw_replica_count`)
+
+`appgw_replica_count` vaut `2` par défaut (haute disponibilité). La valeur `1`
+convient aux environnements qui acceptent une interruption en cas de panne
+ou maintenance de leur instance unique. Le plan fixe la capacité de chaque
+instance ; il ne détermine pas leur nombre. Le modifier recrée la ressource.
+La sortie `appgw_replica_count` restitue la valeur provisionnée.
+
+Nécessite le provider **8.0.0** et une plateforme prenant en charge ce champ.
+Mettre la plateforme à jour avant de demander le mode unique. Le provider
+peut être installé auparavant en conservant la valeur historique `2`.
+Le catalogue définit des tarifs distincts pour une et deux instances. Chaque
+montant couvre déjà toutes les instances du mode choisi ; le module ne
+multiplie pas ce montant.
+
+### Option cache payante
+
+`appgw_cache_enabled` active ou désactive l'option cache HTTP. Le catalogue publie
+son supplément sous `appgw_cache` pour le plan et le nombre d'instances choisis.
+Ce supplément s'ajoute au tarif de base ; aucun montant n'est fixé ou calculé
+par le module. Le budget et la taille maximale d'objet restent ceux du plan.
+Consulter l'estimation de la plateforme avant activation, par exemple :
+
+```bash
+cetic billing estimate appgw --plan small --replica-count 1 --cache-enabled
+```
+
+Le tarif de la combinaison doit être disponible sur la plateforme pour activer
+l'option. La désactivation du cache reste possible.

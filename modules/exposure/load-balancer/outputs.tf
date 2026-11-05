@@ -22,3 +22,8 @@ output "created_at" {
   description = "Timestamp RFC 3339 de création du LB."
   value       = ccp_load_balancer.this.created_at
 }
+
+output "replica_count" {
+  description = "Nombre d'instances provisionnées."
+  value       = ccp_load_balancer.this.replica_count
+}

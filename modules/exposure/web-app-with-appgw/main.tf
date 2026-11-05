@@ -6,12 +6,15 @@ locals {
 module "gateway" {
   source = "../../atomic/application-gateway"
 
-  name         = var.name
-  region       = var.region
-  plan         = var.plan
-  vpc_id       = var.vpc_id
-  vnet_id      = var.vnet_id
-  public_ip_id = var.public_ip_id
+  name          = var.name
+  region        = var.region
+  plan          = var.plan
+  replica_count = var.replica_count
+  vpc_id        = var.vpc_id
+  vnet_id       = var.vnet_id
+  public_ip_id  = var.public_ip_id
+
+  cache_enabled = var.cache_enabled
 
   force_https               = var.force_https
   hsts_enabled              = var.hsts_enabled
@@ -59,12 +62,18 @@ module "routes" {
   listener_id     = ccp_appgw_listener.this[tostring(var.routes[count.index].listener_index)].id
   target_group_id = module.target_groups[var.routes[count.index].target_group_key].id
 
-  priority        = var.routes[count.index].priority
-  path_match      = var.routes[count.index].path_match
-  path_match_type = var.routes[count.index].path_match_type
-  method_match    = var.routes[count.index].method_match
-  strip_prefix    = var.routes[count.index].strip_prefix
-  header_matches  = var.routes[count.index].header_matches
+  priority             = var.routes[count.index].priority
+  path_match           = var.routes[count.index].path_match
+  path_match_type      = var.routes[count.index].path_match_type
+  method_match         = var.routes[count.index].method_match
+  strip_prefix         = var.routes[count.index].strip_prefix
+  cache_mode           = var.routes[count.index].cache_mode
+  cache_default_ttl_s  = var.routes[count.index].cache_default_ttl_s
+  cache_max_ttl_s      = var.routes[count.index].cache_max_ttl_s
+  cache_bypass_cookies = var.routes[count.index].cache_bypass_cookies
+  cache_debug_headers  = var.routes[count.index].cache_debug_headers
+
+  header_matches = var.routes[count.index].header_matches
 
   rate_limit_per_sec = var.routes[count.index].policies.rate_limit_per_sec
   allow_cidrs        = var.routes[count.index].policies.allow_cidrs

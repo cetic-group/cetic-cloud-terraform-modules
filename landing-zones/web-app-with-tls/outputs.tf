@@ -48,3 +48,18 @@ output "ssh_key_id" {
   description = "UUID de la clé SSH ops."
   value       = module.ssh_key.id
 }
+
+output "appgw_cache_size_mb" {
+  description = "Dimension du cache fixée par le plan (Mio)."
+  value       = module.appgw.cache_size_mb
+}
+
+output "appgw_cache_max_object_kb" {
+  description = "Dimension du cache fixée par le plan (Kio)."
+  value       = module.appgw.cache_max_object_kb
+}
+
+output "appgw_replica_count" {
+  description = "Nombre d'instances provisionnées."
+  value       = module.appgw.replica_count
+}

@@ -1,4 +1,5 @@
 resource "ccp_appgw_route" "this" {
+  l7_policy       = var.l7_policy
   provider        = ccp
   appgw_id        = var.appgw_id
   listener_id     = var.listener_id

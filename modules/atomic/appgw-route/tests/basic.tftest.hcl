@@ -183,3 +183,30 @@ run "cache_configuration" {
     error_message = "Cache configuration was not propagated."
   }
 }
+
+run "typed_security_policy" {
+  command = plan
+  variables {
+    appgw_id        = "00000000-0000-0000-0000-00000000a001"
+    listener_id     = "listener"
+    target_group_id = "target"
+    l7_policy       = { enabled = true, policies = { partners = { required_headers = { id = { name = "X-Partner", op = "in", values = ["a", "b"] } } } } }
+  }
+  assert {
+    condition     = ccp_appgw_route.this.l7_policy.policies.partners.required_headers.id.values == tolist(["a", "b"])
+    error_message = "Typed mandatory header policy must reach the provider unchanged."
+  }
+}
+run "explicit_security_reset" {
+  command = plan
+  variables {
+    appgw_id        = "00000000-0000-0000-0000-00000000a001"
+    listener_id     = "listener"
+    target_group_id = "target"
+    l7_policy       = {}
+  }
+  assert {
+    condition     = ccp_appgw_route.this.l7_policy != null && ccp_appgw_route.this.l7_policy.enabled == null && ccp_appgw_route.this.l7_policy.policies == null
+    error_message = "Explicit empty object must be distinct from an omitted policy."
+  }
+}

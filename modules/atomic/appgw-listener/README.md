@@ -88,3 +88,27 @@ module "listener_plain" {
 - **`dns01`** : fournir `acme_dns_provider` + `acme_dns_credentials`. Découvrir les providers DNS supportés et leurs clés via la data source `ccp_acme_dns_providers`.
 - **Rate limit Let's Encrypt** : 50 certs/semaine/registered domain.
 - **Pas de cert custom** : la plateforme ne supporte pas l'upload de cert externes — uniquement Let's Encrypt. Pour un cert d'entreprise CA, ouvrir un ticket support.
+
+
+### Politiques d’accès (#1828)
+
+Terraform 1.9 minimum (validation des domaines entre variables).
+
+Les entrées `l4_policy`, `l7_policy` et `client_ip_policy` de la passerelle,
+et `l7_policy` des listeners/routes, utilisent les objets typés du provider
+**8.1.0 minimum** (publication requise avant livraison de ces modules).
+Une valeur omise ou `null` conserve la protection distante, notamment après
+import ; `{}` demande explicitement sa suppression. Les maps `policies`,
+`allow_rules`, `deny_rules` et `required_headers` sont indexées par des clés
+stables. `match.headers` est une liste de critères combinés par ET.
+
+Une autorisation locale ne contourne aucun refus hérité. TCP/80 restrictif
+nécessite DNS-01/certificat importé ; une politique d’en-têtes exige le cache
+`off` sur les routes concernées. Les domaines avec une route regex ne peuvent
+pas activer les politiques L7. Le provider vérifie la capacité de l’API et la
+convergence des instances avant d’annoncer la fin de la modification.
+
+Pour les modules `managed/application-gateway` et `exposure/web-app-with-appgw`, `listener_l7_policies` est une map indexée par
+hostname, et `routes[*].l7_policy` porte les règles propres à la route.
+La landing zone expose les trois politiques de passerelle avec le préfixe `appgw_` ; pour une politique propre à un listener ou une route, utiliser les modules managed/exposure.
+Le filtrage hérité `allow_cidrs` / `deny_cidrs` conserve son sens HTTP.

@@ -199,3 +199,32 @@ run "replica_count_rejects_fraction" {
   }
   expect_failures = [var.replica_count]
 }
+
+run "typed_security_policy" {
+  command = plan
+  variables {
+    name      = "policy-test"
+    region    = "RNN"
+    vpc_id    = "vpc"
+    vnet_id   = "vnet"
+    l7_policy = { enabled = true, policies = { partners = { required_headers = { id = { name = "X-Partner", op = "in", values = ["a", "b"] } } } } }
+  }
+  assert {
+    condition     = ccp_application_gateway.this.l7_policy.policies.partners.required_headers.id.values == tolist(["a", "b"])
+    error_message = "Typed mandatory header policy must reach the provider unchanged."
+  }
+}
+run "explicit_security_reset" {
+  command = plan
+  variables {
+    name      = "policy-test"
+    region    = "RNN"
+    vpc_id    = "vpc"
+    vnet_id   = "vnet"
+    l7_policy = {}
+  }
+  assert {
+    condition     = ccp_application_gateway.this.l7_policy != null && ccp_application_gateway.this.l7_policy.enabled == null && ccp_application_gateway.this.l7_policy.policies == null
+    error_message = "Explicit empty object must be distinct from an omitted policy."
+  }
+}

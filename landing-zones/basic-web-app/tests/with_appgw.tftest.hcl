@@ -374,3 +374,31 @@ run "appgw_replica_count_rejects_fraction" {
   }
   expect_failures = [var.appgw_replica_count]
 }
+
+run "appgw_access_policies_propagate" {
+  command = plan
+  variables {
+    org_prefix        = "acme"
+    region            = "RNN"
+    ssh_public_key    = "ssh-ed25519 AAAA test@example.com"
+    app_root_password = "test-password-123"
+    enable_database   = false
+    exposure_type     = "appgw"
+    appgw_l4_policy = {
+      enabled = true
+      tcp_443 = { allow_cidrs = ["192.0.2.0/24"] }
+    }
+    appgw_l7_policy = {
+      enabled  = true
+      policies = { internal = { allow_rules = { office = { match = { source_cidrs = ["192.0.2.0/24"] } } } } }
+    }
+    appgw_client_ip_policy = {
+      mode                = "trusted_xff"
+      trusted_proxy_cidrs = ["10.0.0.0/24"]
+    }
+  }
+  assert {
+    condition     = module.appgw[0].l4_policy.tcp_443.allow_cidrs == tolist(["192.0.2.0/24"]) && module.appgw[0].l7_policy.enabled && module.appgw[0].client_ip_policy.mode == "trusted_xff"
+    error_message = "Landing zone must forward every configured gateway policy."
+  }
+}

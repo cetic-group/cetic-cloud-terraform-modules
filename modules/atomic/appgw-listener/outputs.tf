@@ -47,3 +47,13 @@ output "created_at" {
   description = "Timestamp RFC 3339 de création du listener."
   value       = ccp_appgw_listener.this.created_at
 }
+
+output "l7_policy" {
+  value       = ccp_appgw_listener.this.l7_policy
+  description = "État de politique lu sur la ressource (l7_policy)."
+}
+
+output "security_revision" {
+  value       = ccp_appgw_listener.this.security_revision
+  description = "État de politique lu sur la ressource (security_revision)."
+}

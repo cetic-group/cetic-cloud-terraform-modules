@@ -151,15 +151,19 @@ module "appgw" {
 
   source = "../../modules/exposure/web-app-with-appgw"
 
-  name          = "${var.org_prefix}-${lower(var.region)}-appgw"
-  region        = var.region
-  plan          = var.appgw_plan
-  replica_count = var.appgw_replica_count
-  cache_enabled = var.appgw_cache_enabled
-  vpc_id        = module.vpc.vpc_id
-  vnet_id       = module.vpc.vnet_ids.web
-  public_ip_id  = ccp_public_ip.exposure.id
-  tags          = local.base_tags
+  name             = "${var.org_prefix}-${lower(var.region)}-appgw"
+  region           = var.region
+  plan             = var.appgw_plan
+  replica_count    = var.appgw_replica_count
+  cache_enabled    = var.appgw_cache_enabled
+  l4_policy        = var.appgw_l4_policy
+  l7_policy        = var.appgw_l7_policy
+  client_ip_policy = var.appgw_client_ip_policy
+
+  vpc_id       = module.vpc.vpc_id
+  vnet_id      = module.vpc.vnet_ids.web
+  public_ip_id = ccp_public_ip.exposure.id
+  tags         = local.base_tags
 
   hostnames            = [local.appgw_hostname_effective]
   acme_challenge       = var.appgw_acme_challenge

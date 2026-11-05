@@ -31,10 +31,6 @@ jobs:
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
           terraform_version: "1.10.0"
-      # Temporary dependency for #1828; remove after provider 8.1.0 is released.
-      - name: Install access-policy provider snapshot
-        if: github.event_name == 'pull_request' && (github.head_ref == 'fix/1746-appgw-cache-plan' || github.head_ref == 'feat/1828-appgw-access-policies')
-        uses: ./.github/actions/setup-ccp-test-provider
       - run: make validate
 
   lint:
@@ -60,8 +56,4 @@ jobs:
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
           terraform_version: "1.10.0"
-      # Temporary dependency for #1828; remove after provider 8.1.0 is released.
-      - name: Install access-policy provider snapshot
-        if: github.event_name == 'pull_request' && (github.head_ref == 'fix/1746-appgw-cache-plan' || github.head_ref == 'feat/1828-appgw-access-policies')
-        uses: ./.github/actions/setup-ccp-test-provider
       - run: make test

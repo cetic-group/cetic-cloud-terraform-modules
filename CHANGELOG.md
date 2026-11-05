@@ -4,25 +4,73 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.38.0]
+
+Aligné sur le provider `cetic-group/ccp` **`>= 7.3.2`** — cascade sur toutes
+les déclarations du dépôt (`versions.tf` des modules et landing-zones,
+`providers.tf`, exemples et Quick Start du README). La 7.3.2 porte aussi les
+changements préparés pour une 7.4.0 jamais publiée.
+
+### Changed — BREAKING
+
+- **Terraform `>= 1.9`** (au lieu de `>= 1.7`) pour `atomic/application-gateway`,
+  `atomic/appgw-listener`, `atomic/appgw-route`, `managed/application-gateway`,
+  `exposure/web-app-with-appgw` et les landing zones `basic-web-app` et
+  `web-app-with-tls` (validations croisées entre variables). Les autres
+  modules restent sur `>= 1.7`.
+- **Provider `>= 7.3.2`** sur tous les modules. Le provider 7.3.2 rend
+  `cache_size_mb` et `cache_max_object_kb` de `ccp_application_gateway` en
+  lecture seule et passe `data.ccp_pricing` en montants décimaux ou `null`
+  (aucun module de ce dépôt ne les assignait ni ne les lisait). Les providers
+  7.3.1 et antérieurs peuvent signaler des résultats incohérents avec l'API de
+  cache par plan déjà en production.
+- Modules **AppGW** : `cache_enabled` (défaut `false`) et `cache_mode` des
+  routes (défaut `"off"`) sont désormais envoyés explicitement. Un cache activé
+  hors Terraform (console, CLI) sur une passerelle gérée par ces modules est
+  désactivé au prochain apply : positionner `cache_enabled = true` et le
+  `cache_mode` voulu avant la mise à jour.
 
 ### Added
 
+- Cache HTTP des **Application Gateways** (`atomic/application-gateway`,
+  `managed/application-gateway`, `exposure/web-app-with-appgw`, landing zones
+  `basic-web-app` et `web-app-with-tls`) : activation `cache_enabled` par
+  passerelle, politiques par route (`cache_mode`, `cache_default_ttl_s`,
+  `cache_max_ttl_s`, `cache_bypass_cookies`, `cache_debug_headers`) dans
+  `atomic/appgw-route` et les modules composés. Les dimensions sont fixées par
+  le plan et exposées en outputs seulement (`cache_size_mb`,
+  `cache_max_object_kb`, `cache_effective_size_mb`, `cache_size_limit_mb`).
+  Supplément tarifaire `appgw_cache` publié au catalogue (#1746).
+- `replica_count` (`1` sans redondance, `2` haute disponibilité, défaut `2`) sur
+  les modules AppGW et `exposure/load-balancer`, `appgw_replica_count` et
+  `lb_replica_count` sur les landing zones ; output `replica_count`. Le changer
+  remplace la ressource ; les passerelles existantes sont lues à `2` et ne sont
+  pas remplacées par la mise à jour (#1748).
+- Politiques d'accès typées des **Application Gateways** : `l4_policy`,
+  `l7_policy` et `client_ip_policy` sur la passerelle, `l7_policy` sur
+  `atomic/appgw-listener` et `atomic/appgw-route`, `listener_l7_policies`
+  (par hostname) et `routes[*].l7_policy` dans les modules composés,
+  `appgw_l4_policy`, `appgw_l7_policy` et `appgw_client_ip_policy` sur la
+  landing zone `basic-web-app`. `null` ou omis conserve la politique distante,
+  `{}` l'efface. Outputs `security_revision` et `access_policy_state`. Exige
+  une plateforme annonçant les politiques d'accès v1 (#1828).
+- Module **`storage/bucket`** : variable `cors_rules` (règles CORS du bucket,
+  liste ordonnée, vide par défaut = CORS non géré).
+- Module **`network/vpc`** : variable `dedicated_egress_ip` (IP publique de
+  sortie dédiée, défaut `false` = sortie partagée avec port TCP 25 sortant
+  bloqué, modifiable en place) et outputs `dedicated_egress_ip`, `egress_ip`,
+  `egress_ip_type` et `egress_ip_status`. Repasser l'option à `false` rend l'IP
+  au pool immédiatement (#1734).
 - Module **`managed/database/pg`** : variables `allowed_extensions`,
   `preload_libraries` et `cron_database` (modifiables en place, défaut `null` =
   réglages existants inchangés) et outputs `extensions_available` et
-  `extensions_status`. Le module exige le provider `cetic-group/ccp`
-  **`>= 7.3.0`**.
-- Module **`storage/bucket`** : variable `cors_rules` (règles CORS du bucket,
-  liste ordonnée, vide par défaut = CORS non géré). Le module exige le
-  provider `cetic-group/ccp` **`>= 7.4.0`**. Les autres modules restent sur
-  `>= 7.0.0`.
+  `extensions_status`.
 
 ### Changed
 
-- Landing zone **`k8s-platform`**, qui appelle `managed/database/pg` : version
-  minimale du provider `cetic-group/ccp` relevée de `>= 7.0.0` à **`>= 7.3.0`**.
-- CI : les workflows tournent aussi sur les push et pull requests vers `develop`.
+- CI : les workflows tournent aussi sur les push et pull requests vers
+  `develop` ; actions `actions/checkout` v7.0.1, `hashicorp/setup-terraform`
+  v4.0.1 et `terraform-linters/setup-tflint` v6.3.2.
 
 ## [0.37.0]
 

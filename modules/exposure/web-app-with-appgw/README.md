@@ -89,6 +89,60 @@ output "appgw_url" {
 }
 ```
 
+## Exemple — images ou site statique servis depuis un bucket
+
+Un target group `kind = "bucket"` sert un bucket public sous votre domaine (lecture seule). Combiné à un second target group `upstream` pour l'application, il permet de servir `/static/` depuis le bucket et le reste depuis vos serveurs, sous le même hostname :
+
+```hcl
+module "web" {
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/exposure/web-app-with-appgw?ref=v0.39.0"
+
+  name         = "acme-web"
+  region       = "RNN"
+  vpc_id       = module.vpc.vpc_id
+  vnet_id      = module.vpc.vnet_ids.web
+  public_ip_id = module.appgw_public_ip.id
+
+  hostnames = ["www.example.com"]
+
+  target_groups = {
+    app = {
+      members = {
+        app_01 = { container_id = ccp_container_instance.app_01.id, port = 8080 }
+      }
+    }
+    assets = {
+      kind          = "bucket"
+      bucket_id     = module.assets_bucket.id # bucket public
+      bucket_prefix = "static"
+    }
+  }
+
+  routes = [
+    {
+      listener_index   = 0
+      target_group_key = "assets"
+      priority         = 10
+      path_match       = "/static/"
+      strip_prefix     = true
+      # Cache : contenu stable (images, fichiers)
+      cache_mode          = "force"
+      cache_default_ttl_s = 3600
+      cache_max_ttl_s     = 3600
+    },
+    {
+      listener_index   = 0
+      target_group_key = "app"
+      priority         = 100
+    },
+  ]
+
+  cache_enabled = true
+}
+```
+
+Il reste ensuite à créer **un seul enregistrement DNS** chez votre hébergeur pour `www.example.com`. Voir aussi [`examples/static-site-bucket`](../../../examples/static-site-bucket).
+
 ## Inputs
 
 | Name | Type | Required | Default | Description |
@@ -110,7 +164,7 @@ output "appgw_url" {
 | `acme_challenge` | string | no | `"http01"` | `http01` / `dns01` / `null` (pas de cert). Appliqué à tous les hostnames. |
 | `acme_dns_provider` | string | no | `null` | Clé provider DNS pour `dns01` (ex. `cloudflare`). |
 | `acme_dns_credentials` | map(string) | no | `null` | Credentials DNS pour `dns01` (sensible, write-only). |
-| `target_groups` | map(object) | yes | — | Voir schéma `atomic/appgw-target-group`. |
+| `target_groups` | map(object) | yes | — | Voir schéma `atomic/appgw-target-group` ; `members` vide par défaut ; `kind` (`upstream`/`bucket`), `bucket_id`, `bucket_prefix` pour servir un bucket public. |
 | `routes` | list(object) | yes | — | Voir schéma ci-dessous. |
 
 ### Schéma `routes[*]`
@@ -138,6 +192,7 @@ output "appgw_url" {
 | `hostnames` | Liste hostnames. |
 | `listener_ids` | Map hostname → UUID. |
 | `target_group_ids` | Map clé → UUID. |
+| `target_group_origin_status` | Map clé → état de l'origine (`ok` / `error` / `null`). |
 | `route_ids` | Liste UUID routes. |
 | `url` | URL HTTPS du 1er hostname. |
 

@@ -56,6 +56,10 @@ module "target_groups" {
   sticky_enabled     = each.value.sticky_enabled
   sticky_cookie_name = each.value.sticky_cookie_name
   members            = each.value.members
+
+  kind          = each.value.kind
+  bucket_id     = each.value.bucket_id
+  bucket_prefix = each.value.bucket_prefix
 }
 
 # ── 4. Routes ────────────────────────────────────────────────────────────────

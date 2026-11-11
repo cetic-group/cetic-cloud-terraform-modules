@@ -33,6 +33,11 @@ output "target_group_ids" {
   value       = { for k, m in module.target_groups : k => m.id }
 }
 
+output "target_group_origin_status" {
+  description = "Map keyed par clé logique → état de l'origine (`ok` / `error` / null) ; utile pour les target groups `bucket`."
+  value       = { for k, m in module.target_groups : k => m.origin_status }
+}
+
 output "route_ids" {
   description = "Liste des UUID des routes, dans l'ordre déclaré."
   value       = [for r in module.routes : r.id]

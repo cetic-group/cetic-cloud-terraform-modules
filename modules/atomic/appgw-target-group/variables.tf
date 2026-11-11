@@ -24,6 +24,47 @@ variable "algorithm" {
   }
 }
 
+# ── Type de target group ──────────────────────────────────────────────────────
+
+variable "kind" {
+  type        = string
+  default     = "upstream"
+  description = <<-EOT
+    Type de target group (immuable : le changer remplace la ressource).
+    - `upstream` (défaut) : pool de serveurs (`members`).
+    - `bucket` : sert un bucket public sous le domaine de la passerelle, en lecture
+      seule (GET/HEAD, sans listing). Exige `bucket_id` ; aucun `members` ni
+      `sticky_enabled`. `algorithm`, `health_check` et `sticky_cookie_name` sont alors ignorés.
+  EOT
+
+  validation {
+    condition     = contains(["upstream", "bucket"], var.kind)
+    error_message = "`kind` doit être `upstream` ou `bucket`."
+  }
+}
+
+variable "bucket_id" {
+  type        = string
+  default     = null
+  description = "UUID du bucket public servi (immuable). Requis si `kind = \"bucket\"`, interdit sinon. Un bucket privé est refusé."
+}
+
+variable "bucket_prefix" {
+  type        = string
+  default     = ""
+  description = "Dossier du bucket à servir (ex. `site/images`). Lettres, chiffres, `. _ - /` ; segments `.` et `..` interdits ; 512 caractères au plus. Modifiable. Uniquement avec `kind = \"bucket\"`."
+
+  validation {
+    condition = (
+      length(var.bucket_prefix) <= 512 &&
+      can(regex("^[A-Za-z0-9._/-]*$", var.bucket_prefix)) &&
+      !contains(split("/", var.bucket_prefix), ".") &&
+      !contains(split("/", var.bucket_prefix), "..")
+    )
+    error_message = "`bucket_prefix` : lettres, chiffres, `. _ - /` uniquement, 512 caractères au plus, sans segment `.` ni `..`."
+  }
+}
+
 # ── Health check ──────────────────────────────────────────────────────────────
 
 variable "health_check" {

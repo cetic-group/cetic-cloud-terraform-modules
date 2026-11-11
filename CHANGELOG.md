@@ -4,6 +4,25 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.39.0]
+
+### Added
+
+- **Target group de type bucket** : `atomic/appgw-target-group` accepte `kind`
+  (`upstream` par défaut, ou `bucket`), `bucket_id` et `bucket_prefix`, et
+  expose les sorties `kind` et `origin_status`. Un target group `bucket` sert un
+  bucket public sous le domaine de la passerelle, en lecture seule, sans
+  serveur, clé ni IP à fournir. `bucket_id` est requis avec `bucket` et
+  interdit sinon ; `members` et `sticky_enabled` sont refusés en mode `bucket`.
+  Le cache se règle sur la route.
+- `exposure/web-app-with-appgw` : `target_groups[*]` accepte `kind`,
+  `bucket_id` et `bucket_prefix` (`members` devient optionnel, vide par défaut)
+  et expose l'output `target_group_origin_status`. Exemple
+  `examples/static-site-bucket`.
+- Exige un provider `cetic-group/ccp` dont `ccp_appgw_target_group` porte
+  `kind`, `bucket_id`, `bucket_prefix`, `origin_status` (la contrainte
+  `required_providers` sera relevée à la publication de cette version).
+
 ## [0.38.0]
 
 Aligné sur le provider `cetic-group/ccp` **`>= 7.3.2`** — cascade sur toutes

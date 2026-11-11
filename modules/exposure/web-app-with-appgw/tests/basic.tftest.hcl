@@ -15,7 +15,9 @@ mock_provider "ccp" {
   }
   mock_resource "ccp_appgw_target_group" {
     defaults = {
-      id = "00000000-0000-0000-0000-00000000d001"
+      id            = "00000000-0000-0000-0000-00000000d001"
+      kind          = "upstream"
+      origin_status = "ok"
     }
   }
   mock_resource "ccp_appgw_target_group_member" {
@@ -250,4 +252,134 @@ run "reject_unmapped_listener_policy" {
     listener_l7_policies = { "typo.example.com" = { enabled = true, policies = { partners = { required_headers = { id = { name = "X-Partner", op = "in", values = ["a", "b"] } } } } } }
   }
   expect_failures = [var.listener_l7_policies]
+}
+
+run "creates_bucket_target_group_with_app" {
+  command = plan
+  variables {
+    name    = "static"
+    region  = "RNN"
+    vpc_id  = "00000000-0000-0000-0000-000000000010"
+    vnet_id = "00000000-0000-0000-0000-000000000020"
+
+    hostnames = ["www.example.com"]
+
+    target_groups = {
+      app = {
+        members = {
+          m1 = { container_id = "00000000-0000-0000-0000-00000000c001", port = 8080 }
+        }
+      }
+      assets = {
+        kind          = "bucket"
+        bucket_id     = "00000000-0000-0000-0000-00000000b0b0"
+        bucket_prefix = "static"
+      }
+    }
+
+    routes = [
+      {
+        listener_index      = 0
+        target_group_key    = "assets"
+        priority            = 10
+        path_match          = "/static/"
+        strip_prefix        = true
+        cache_mode          = "force"
+        cache_default_ttl_s = 3600
+        cache_max_ttl_s     = 3600
+      },
+      {
+        listener_index   = 0
+        target_group_key = "app"
+      },
+    ]
+  }
+  assert {
+    condition     = length(module.target_groups) == 2
+    error_message = "should create 2 target groups"
+  }
+  assert {
+    condition     = length(module.routes) == 2
+    error_message = "should create 2 routes"
+  }
+}
+
+run "rejects_bucket_target_group_without_bucket_id" {
+  command = plan
+  variables {
+    name    = "bad"
+    region  = "RNN"
+    vpc_id  = "00000000-0000-0000-0000-000000000010"
+    vnet_id = "00000000-0000-0000-0000-000000000020"
+
+    hostnames = ["www.example.com"]
+
+    target_groups = {
+      assets = { kind = "bucket" }
+    }
+
+    routes = [
+      { listener_index = 0, target_group_key = "assets" },
+    ]
+  }
+  expect_failures = [
+    var.target_groups,
+  ]
+}
+
+run "rejects_bucket_target_group_with_members" {
+  command = plan
+  variables {
+    name    = "bad"
+    region  = "RNN"
+    vpc_id  = "00000000-0000-0000-0000-000000000010"
+    vnet_id = "00000000-0000-0000-0000-000000000020"
+
+    hostnames = ["www.example.com"]
+
+    target_groups = {
+      assets = {
+        kind      = "bucket"
+        bucket_id = "00000000-0000-0000-0000-00000000b0b0"
+        members = {
+          m1 = { container_id = "00000000-0000-0000-0000-00000000c001", port = 8080 }
+        }
+      }
+    }
+
+    routes = [
+      { listener_index = 0, target_group_key = "assets" },
+    ]
+  }
+  expect_failures = [
+    var.target_groups,
+  ]
+}
+
+run "rejects_bucket_id_on_upstream_target_group" {
+  command = plan
+  variables {
+    name    = "bad"
+    region  = "RNN"
+    vpc_id  = "00000000-0000-0000-0000-000000000010"
+    vnet_id = "00000000-0000-0000-0000-000000000020"
+
+    hostnames = ["www.example.com"]
+
+    target_groups = {
+      app = {
+        bucket_id = "00000000-0000-0000-0000-00000000b0b0"
+        members = {
+          m1 = { container_id = "00000000-0000-0000-0000-00000000c001", port = 8080 }
+        }
+      }
+    }
+
+    routes = [
+      { listener_index = 0, target_group_key = "app" },
+    ]
+  }
+  expect_failures = [
+    var.target_groups,
+  ]
 }

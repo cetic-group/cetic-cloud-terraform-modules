@@ -22,3 +22,13 @@ output "member_ids" {
   description = "Map keyed par label logique → UUID du member."
   value       = { for k, v in ccp_appgw_target_group_member.members : k => v.id }
 }
+
+output "kind" {
+  description = "Type effectif du target group : `upstream` ou `bucket`."
+  value       = ccp_appgw_target_group.this.kind
+}
+
+output "origin_status" {
+  description = "État de l'origine d'un target group `bucket` : `ok`, `error` ou null (non évalué / `upstream`)."
+  value       = ccp_appgw_target_group.this.origin_status
+}

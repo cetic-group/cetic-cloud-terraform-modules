@@ -30,7 +30,7 @@ variable "kind" {
   type        = string
   default     = "upstream"
   description = <<-EOT
-    Type de target group (immuable : le changer remplace la ressource).
+    Type de target group (définitif : le changer remplace la ressource).
     - `upstream` (défaut) : pool de serveurs (`members`).
     - `bucket` : sert un bucket public sous le domaine de la passerelle, en lecture
       seule (GET/HEAD, sans listing). Exige `bucket_id` ; aucun `members` ni
@@ -46,7 +46,7 @@ variable "kind" {
 variable "bucket_id" {
   type        = string
   default     = null
-  description = "UUID du bucket public servi (immuable). Requis si `kind = \"bucket\"`, interdit sinon. Un bucket privé est refusé."
+  description = "UUID du bucket public servi (modifiable en place). Requis si `kind = \"bucket\"`, interdit sinon. Un bucket privé est refusé."
 }
 
 variable "bucket_prefix" {

@@ -87,7 +87,7 @@ Comportement en mode `bucket` :
 - `bucket_id` est obligatoire ; un bucket privé est refusé par la plateforme.
 - `members` doit rester vide et `sticky_enabled` à `false` (un plan refuse sinon, avec un message explicite).
 - `algorithm`, `health_check` et `sticky_cookie_name` sont ignorés et non transmis (un bucket n'a pas de serveurs à répartir ni à sonder).
-- `kind` et `bucket_id` sont **immuables** : les changer remplace le target group. `bucket_prefix` se modifie en place.
+- `kind` est **définitif** : le changer remplace le target group. `bucket_id` et `bucket_prefix` se modifient en place (changer de bucket ne recrée pas le target group).
 - Le cache ne se règle pas ici mais sur la **route** (`cache_mode`, `cache_default_ttl_s`, `cache_max_ttl_s`).
 - La sortie `origin_status` vaut `error` si le bucket est redevenu privé ou introuvable.
 
@@ -102,8 +102,8 @@ Comportement en mode `bucket` :
 | `sticky_enabled` | bool | no | `false` | Cookie-based session affinity. |
 | `sticky_cookie_name` | string | no | `null` | Requis si `sticky_enabled=true`. |
 | `members` | map(object) | no | `{}` | Map de members (voir schéma). Doit rester vide avec `kind = "bucket"`. |
-| `kind` | string | no | `"upstream"` | `upstream` (pool de serveurs) ou `bucket` (sert un bucket public). Immuable. |
-| `bucket_id` | string | no | `null` | UUID du bucket servi. Requis avec `kind = "bucket"`, interdit sinon. Immuable. |
+| `kind` | string | no | `"upstream"` | `upstream` (pool de serveurs) ou `bucket` (sert un bucket public). Définitif : le changer remplace la ressource. |
+| `bucket_id` | string | no | `null` | UUID du bucket servi. Requis avec `kind = "bucket"`, interdit sinon. Modifiable en place. |
 | `bucket_prefix` | string | no | `""` | Dossier du bucket (lettres, chiffres, `. _ - /` ; pas de segment `.`/`..` ; 512 car. max). Modifiable. |
 
 ### Schéma `health_check`

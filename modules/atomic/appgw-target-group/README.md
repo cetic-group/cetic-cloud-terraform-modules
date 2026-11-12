@@ -57,6 +57,40 @@ module "tg_legacy" {
 }
 ```
 
+## Exemple — site statique ou images servis depuis un bucket
+
+Un target group `bucket` sert un bucket **public** sous le domaine de la passerelle (lecture seule : GET/HEAD, sans listing du contenu). Aucun serveur, aucune clé, aucune IP : il suffit ensuite d'une route, d'un listener pour votre domaine et d'un enregistrement DNS chez votre hébergeur.
+
+```hcl
+module "images" {
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/storage/bucket?ref=v0.39.0"
+
+  name      = "site-assets"
+  region    = "RNN"
+  is_public = true
+}
+
+module "tg_images" {
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/atomic/appgw-target-group?ref=v0.39.0"
+
+  appgw_id = module.appgw.id
+  name     = "images"
+
+  kind          = "bucket"
+  bucket_id     = module.images.id
+  bucket_prefix = "images" # dossier du bucket, optionnel
+}
+```
+
+Comportement en mode `bucket` :
+
+- `bucket_id` est obligatoire ; un bucket privé est refusé par la plateforme.
+- `members` doit rester vide et `sticky_enabled` à `false` (un plan refuse sinon, avec un message explicite).
+- `algorithm`, `health_check` et `sticky_cookie_name` sont ignorés et non transmis (un bucket n'a pas de serveurs à répartir ni à sonder).
+- `kind` est **définitif** : le changer remplace le target group. `bucket_id` et `bucket_prefix` se modifient en place (changer de bucket ne recrée pas le target group).
+- Le cache ne se règle pas ici mais sur la **route** (`cache_mode`, `cache_default_ttl_s`, `cache_max_ttl_s`).
+- La sortie `origin_status` vaut `ok`, `drift` (bucket redevenu privé ou introuvable ; le détail est dans `origin_error`) ou `null` (avant la première vérification, et pour `upstream`).
+
 ## Inputs
 
 | Name | Type | Required | Default | Description |
@@ -67,7 +101,10 @@ module "tg_legacy" {
 | `health_check` | object | no | `{}` (défauts) | Voir schéma. |
 | `sticky_enabled` | bool | no | `false` | Cookie-based session affinity. |
 | `sticky_cookie_name` | string | no | `null` | Requis si `sticky_enabled=true`. |
-| `members` | map(object) | no | `{}` | Map de members (voir schéma). |
+| `members` | map(object) | no | `{}` | Map de members (voir schéma). Doit rester vide avec `kind = "bucket"`. |
+| `kind` | string | no | `"upstream"` | `upstream` (pool de serveurs) ou `bucket` (sert un bucket public). Définitif : le changer remplace la ressource. |
+| `bucket_id` | string | no | `null` | UUID du bucket servi. Requis avec `kind = "bucket"`, interdit sinon. Modifiable en place. |
+| `bucket_prefix` | string | no | `""` | Dossier du bucket en forme canonique : lettres, chiffres, `. _ - /` ; sans `/` initial ni final, sans `//`, sans segment `.`/`..` ; 512 car. max. `site/`, `/site` et `a//b` sont refusés. Modifiable. |
 
 ### Schéma `health_check`
 
@@ -104,6 +141,9 @@ Exactement un de `container_id` / `vm_instance_id` / `target_ip` est requis.
 | `appgw_id` | UUID de la gateway parente. |
 | `algorithm` | Algorithme effectif. |
 | `member_ids` | Map keyed par label → UUID member. |
+| `kind` | Type effectif : `upstream` ou `bucket`. |
+| `origin_status` | État de l'origine d'un target group `bucket` : `ok`, `drift` ou `null`. |
+| `origin_error` | Détail du problème quand `origin_status = "drift"`, sinon `null`. |
 
 ## Notes
 

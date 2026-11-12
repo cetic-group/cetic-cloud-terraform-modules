@@ -4,6 +4,35 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.39.0]
+
+### Added
+
+- **Target group de type bucket** : `atomic/appgw-target-group` accepte `kind`
+  (`upstream` par défaut, ou `bucket`), `bucket_id` et `bucket_prefix`, et
+  expose les sorties `kind` et `origin_status`. Un target group `bucket` sert un
+  bucket public sous le domaine de la passerelle, en lecture seule, sans
+  serveur, clé ni IP à fournir. `bucket_id` est requis avec `bucket` et
+  interdit sinon ; `members` et `sticky_enabled` sont refusés en mode `bucket`.
+  Le cache se règle sur la route.
+- `exposure/web-app-with-appgw` : `target_groups[*]` accepte `kind`,
+  `bucket_id` et `bucket_prefix` (`members` devient optionnel, vide par défaut)
+  et expose l'output `target_group_origin_status`. Exemple
+  `examples/static-site-bucket`.
+- Sorties `origin_status` (`ok`, `drift` ou null) et `origin_error` sur
+  `atomic/appgw-target-group` ; `target_group_origin_status` et
+  `target_group_origin_error` sur `exposure/web-app-with-appgw`. Sorties
+  `bucket_id` et `bucket_prefix` sur `atomic/appgw-target-group`.
+- `bucket_prefix` doit être en forme canonique (sans `/` initial ni final, sans
+  `//`), comme l'exige la plateforme : l'erreur apparaît dès la validation.
+
+### Changed
+
+- **Provider `>= 7.4.0`** pour `atomic/appgw-target-group`,
+  `exposure/web-app-with-appgw` et l'exemple `static-site-bucket` : ces modules
+  envoient `kind`, `bucket_id` et `bucket_prefix`, que seul le provider 7.4.0 et
+  suivants acceptent. À fusionner après la publication de ce provider.
+
 ## [0.38.0]
 
 Aligné sur le provider `cetic-group/ccp` **`>= 7.3.2`** — cascade sur toutes

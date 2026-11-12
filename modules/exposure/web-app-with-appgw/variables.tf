@@ -134,7 +134,10 @@ variable "target_groups" {
     - `algorithm` : `roundrobin` / `leastconn` / `source` / `random` (défaut `roundrobin`).
     - `health_check` : object (cf. atomic/appgw-target-group).
     - `sticky_enabled` / `sticky_cookie_name` : optionnels.
-    - `members` : map(object) (cf. atomic/appgw-target-group).
+    - `members` : map(object) (cf. atomic/appgw-target-group), vide par défaut.
+    - `kind` : `upstream` (défaut) ou `bucket`. Un target group `bucket` sert un bucket
+      public sous le domaine de la passerelle (lecture seule) : `bucket_id` requis,
+      `bucket_prefix` optionnel, ni `members` ni `sticky_enabled`.
   EOT
 
   type = map(object({
@@ -151,19 +154,53 @@ variable "target_groups" {
     }), {})
     sticky_enabled     = optional(bool, false)
     sticky_cookie_name = optional(string)
-    members = map(object({
+    members = optional(map(object({
       container_id   = optional(string)
       vm_instance_id = optional(string)
       target_ip      = optional(string)
       port           = number
       weight         = optional(number, 100)
       enabled        = optional(bool, true)
-    }))
+    })), {})
+    kind          = optional(string, "upstream")
+    bucket_id     = optional(string)
+    bucket_prefix = optional(string, "")
   }))
 
   validation {
     condition     = length(var.target_groups) >= 1
     error_message = "Au moins un target group est requis."
+  }
+  validation {
+    condition     = alltrue([for k, g in var.target_groups : contains(["upstream", "bucket"], g.kind)])
+    error_message = "`kind` d'un target group doit être `upstream` ou `bucket`."
+  }
+  validation {
+    condition = alltrue([
+      for k, g in var.target_groups :
+      g.kind == "bucket" ? g.bucket_id != null : (g.bucket_id == null && g.bucket_prefix == "")
+    ])
+    error_message = "`bucket_id` est requis avec `kind = \"bucket\"` ; `bucket_id` et `bucket_prefix` sont interdits avec `kind = \"upstream\"`."
+  }
+  validation {
+    condition = alltrue([
+      for k, g in var.target_groups :
+      length(g.bucket_prefix) <= 512 &&
+      can(regex("^[A-Za-z0-9._/-]*$", g.bucket_prefix)) &&
+      !startswith(g.bucket_prefix, "/") &&
+      !endswith(g.bucket_prefix, "/") &&
+      !strcontains(g.bucket_prefix, "//") &&
+      !contains(split("/", g.bucket_prefix), ".") &&
+      !contains(split("/", g.bucket_prefix), "..")
+    ])
+    error_message = "`bucket_prefix` d'un target group : lettres, chiffres, `. _ - /` uniquement, 512 caractères au plus, sans `/` initial ni final, sans `//`, sans segment `.` ni `..`."
+  }
+  validation {
+    condition = alltrue([
+      for k, g in var.target_groups :
+      g.kind != "bucket" || (length(g.members) == 0 && !g.sticky_enabled)
+    ])
+    error_message = "Un target group `kind = \"bucket\"` n'a ni `members` ni `sticky_enabled`."
   }
 }
 

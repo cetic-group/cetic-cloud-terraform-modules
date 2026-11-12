@@ -19,9 +19,19 @@ suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `bucket_id` et `bucket_prefix` (`members` devient optionnel, vide par défaut)
   et expose l'output `target_group_origin_status`. Exemple
   `examples/static-site-bucket`.
-- Exige un provider `cetic-group/ccp` dont `ccp_appgw_target_group` porte
-  `kind`, `bucket_id`, `bucket_prefix`, `origin_status` (la contrainte
-  `required_providers` sera relevée à la publication de cette version).
+- Sorties `origin_status` (`ok`, `drift` ou null) et `origin_error` sur
+  `atomic/appgw-target-group` ; `target_group_origin_status` et
+  `target_group_origin_error` sur `exposure/web-app-with-appgw`. Sorties
+  `bucket_id` et `bucket_prefix` sur `atomic/appgw-target-group`.
+- `bucket_prefix` doit être en forme canonique (sans `/` initial ni final, sans
+  `//`), comme l'exige la plateforme : l'erreur apparaît dès la validation.
+
+### Changed
+
+- **Provider `>= 7.4.0`** pour `atomic/appgw-target-group`,
+  `exposure/web-app-with-appgw` et l'exemple `static-site-bucket` : ces modules
+  envoient `kind`, `bucket_id` et `bucket_prefix`, que seul le provider 7.4.0 et
+  suivants acceptent. À fusionner après la publication de ce provider.
 
 ## [0.38.0]
 

@@ -17,7 +17,8 @@ mock_provider "ccp" {
     defaults = {
       id            = "00000000-0000-0000-0000-00000000d001"
       kind          = "upstream"
-      origin_status = "ok"
+      origin_status = "drift"
+      origin_error  = "bucket redevenu privé"
     }
   }
   mock_resource "ccp_appgw_target_group_member" {
@@ -377,6 +378,138 @@ run "rejects_bucket_id_on_upstream_target_group" {
 
     routes = [
       { listener_index = 0, target_group_key = "app" },
+    ]
+  }
+  expect_failures = [
+    var.target_groups,
+  ]
+}
+
+run "bucket_fields_reach_the_target_group_module" {
+  command = plan
+  variables {
+    name    = "static"
+    region  = "RNN"
+    vpc_id  = "00000000-0000-0000-0000-000000000010"
+    vnet_id = "00000000-0000-0000-0000-000000000020"
+
+    hostnames = ["www.example.com"]
+
+    target_groups = {
+      app = {
+        members = {
+          m1 = { container_id = "00000000-0000-0000-0000-00000000c001", port = 8080 }
+        }
+      }
+      assets = {
+        kind          = "bucket"
+        bucket_id     = "00000000-0000-0000-0000-00000000b0b0"
+        bucket_prefix = "static"
+      }
+    }
+
+    routes = [
+      { listener_index = 0, target_group_key = "assets", priority = 10, path_match = "/static/" },
+      { listener_index = 0, target_group_key = "app" },
+    ]
+  }
+  assert {
+    condition     = module.target_groups["assets"].kind == "bucket"
+    error_message = "kind must reach the target group module"
+  }
+  assert {
+    condition     = module.target_groups["assets"].bucket_id == "00000000-0000-0000-0000-00000000b0b0"
+    error_message = "bucket_id must reach the target group module"
+  }
+  assert {
+    condition     = module.target_groups["assets"].bucket_prefix == "static"
+    error_message = "bucket_prefix must reach the target group module"
+  }
+  assert {
+    condition     = module.target_groups["app"].kind == "upstream"
+    error_message = "an upstream target group keeps the default kind"
+  }
+}
+
+run "origin_outputs_are_exposed" {
+  command = apply
+  variables {
+    name    = "static"
+    region  = "RNN"
+    vpc_id  = "00000000-0000-0000-0000-000000000010"
+    vnet_id = "00000000-0000-0000-0000-000000000020"
+
+    hostnames = ["www.example.com"]
+
+    target_groups = {
+      assets = {
+        kind      = "bucket"
+        bucket_id = "00000000-0000-0000-0000-00000000b0b0"
+      }
+    }
+
+    routes = [
+      { listener_index = 0, target_group_key = "assets" },
+    ]
+  }
+  assert {
+    condition     = output.target_group_origin_status["assets"] == "drift"
+    error_message = "target_group_origin_status must be exposed"
+  }
+  assert {
+    condition     = output.target_group_origin_error["assets"] == "bucket redevenu privé"
+    error_message = "target_group_origin_error must be exposed"
+  }
+}
+
+run "rejects_bucket_prefix_on_upstream_target_group" {
+  command = plan
+  variables {
+    name    = "bad"
+    region  = "RNN"
+    vpc_id  = "00000000-0000-0000-0000-000000000010"
+    vnet_id = "00000000-0000-0000-0000-000000000020"
+
+    hostnames = ["www.example.com"]
+
+    target_groups = {
+      app = {
+        bucket_prefix = "static"
+        members = {
+          m1 = { container_id = "00000000-0000-0000-0000-00000000c001", port = 8080 }
+        }
+      }
+    }
+
+    routes = [
+      { listener_index = 0, target_group_key = "app" },
+    ]
+  }
+  expect_failures = [
+    var.target_groups,
+  ]
+}
+
+run "rejects_non_canonical_bucket_prefix" {
+  command = plan
+  variables {
+    name    = "bad"
+    region  = "RNN"
+    vpc_id  = "00000000-0000-0000-0000-000000000010"
+    vnet_id = "00000000-0000-0000-0000-000000000020"
+
+    hostnames = ["www.example.com"]
+
+    target_groups = {
+      assets = {
+        kind          = "bucket"
+        bucket_id     = "00000000-0000-0000-0000-00000000b0b0"
+        bucket_prefix = "site/"
+      }
+    }
+
+    routes = [
+      { listener_index = 0, target_group_key = "assets" },
     ]
   }
   expect_failures = [

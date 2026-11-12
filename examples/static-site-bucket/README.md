@@ -19,7 +19,7 @@ terraform apply
 Puis créez un enregistrement DNS pour `www.example.com` chez votre
 hébergeur. Contrôlez-le avec `cetic appgw listener dns-check`.
 
-Si le bucket redevient privé, la sortie `origin_status` passe à `error`.
+Si le bucket redevient privé, la sortie `origin_status` passe à `drift` (détail dans `origin_error`).
 Déposez vos fichiers dans le dossier `site/` du bucket.
 
 > Le provider doit être une version qui porte l'attribut `kind` de

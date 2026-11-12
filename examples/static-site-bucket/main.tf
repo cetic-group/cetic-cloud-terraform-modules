@@ -9,7 +9,7 @@ terraform {
   required_providers {
     ccp = {
       source  = "cetic-group/ccp"
-      version = ">= 7.3.2" # utiliser la version du provider qui porte `kind` sur ccp_appgw_target_group
+      version = ">= 7.4.0" # première version du provider qui porte `kind` sur ccp_appgw_target_group
     }
   }
 }

@@ -192,12 +192,14 @@ Il reste ensuite à créer **un seul enregistrement DNS** chez votre hébergeur 
 | `hostnames` | Liste hostnames. |
 | `listener_ids` | Map hostname → UUID. |
 | `target_group_ids` | Map clé → UUID. |
-| `target_group_origin_status` | Map clé → état de l'origine (`ok` / `error` / `null`). |
+| `target_group_origin_status` | Map clé → état de l'origine (`ok` / `drift` / `null`). |
+| `target_group_origin_error` | Map clé → détail du problème d'origine (état `drift`), sinon `null`. |
 | `route_ids` | Liste UUID routes. |
 | `url` | URL HTTPS du 1er hostname. |
 
 ## Notes
 
+- **`members` est optionnel** : un target group `upstream` sans `members` est accepté (pool vide). Vérifiez que chaque target group de type serveurs déclare bien ses membres.
 - **Ordre des hostnames stable** : `routes[*].listener_index` est résolu par position dans `hostnames`. Réordonner la liste change la cible des routes — préférer ajouter en queue.
 - **Reuse des target groups** : plusieurs routes peuvent pointer vers le même `target_group_key` (cas typique : routing path-based vers un même backend pool sous conditions différentes).
 - **ACME** : `http01` exige que le hostname résolve vers l'IP publique de la gateway (CNAME/A) **avant** l'apply. `dns01` exige `acme_dns_provider` + `acme_dns_credentials` (pas de pré-requis DNS A/CNAME). `acme_challenge = null` n'émet aucun certificat.

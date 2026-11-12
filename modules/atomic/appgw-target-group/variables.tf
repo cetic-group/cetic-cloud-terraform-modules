@@ -29,6 +29,7 @@ variable "algorithm" {
 variable "kind" {
   type        = string
   default     = "upstream"
+  nullable    = false
   description = <<-EOT
     Type de target group (définitif : le changer remplace la ressource).
     - `upstream` (défaut) : pool de serveurs (`members`).
@@ -52,16 +53,19 @@ variable "bucket_id" {
 variable "bucket_prefix" {
   type        = string
   default     = ""
-  description = "Dossier du bucket à servir (ex. `site/images`). Lettres, chiffres, `. _ - /` ; segments `.` et `..` interdits ; 512 caractères au plus. Modifiable. Uniquement avec `kind = \"bucket\"`."
+  description = "Dossier du bucket à servir, en forme canonique (ex. `site/images`) : lettres, chiffres, `. _ - /`, sans `/` initial ni final, sans `//`, sans segment `.` ni `..`, 512 caractères au plus. Chaîne vide = tout le bucket. Modifiable. Uniquement avec `kind = \"bucket\"`."
 
   validation {
     condition = (
       length(var.bucket_prefix) <= 512 &&
       can(regex("^[A-Za-z0-9._/-]*$", var.bucket_prefix)) &&
+      !startswith(var.bucket_prefix, "/") &&
+      !endswith(var.bucket_prefix, "/") &&
+      !strcontains(var.bucket_prefix, "//") &&
       !contains(split("/", var.bucket_prefix), ".") &&
       !contains(split("/", var.bucket_prefix), "..")
     )
-    error_message = "`bucket_prefix` : lettres, chiffres, `. _ - /` uniquement, 512 caractères au plus, sans segment `.` ni `..`."
+    error_message = "`bucket_prefix` : lettres, chiffres, `. _ - /` uniquement, 512 caractères au plus, sans `/` initial ni final, sans `//`, sans segment `.` ni `..`."
   }
 }
 

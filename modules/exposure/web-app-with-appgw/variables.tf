@@ -185,6 +185,19 @@ variable "target_groups" {
   validation {
     condition = alltrue([
       for k, g in var.target_groups :
+      length(g.bucket_prefix) <= 512 &&
+      can(regex("^[A-Za-z0-9._/-]*$", g.bucket_prefix)) &&
+      !startswith(g.bucket_prefix, "/") &&
+      !endswith(g.bucket_prefix, "/") &&
+      !strcontains(g.bucket_prefix, "//") &&
+      !contains(split("/", g.bucket_prefix), ".") &&
+      !contains(split("/", g.bucket_prefix), "..")
+    ])
+    error_message = "`bucket_prefix` d'un target group : lettres, chiffres, `. _ - /` uniquement, 512 caractères au plus, sans `/` initial ni final, sans `//`, sans segment `.` ni `..`."
+  }
+  validation {
+    condition = alltrue([
+      for k, g in var.target_groups :
       g.kind != "bucket" || (length(g.members) == 0 && !g.sticky_enabled)
     ])
     error_message = "Un target group `kind = \"bucket\"` n'a ni `members` ni `sticky_enabled`."

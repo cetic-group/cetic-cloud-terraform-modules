@@ -29,6 +29,21 @@ output "kind" {
 }
 
 output "origin_status" {
-  description = "État de l'origine d'un target group `bucket` : `ok`, `error` ou null (non évalué / `upstream`)."
+  description = "État de l'origine d'un target group `bucket` : `ok`, `drift` (bucket redevenu privé ou introuvable, voir `origin_error`) ou null (pas encore vérifié, ou `upstream`)."
   value       = ccp_appgw_target_group.this.origin_status
+}
+
+output "origin_error" {
+  description = "Détail du problème d'origine d'un target group `bucket` en état `drift` ; null sinon."
+  value       = ccp_appgw_target_group.this.origin_error
+}
+
+output "bucket_id" {
+  description = "UUID du bucket servi (target group `bucket`), sinon null."
+  value       = ccp_appgw_target_group.this.bucket_id
+}
+
+output "bucket_prefix" {
+  description = "Dossier du bucket servi (target group `bucket`), vide pour tout le bucket."
+  value       = ccp_appgw_target_group.this.bucket_prefix
 }

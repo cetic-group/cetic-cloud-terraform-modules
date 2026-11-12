@@ -89,7 +89,7 @@ Comportement en mode `bucket` :
 - `algorithm`, `health_check` et `sticky_cookie_name` sont ignorés et non transmis (un bucket n'a pas de serveurs à répartir ni à sonder).
 - `kind` est **définitif** : le changer remplace le target group. `bucket_id` et `bucket_prefix` se modifient en place (changer de bucket ne recrée pas le target group).
 - Le cache ne se règle pas ici mais sur la **route** (`cache_mode`, `cache_default_ttl_s`, `cache_max_ttl_s`).
-- La sortie `origin_status` vaut `error` si le bucket est redevenu privé ou introuvable.
+- La sortie `origin_status` vaut `ok`, `drift` (bucket redevenu privé ou introuvable ; le détail est dans `origin_error`) ou `null` (avant la première vérification, et pour `upstream`).
 
 ## Inputs
 
@@ -104,7 +104,7 @@ Comportement en mode `bucket` :
 | `members` | map(object) | no | `{}` | Map de members (voir schéma). Doit rester vide avec `kind = "bucket"`. |
 | `kind` | string | no | `"upstream"` | `upstream` (pool de serveurs) ou `bucket` (sert un bucket public). Définitif : le changer remplace la ressource. |
 | `bucket_id` | string | no | `null` | UUID du bucket servi. Requis avec `kind = "bucket"`, interdit sinon. Modifiable en place. |
-| `bucket_prefix` | string | no | `""` | Dossier du bucket (lettres, chiffres, `. _ - /` ; pas de segment `.`/`..` ; 512 car. max). Modifiable. |
+| `bucket_prefix` | string | no | `""` | Dossier du bucket en forme canonique : lettres, chiffres, `. _ - /` ; sans `/` initial ni final, sans `//`, sans segment `.`/`..` ; 512 car. max. `site/`, `/site` et `a//b` sont refusés. Modifiable. |
 
 ### Schéma `health_check`
 
@@ -142,7 +142,8 @@ Exactement un de `container_id` / `vm_instance_id` / `target_ip` est requis.
 | `algorithm` | Algorithme effectif. |
 | `member_ids` | Map keyed par label → UUID member. |
 | `kind` | Type effectif : `upstream` ou `bucket`. |
-| `origin_status` | État de l'origine d'un target group `bucket` : `ok`, `error` ou `null`. |
+| `origin_status` | État de l'origine d'un target group `bucket` : `ok`, `drift` ou `null`. |
+| `origin_error` | Détail du problème quand `origin_status = "drift"`, sinon `null`. |
 
 ## Notes
 

@@ -31,8 +31,12 @@ output "egress_ip" {
 }
 
 output "egress_ip_type" {
-  description = "Type de l'IP de sortie dédiée (`null` sans l'option)."
-  value       = ccp_vpc.this.egress_ip_type
+  # DÉPRÉCIÉ (cetic-cloud-platform#1977) : la plateforme ne communique plus le
+  # type de l'IP de sortie, qu'elle attribue et gère. Gardé à `null` pour ne
+  # pas casser les appelants ; ne lit plus l'attribut déprécié du provider
+  # (sinon avertissement à chaque plan). Retrait à la prochaine version majeure.
+  description = "DÉPRÉCIÉ, toujours `null` : la plateforme ne communique plus le type de l'IP de sortie. Retrait à la prochaine version majeure."
+  value       = null
 }
 
 output "egress_ip_status" {

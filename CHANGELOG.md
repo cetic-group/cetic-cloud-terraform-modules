@@ -4,6 +4,17 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Deprecated
+
+- `network/vpc` : l'output `egress_ip_type` vaut toujours `null` et sera
+  retiré à la prochaine version majeure. La plateforme ne communique plus le
+  type de l'IP de sortie dédiée, qu'elle attribue et gère
+  (cetic-cloud-platform#1977). L'output ne lit plus l'attribut
+  `ccp_vpc.egress_ip_type`, déprécié par le provider : plus d'avertissement
+  de dépréciation au plan des appelants.
+
 ## [0.38.0]
 
 Aligné sur le provider `cetic-group/ccp` **`>= 7.3.2`** — cascade sur toutes

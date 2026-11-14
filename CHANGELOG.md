@@ -14,10 +14,19 @@ suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   n'est pas géré et un réglage posé depuis la console ou le CLI n'est pas
   touché. Jamais désactivé : repasser à `null` arrête la gestion, le bucket
   garde son versionnage.
-  ⚠️ Exige une version du provider `cetic-group/ccp` qui connaît le bloc
-  `versioning` (terraform-provider-ccp#113) : la contrainte de `versions.tf`
-  est à relever à cette version avant la release. Avec la 7.3.2, le module est
-  refusé (« Unsupported block type »), même avec `versioning = null`.
+  Sur un bucket déjà versionné hors plateforme, la première prise en charge
+  pose la durée renseignée (30 jours par défaut) et efface les versions plus
+  anciennes ; le plan du provider l'annonce.
+
+### Changed — BREAKING
+
+- **Provider minimum relevé** sur tous les modules et landing zones, à la
+  release de `cetic-group/ccp` qui apporte le bloc `versioning`
+  (terraform-provider-ccp#113 — numéro à fixer à la release, cascade sur
+  toutes les déclarations comme pour la 0.38.0). Concerne tous les
+  utilisateurs de `storage/bucket`, même sans versionnage : un provider plus
+  ancien refuse le module (« Unsupported block type »), même avec
+  `versioning = null`.
 
 ### Deprecated
 

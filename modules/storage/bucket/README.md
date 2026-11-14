@@ -75,8 +75,15 @@ module "documents" {
 - **On ne désactive jamais, on suspend** : S3 ne revient pas à « jamais
   versionné ». Repasser à `null` arrête la gestion, le bucket garde son
   versionnage ; pour ne plus créer de versions, mettre `status = "Suspended"`.
-- **Changer `status` ne change pas la durée.** Sans durée, la valeur en place
-  est gardée (30 jours pour un bucket jamais versionné).
+- **La durée n'est envoyée que si elle est renseignée.** Sans elle, changer
+  `status` garde la durée en place (30 jours pour un bucket jamais
+  versionné), même avec un plan sauvegardé.
+- **Prendre en charge un versionnage posé hors plateforme efface des
+  versions.** Sur un bucket versionné avec un client S3, les versions
+  anciennes sont souvent gardées sans limite. Le premier apply pose la durée
+  renseignée, 30 jours par défaut, et efface les versions plus anciennes ; le
+  plan l'annonce par un avertissement. Renseignez une durée assez longue pour
+  les garder.
 - **Raccourcir la durée efface plus tôt les versions anciennes** : le plan
   l'annonce par un avertissement. Les versions anciennes occupent de la place
   jusqu'à leur expiration.

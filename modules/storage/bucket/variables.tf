@@ -91,9 +91,14 @@ variable "versioning" {
       pas à « jamais versionné ». Un nouveau bucket ne peut pas être créé
       `Suspended` (le provider le refuse au plan).
     - `noncurrent_version_expiration_days` : conservation des versions
-      anciennes, 1 à 3650 jours. Absente : la valeur en place (30 jours pour
-      un bucket jamais versionné). La raccourcir efface plus tôt les versions
-      anciennes.
+      anciennes, 1 à 3650 jours. Absente, elle n'est pas envoyée et la valeur
+      en place est gardée (30 jours pour un bucket jamais versionné). La
+      raccourcir efface plus tôt les versions anciennes.
+
+    ⚠️ Sur un bucket déjà versionné hors plateforme (client S3), les versions
+    anciennes sont souvent gardées sans limite : la première prise en charge
+    pose cette durée, 30 jours par défaut, et efface les versions plus
+    anciennes. Le plan du provider l'annonce par un avertissement.
 
     Repasser à `null` arrête la gestion sans désactiver le versionnage.
   EOT

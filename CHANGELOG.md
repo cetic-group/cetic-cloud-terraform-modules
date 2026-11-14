@@ -6,6 +6,19 @@ suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `storage/bucket` : variable `versioning` (`status` = `Enabled` ou `Suspended`,
+  `noncurrent_version_expiration_days` de 1 à 3650, optionnelle) et output
+  `versioning` (cetic-cloud-platform#1923). `null` par défaut : le versionnage
+  n'est pas géré et un réglage posé depuis la console ou le CLI n'est pas
+  touché. Jamais désactivé : repasser à `null` arrête la gestion, le bucket
+  garde son versionnage.
+  ⚠️ Exige une version du provider `cetic-group/ccp` qui connaît le bloc
+  `versioning` (terraform-provider-ccp#113) : la contrainte de `versions.tf`
+  est à relever à cette version avant la release. Avec la 7.3.2, le module est
+  refusé (« Unsupported block type »), même avec `versioning = null`.
+
 ### Deprecated
 
 - `network/vpc` : l'output `egress_ip_type` vaut toujours `null` et sera

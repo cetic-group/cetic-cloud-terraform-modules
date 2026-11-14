@@ -51,6 +51,39 @@ module "uploads" {
 Ce module exige le provider `cetic-group/ccp` **`>= 7.3.2`**. Sans `cors_rules`,
 une configuration CORS posée depuis la console ou le CLI n'est pas modifiée.
 
+## Versionnage
+
+Chaque écrasement ou suppression garde la version précédente de l'objet, effacée
+après `noncurrent_version_expiration_days` jours :
+
+```hcl
+module "documents" {
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/storage/bucket?ref=vX.Y.Z"
+
+  name   = "acme-documents"
+  region = "RNN"
+
+  versioning = {
+    status                             = "Enabled"   # ou "Suspended"
+    noncurrent_version_expiration_days = 90          # optionnel, 1 à 3650
+  }
+}
+```
+
+- **Sans `versioning`** (défaut `null`), le versionnage n'est pas géré : un
+  réglage posé depuis la console ou le CLI n'est pas modifié.
+- **On ne désactive jamais, on suspend** : S3 ne revient pas à « jamais
+  versionné ». Repasser à `null` arrête la gestion, le bucket garde son
+  versionnage ; pour ne plus créer de versions, mettre `status = "Suspended"`.
+- **Changer `status` ne change pas la durée.** Sans durée, la valeur en place
+  est gardée (30 jours pour un bucket jamais versionné).
+- **Raccourcir la durée efface plus tôt les versions anciennes** : le plan
+  l'annonce par un avertissement. Les versions anciennes occupent de la place
+  jusqu'à leur expiration.
+
+Le versionnage exige un provider `cetic-group/ccp` qui connaît le bloc
+`versioning` (cetic-group/terraform-provider-ccp#113).
+
 ## Inputs
 
 | Name | Type | Required | Default | Description |
@@ -60,6 +93,7 @@ une configuration CORS posée depuis la console ou le CLI n'est pas modifiée.
 | `is_public` | bool | no | `false` | Lecture anonyme. |
 | `scoped_keys` | map(object({access_level})) | no | `{}` | `read` / `write` / `readwrite` / `full`. |
 | `cors_rules` | list(object) | no | `[]` | Règles CORS (origines, méthodes, en-têtes, durée). Vide = CORS non géré. Voir ci-dessous. |
+| `versioning` | object({status, noncurrent_version_expiration_days}) | no | `null` | Versionnage (`Enabled` / `Suspended`, durée 1–3650 j). `null` = non géré. Voir ci-dessus. |
 | `tags` | list(string) | no | `[]` | |
 
 ## Outputs
@@ -69,5 +103,6 @@ une configuration CORS posée depuis la console ou le CLI n'est pas modifiée.
 | `id` | no | UUID. |
 | `name` | no | Nom. |
 | `endpoint_url` | no | Endpoint S3. |
+| `versioning` | no | Versionnage géré (`status`, `noncurrent_version_expiration_days`), ou `null`. |
 | `access_key` | no | Master access key. |
 | `scoped_keys` | **yes** | Map de creds par label. |

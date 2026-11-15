@@ -80,7 +80,7 @@ output "web_vnet_id" {
 | `vpc` | object | VPC complet (id, name, region, status, tags). |
 | `dedicated_egress_ip` | bool | Option IP de sortie dédiée active. |
 | `egress_ip` | string | IP de sortie dédiée (`null` sans l'option). |
-| `egress_ip_type` | string | Type de l'IP de sortie dédiée (`null` sans l'option). |
+| `egress_ip_type` | string | **Déprécié**, toujours `null` : la plateforme ne communique plus le type de l'IP de sortie. Retrait à la prochaine version majeure. |
 | `egress_ip_status` | string | État de l'IP de sortie dédiée (`null` sans l'option). |
 | `vnet_ids` | map(string) | `{<key> => <uuid>}` — passe à d'autres modules. |
 | `vnets` | map(object) | VNets complets (id, name, cidr, gateway, status). |

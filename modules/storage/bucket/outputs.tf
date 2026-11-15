@@ -11,6 +11,11 @@ output "endpoint_url" {
   value       = ccp_object_bucket.this.endpoint_url
 }
 
+output "versioning" {
+  description = "Versionnage géré par ce module : `{ status, noncurrent_version_expiration_days }`, ou `null` s'il n'est pas géré."
+  value       = ccp_object_bucket.this.versioning
+}
+
 output "access_key" {
   description = "Master access key (visible côté admin / utilisable dans boto3, etc). Sensitive (le provider marque le champ Sensitive)."
   value       = ccp_object_bucket.this.access_key

@@ -81,3 +81,46 @@ variable "cors_rules" {
     error_message = "Méthodes CORS permises : GET, PUT, POST, DELETE, HEAD."
   }
 }
+
+variable "versioning" {
+  description = <<-EOT
+    Versionnage du bucket. `null` par défaut : le versionnage n'est alors pas
+    géré par ce module et un réglage existant (console, CLI) est laissé tel quel.
+
+    - `status` : `Enabled` ou `Suspended`. Jamais « désactivé » : S3 ne revient
+      pas à « jamais versionné ». Un nouveau bucket ne peut pas être créé
+      `Suspended` (le provider le refuse au plan).
+    - `noncurrent_version_expiration_days` : conservation des versions
+      anciennes, 1 à 3650 jours. Absente, elle n'est pas envoyée et la valeur
+      en place est gardée (30 jours pour un bucket jamais versionné). La
+      raccourcir efface plus tôt les versions anciennes.
+
+    ⚠️ Sur un bucket déjà versionné hors plateforme (client S3), les versions
+    anciennes sont souvent gardées sans limite : la première prise en charge
+    pose cette durée, 30 jours par défaut, et efface les versions plus
+    anciennes. Le plan du provider l'annonce par un avertissement.
+
+    Repasser à `null` arrête la gestion sans désactiver le versionnage.
+  EOT
+  type = object({
+    status                             = string
+    noncurrent_version_expiration_days = optional(number)
+  })
+  default = null
+
+  validation {
+    condition     = var.versioning == null ? true : contains(["Enabled", "Suspended"], var.versioning.status)
+    error_message = "versioning.status doit être « Enabled » ou « Suspended » (le versionnage ne se désactive pas, il se suspend)."
+  }
+
+  validation {
+    condition = var.versioning == null ? true : (
+      var.versioning.noncurrent_version_expiration_days == null ? true : (
+        floor(var.versioning.noncurrent_version_expiration_days) == var.versioning.noncurrent_version_expiration_days &&
+        var.versioning.noncurrent_version_expiration_days >= 1 &&
+        var.versioning.noncurrent_version_expiration_days <= 3650
+      )
+    )
+    error_message = "versioning.noncurrent_version_expiration_days doit être un nombre entier de jours entre 1 et 3650."
+  }
+}

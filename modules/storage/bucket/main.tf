@@ -18,6 +18,17 @@ resource "ccp_object_bucket" "this" {
       description     = cors_rule.value.description
     }
   }
+
+  # Versionnage (cetic-cloud-platform#1923). null = non géré par ce module : un
+  # réglage posé ailleurs n'est pas touché. Jamais désactivé : repasser à null
+  # arrête la gestion, le bucket garde son versionnage.
+  dynamic "versioning" {
+    for_each = var.versioning == null ? [] : [var.versioning]
+    content {
+      status                             = versioning.value.status
+      noncurrent_version_expiration_days = versioning.value.noncurrent_version_expiration_days
+    }
+  }
 }
 
 # Clés scopées (subusers) — tenant-wide en v1, mais scopées par access_level.

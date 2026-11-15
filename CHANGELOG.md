@@ -4,6 +4,45 @@ All notable changes to `cetic-cloud-terraform-modules` are documented here.
 Format suit [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ; le projet
 suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.39.0]
+
+Aligné sur le provider `cetic-group/ccp` **`>= 7.5.0`** (publié le 15/11), qui
+apporte le bloc `versioning` de `ccp_object_bucket` — cascade sur toutes les
+déclarations du dépôt.
+
+### Added
+
+- `storage/bucket` : variable `versioning` (`status` = `Enabled` ou `Suspended`,
+  `noncurrent_version_expiration_days` de 1 à 3650, optionnelle) et output
+  `versioning` (cetic-cloud-platform#1923). `null` par défaut : le versionnage
+  n'est pas géré et un réglage posé depuis la console ou le CLI n'est pas
+  touché. Jamais désactivé : repasser à `null` arrête la gestion, le bucket
+  garde son versionnage.
+  Sur un bucket déjà versionné hors plateforme, la première prise en charge
+  pose la durée renseignée (30 jours par défaut) et efface les versions plus
+  anciennes ; le plan du provider l'annonce.
+
+### Changed — BREAKING
+
+- **Provider `>= 7.5.0`** (au lieu de `>= 7.3.2`) — cascade sur toutes les
+  déclarations du dépôt (`versions.tf` des modules et landing zones,
+  `providers.tf`, exemples, Quick Start du README). La 7.5.0 apporte le bloc
+  `versioning` de `ccp_object_bucket` (terraform-provider-ccp#113). Concerne
+  tous les utilisateurs de `storage/bucket`, même sans versionnage : un
+  provider plus ancien refuse le module (« Unsupported block type »), même
+  avec `versioning = null`.
+
+### Deprecated
+
+- `network/vpc` : l'output `egress_ip_type` vaut toujours `null` et sera
+  retiré à la prochaine version majeure. La plateforme ne communique plus le
+  type de l'IP de sortie dédiée, qu'elle attribue et gère
+  (cetic-cloud-platform#1977). L'output ne lit plus l'attribut
+  `ccp_vpc.egress_ip_type`, déprécié par le provider : plus d'avertissement
+  de dépréciation au plan des appelants.
+
 ## [0.38.0]
 
 Aligné sur le provider `cetic-group/ccp` **`>= 7.3.2`** — cascade sur toutes

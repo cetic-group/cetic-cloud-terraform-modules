@@ -48,7 +48,7 @@ module "uploads" {
 }
 ```
 
-Ce module exige le provider `cetic-group/ccp` **`>= 7.3.2`**. Sans `cors_rules`,
+Ce module exige le provider `cetic-group/ccp` **`>= 7.5.0`**. Sans `cors_rules`,
 une configuration CORS posée depuis la console ou le CLI n'est pas modifiée.
 
 ## Versionnage
@@ -88,8 +88,7 @@ module "documents" {
   l'annonce par un avertissement. Les versions anciennes occupent de la place
   jusqu'à leur expiration.
 
-Le versionnage exige un provider `cetic-group/ccp` qui connaît le bloc
-`versioning` (cetic-group/terraform-provider-ccp#113).
+Le versionnage exige le provider `cetic-group/ccp` **`>= 7.5.0`**.
 
 ## Inputs
 

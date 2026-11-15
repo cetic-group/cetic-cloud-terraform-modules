@@ -20,13 +20,13 @@ suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed — BREAKING
 
-- **Provider minimum relevé** sur tous les modules et landing zones, à la
-  release de `cetic-group/ccp` qui apporte le bloc `versioning`
-  (terraform-provider-ccp#113 — numéro à fixer à la release, cascade sur
-  toutes les déclarations comme pour la 0.38.0). Concerne tous les
-  utilisateurs de `storage/bucket`, même sans versionnage : un provider plus
-  ancien refuse le module (« Unsupported block type »), même avec
-  `versioning = null`.
+- **Provider `>= 7.5.0`** (au lieu de `>= 7.3.2`) — cascade sur toutes les
+  déclarations du dépôt (`versions.tf` des modules et landing zones,
+  `providers.tf`, exemples, Quick Start du README). La 7.5.0 apporte le bloc
+  `versioning` de `ccp_object_bucket` (terraform-provider-ccp#113). Concerne
+  tous les utilisateurs de `storage/bucket`, même sans versionnage : un
+  provider plus ancien refuse le module (« Unsupported block type »), même
+  avec `versioning = null`.
 
 ### Deprecated
 

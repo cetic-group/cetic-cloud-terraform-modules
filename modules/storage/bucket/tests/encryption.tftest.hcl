@@ -26,6 +26,10 @@ run "sse_c_transmis" {
     condition     = ccp_object_bucket.this.encryption_mode == "sse_c"
     error_message = "encryption_mode doit être transmis à la ressource."
   }
+  assert {
+    condition     = output.encryption_mode == "sse_c"
+    error_message = "L'output encryption_mode doit valoir sse_c."
+  }
 }
 
 run "format_majuscules_refuse" {
@@ -70,5 +74,28 @@ run "public_sans_chiffrement_accepte" {
   assert {
     condition     = ccp_object_bucket.this.is_public == true
     error_message = "Un bucket public sans clé client reste permis."
+  }
+}
+
+run "is_public_null_avec_sse_c_tolere" {
+  command = plan
+  variables {
+    is_public       = null
+    encryption_mode = "sse_c"
+  }
+  assert {
+    condition     = ccp_object_bucket.this.encryption_mode == "sse_c"
+    error_message = "is_public = null ne doit pas faire échouer la garde."
+  }
+}
+
+run "is_public_null_sans_chiffrement_tolere" {
+  command = plan
+  variables {
+    is_public = null
+  }
+  assert {
+    condition     = ccp_object_bucket.this.encryption_mode == "none"
+    error_message = "is_public = null ne doit pas faire échouer la garde."
   }
 }

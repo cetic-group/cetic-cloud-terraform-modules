@@ -14,7 +14,13 @@ suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   création : le changer remplace le bucket et supprime ses fichiers. Un bucket
   `sse_c` est toujours privé : `is_public = true` est refusé au plan.
   Suppose la version du provider qui ajoute `encryption_mode` (supposée
-  `>= 7.6.0`, contrainte du module relevée en conséquence).
+  `>= 7.6.0`, à confirmer à la publication).
+  **Exigence de version : ce module exige désormais le provider
+  `cetic-group/ccp` `>= 7.6.0`** (au lieu de `>= 7.5.0`) ; les utilisateurs d'un
+  provider plus ancien doivent rester sur la version précédente du module. Les
+  autres modules et landing zones déclarent toujours `>= 7.5.0` : l'entrée
+  0.39.0 (alignement « sur toutes les déclarations ») ne vaut plus pour ce
+  module.
 
 ## [0.39.0]
 

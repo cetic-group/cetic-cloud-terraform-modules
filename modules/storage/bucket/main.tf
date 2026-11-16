@@ -35,7 +35,7 @@ resource "ccp_object_bucket" "this" {
 
   lifecycle {
     precondition {
-      condition     = !(var.is_public && var.encryption_mode == "sse_c")
+      condition     = var.is_public != true || var.encryption_mode != "sse_c"
       error_message = "A bucket encrypted with a customer-supplied key cannot be public: set is_public = false, or use encryption_mode = \"none\"."
     }
   }

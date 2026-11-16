@@ -127,7 +127,8 @@ variable "versioning" {
 
 variable "encryption_mode" {
   description = <<-EOT
-    Encryption mode of the bucket. `none` by default (no customer-supplied key).
+    Encryption mode of the bucket. `null` by default: the existing mode is kept
+    (`none`, no customer-supplied key, for a new bucket).
 
     - Chosen at creation and not changeable: changing it replaces the bucket
       and deletes all its files. Copy them first.
@@ -137,10 +138,10 @@ variable "encryption_mode" {
       (`is_public` must stay `false`).
   EOT
   type        = string
-  default     = "none"
+  default     = null
 
   validation {
-    condition     = can(regex("^[a-z][a-z0-9_]*$", var.encryption_mode))
+    condition     = var.encryption_mode == null || can(regex("^[a-z][a-z0-9_]*$", var.encryption_mode))
     error_message = "encryption_mode must start with a lowercase letter and contain only lowercase letters, digits and underscores (e.g. \"none\", \"sse_c\")."
   }
 }

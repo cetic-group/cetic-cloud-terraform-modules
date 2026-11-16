@@ -5,15 +5,36 @@ variables {
   region = "RNN"
 }
 
-run "defaut_sans_chiffrement_fournisseur" {
+run "defaut_null_omet_l_attribut" {
   command = plan
   assert {
-    condition     = ccp_object_bucket.this.encryption_mode == "none"
-    error_message = "Par défaut le mode doit être « none »."
+    condition     = var.encryption_mode == null
+    error_message = "Par défaut la variable doit valoir null."
+  }
+}
+
+run "output_reflete_l_attribut_de_la_ressource" {
+  command = apply
+  override_resource {
+    target = ccp_object_bucket.this
+    values = {
+      encryption_mode = "sse_c"
+    }
   }
   assert {
-    condition     = output.encryption_mode == "none"
-    error_message = "L'output encryption_mode doit refléter la ressource."
+    condition     = output.encryption_mode == "sse_c"
+    error_message = "L'output doit refléter l'attribut de la ressource, pas la variable."
+  }
+}
+
+run "null_explicite_accepte" {
+  command = plan
+  variables {
+    encryption_mode = null
+  }
+  assert {
+    condition     = var.encryption_mode == null
+    error_message = "null doit être accepté."
   }
 }
 
@@ -65,6 +86,18 @@ run "public_avec_cle_client_refuse" {
   expect_failures = [ccp_object_bucket.this]
 }
 
+run "public_avec_null_accepte" {
+  command = plan
+  variables {
+    is_public       = true
+    encryption_mode = null
+  }
+  assert {
+    condition     = ccp_object_bucket.this.is_public == true
+    error_message = "Public avec encryption_mode null doit rester permis."
+  }
+}
+
 run "public_sans_chiffrement_accepte" {
   command = plan
   variables {
@@ -95,7 +128,7 @@ run "is_public_null_sans_chiffrement_tolere" {
     is_public = null
   }
   assert {
-    condition     = ccp_object_bucket.this.encryption_mode == "none"
+    condition     = var.encryption_mode == null
     error_message = "is_public = null ne doit pas faire échouer la garde."
   }
 }

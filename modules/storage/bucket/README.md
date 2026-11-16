@@ -92,7 +92,7 @@ Le versionnage exige le provider `cetic-group/ccp` **`>= 7.5.0`** (ce module : `
 
 ## Client-supplied key (`encryption_mode`)
 
-By default (`encryption_mode = "none"`) the bucket has no customer-supplied key.
+By default (`encryption_mode = null`, attribute omitted) the existing mode is kept: a new bucket has no customer-supplied key (`none`), and an imported bucket keeps its real mode. The bucket has no customer-supplied key.
 With `sse_c`, **you** supply the encryption key on every read and write
 request:
 
@@ -131,7 +131,7 @@ Requires the provider release that adds `encryption_mode` (assumed
 | `scoped_keys` | map(object({access_level})) | no | `{}` | `read` / `write` / `readwrite` / `full`. |
 | `cors_rules` | list(object) | no | `[]` | Règles CORS (origines, méthodes, en-têtes, durée). Vide = CORS non géré. Voir ci-dessous. |
 | `versioning` | object({status, noncurrent_version_expiration_days}) | no | `null` | Versionnage (`Enabled` / `Suspended`, durée 1–3650 j). `null` = non géré. Voir ci-dessus. |
-| `encryption_mode` | string | no | `"none"` | `none` or `sse_c` (key supplied by you; private bucket only). Fixed at creation; changing it replaces the bucket and deletes its files. See above. |
+| `encryption_mode` | string | no | `null` | `none` or `sse_c` (key supplied by you; private bucket only). `null` keeps the existing mode (`none` on creation). Fixed at creation; changing it replaces the bucket and deletes its files. See above. |
 | `tags` | list(string) | no | `[]` | |
 
 ## Outputs

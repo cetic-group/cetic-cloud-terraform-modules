@@ -5,6 +5,9 @@ resource "ccp_object_bucket" "this" {
   is_public = var.is_public
   tags      = var.tags
 
+  # Mode de chiffrement, fixé à la création (cetic-cloud-platform#1995).
+  encryption_mode = var.encryption_mode
+
   # Règles CORS (accès direct depuis un navigateur). Liste vide = CORS non géré
   # par ce module : une configuration posée ailleurs n'est pas touchée.
   dynamic "cors_rule" {
@@ -27,6 +30,13 @@ resource "ccp_object_bucket" "this" {
     content {
       status                             = versioning.value.status
       noncurrent_version_expiration_days = versioning.value.noncurrent_version_expiration_days
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = !(var.is_public && var.encryption_mode == "sse_c")
+      error_message = "A bucket encrypted with a customer-supplied key cannot be public: set is_public = false, or use encryption_mode = \"none\"."
     }
   }
 }

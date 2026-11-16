@@ -124,3 +124,23 @@ variable "versioning" {
     error_message = "versioning.noncurrent_version_expiration_days doit être un nombre entier de jours entre 1 et 3650."
   }
 }
+
+variable "encryption_mode" {
+  description = <<-EOT
+    Encryption mode of the bucket. `none` by default (no customer-supplied key).
+
+    - Chosen at creation and not changeable: changing it replaces the bucket
+      and deletes all its files. Copy them first.
+    - `sse_c`: the encryption key is supplied by you on every read and write
+      request. CETIC never knows it and cannot recover it: a lost key means
+      the files are lost for good. Such a bucket is always private
+      (`is_public` must stay `false`).
+  EOT
+  type        = string
+  default     = "none"
+
+  validation {
+    condition     = can(regex("^[a-z][a-z0-9_]*$", var.encryption_mode))
+    error_message = "encryption_mode must start with a lowercase letter and contain only lowercase letters, digits and underscores (e.g. \"none\", \"sse_c\")."
+  }
+}

@@ -6,6 +6,16 @@ suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `storage/bucket` : variable et output `encryption_mode` (`none` par défaut ;
+  `sse_c` = clé fournie par le client à chaque requête, que CETIC ne connaît
+  pas et ne peut pas récupérer) (cetic-cloud-platform#1995). Choisi à la
+  création : le changer remplace le bucket et supprime ses fichiers. Un bucket
+  `sse_c` est toujours privé : `is_public = true` est refusé au plan.
+  Suppose la version du provider qui ajoute `encryption_mode` (supposée
+  `>= 7.6.0`, contrainte du module relevée en conséquence).
+
 ## [0.39.0]
 
 Aligné sur le provider `cetic-group/ccp` **`>= 7.5.0`** (publié le 15/11), qui

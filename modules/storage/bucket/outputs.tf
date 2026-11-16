@@ -11,6 +11,11 @@ output "endpoint_url" {
   value       = ccp_object_bucket.this.endpoint_url
 }
 
+output "encryption_mode" {
+  description = "Encryption mode of the bucket (`none` or `sse_c`)."
+  value       = ccp_object_bucket.this.encryption_mode
+}
+
 output "versioning" {
   description = "Versionnage géré par ce module : `{ status, noncurrent_version_expiration_days }`, ou `null` s'il n'est pas géré."
   value       = ccp_object_bucket.this.versioning

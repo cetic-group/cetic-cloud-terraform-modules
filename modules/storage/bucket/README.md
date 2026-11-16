@@ -48,7 +48,7 @@ module "uploads" {
 }
 ```
 
-Ce module exige le provider `cetic-group/ccp` **`>= 7.5.0`**. Sans `cors_rules`,
+Ce module exige le provider `cetic-group/ccp` **`>= 7.6.0`**. Sans `cors_rules`,
 une configuration CORS posée depuis la console ou le CLI n'est pas modifiée.
 
 ## Versionnage
@@ -88,7 +88,38 @@ module "documents" {
   l'annonce par un avertissement. Les versions anciennes occupent de la place
   jusqu'à leur expiration.
 
-Le versionnage exige le provider `cetic-group/ccp` **`>= 7.5.0`**.
+Le versionnage exige le provider `cetic-group/ccp` **`>= 7.5.0`** (ce module : `>= 7.6.0`).
+
+## Client-supplied key (`encryption_mode`)
+
+By default (`encryption_mode = null`, attribute omitted) the existing mode is kept: a new bucket has no customer-supplied key (`none`), and an imported bucket keeps its real mode. The bucket has no customer-supplied key.
+With `sse_c`, **you** supply the encryption key on every read and write
+request:
+
+```hcl
+module "vault" {
+  source = "github.com/cetic-group/cetic-cloud-terraform-modules//modules/storage/bucket?ref=vX.Y.Z"
+
+  name            = "acme-confidential"
+  region          = "RNN"
+  encryption_mode = "sse_c"
+}
+```
+
+- **CETIC never knows your key and cannot recover it.** If you lose it, the
+  files are lost for good. Keep it in your own secret store.
+- **The mode is chosen at creation and cannot be changed.** Changing
+  `encryption_mode` replaces the bucket and **deletes all its files**: copy
+  them first.
+- **Such a bucket is always private.** With `sse_c`, `is_public = true` is
+  refused at plan time. The rule is applied to `sse_c` only, because the module
+  does not know which other modes (if any) need a client key; the API validates
+  the accepted values.
+- The format is checked locally (lowercase letters, digits, underscores,
+  starting with a letter); the list of accepted modes is validated by the API.
+
+Requires the provider release that adds `encryption_mode` (assumed
+`cetic-group/ccp` **`>= 7.6.0`**).
 
 ## Inputs
 
@@ -100,6 +131,7 @@ Le versionnage exige le provider `cetic-group/ccp` **`>= 7.5.0`**.
 | `scoped_keys` | map(object({access_level})) | no | `{}` | `read` / `write` / `readwrite` / `full`. |
 | `cors_rules` | list(object) | no | `[]` | Règles CORS (origines, méthodes, en-têtes, durée). Vide = CORS non géré. Voir ci-dessous. |
 | `versioning` | object({status, noncurrent_version_expiration_days}) | no | `null` | Versionnage (`Enabled` / `Suspended`, durée 1–3650 j). `null` = non géré. Voir ci-dessus. |
+| `encryption_mode` | string | no | `null` | `none` or `sse_c` (key supplied by you; private bucket only). `null` keeps the existing mode (`none` on creation). Fixed at creation; changing it replaces the bucket and deletes its files. See above. |
 | `tags` | list(string) | no | `[]` | |
 
 ## Outputs
@@ -109,6 +141,7 @@ Le versionnage exige le provider `cetic-group/ccp` **`>= 7.5.0`**.
 | `id` | no | UUID. |
 | `name` | no | Nom. |
 | `endpoint_url` | no | Endpoint S3. |
+| `encryption_mode` | no | Encryption mode of the bucket. |
 | `versioning` | no | Versionnage géré (`status`, `noncurrent_version_expiration_days`), ou `null`. |
 | `access_key` | no | Master access key. |
 | `scoped_keys` | **yes** | Map de creds par label. |

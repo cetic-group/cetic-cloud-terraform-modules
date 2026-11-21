@@ -82,14 +82,14 @@ variable "os_image" {
 variable "os_template_key" {
   type    = string
   default = null
-  # `null` → dérivée de `k8s_version` (`kube-v1-34-8` pour `1.34.8`), la forme
-  # que l'API écrit et réécrit à chaque montée de version. L'ancien défaut
-  # `null` était passé tel quel et faisait échouer le plan (#2004).
+  # `null` → dérivée de `k8s_version` (`kube-v1-34-8` pour `1.34.8`). L'ancien
+  # défaut `null` était passé tel quel et faisait échouer le plan (#2004).
   description = <<-EOT
-    Clé du template des nodes (cf. `data.ccp_k8s_templates`, attribut `os_key`).
-    `null` (recommandé) = dérivée de `k8s_version` : `kube-v1-34-8` pour `1.34.8`.
-    ⚠️ Une clé fixée ici doit suivre `k8s_version` : l'API réécrit la clé à
-    chaque montée de version, et une clé restée ancienne recréerait le cluster.
+    Clé du template des nodes (cf. `data.ccp_k8s_templates`, attribut `os_key`),
+    lue À LA CRÉATION seulement : le module ignore ensuite tout écart
+    (`ignore_changes`), car l'API la réécrit à chaque montée de version.
+    `null` = dérivée de `k8s_version` : `kube-v1-34-8` pour `1.34.8`. La changer
+    sur un cluster existant n'a aucun effet.
   EOT
 }
 

@@ -9,13 +9,14 @@ suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Fixed (cetic-cloud-platform#2004)
 
 - `managed/k8s-cluster` : `os_template_key` vaut par défaut la clé dérivée de
-  `k8s_version` (`kube-v1-34-8` pour `1.34.8`), la forme que l'API écrit et
-  réécrit à chaque montée de version (l'ancien défaut `null` faisait échouer
-  le plan ; une clé figée aurait recréé le cluster après une montée) ;
-  `disk_gb` documenté tel qu'il est : le changer recrée le pool (ou le cluster
-  pour le pool initial), et non « grow-only » ; `k8s_version` des pools validé
-  au format `X.Y.Z` ; `ingress_controller_scope` : écart de défaut avec la
-  ressource documenté et conservé (le changer basculerait les clusters
+  `k8s_version` (`kube-v1-34-8` pour `1.34.8`) — l'ancien défaut `null` faisait
+  échouer le plan — et n'est plus lue qu'à la création (`ignore_changes`) :
+  l'API la réécrit à chaque montée de version et le provider force le
+  remplacement sur tout écart, donc une montée de `k8s_version` (ou le plan qui
+  la suivait) recréait le cluster au lieu de le monter ; `disk_gb` documenté
+  tel qu'il est : le changer recrée le pool (ou le cluster pour le pool
+  initial), et non « grow-only » ; `ingress_controller_scope` : écart de défaut
+  avec la ressource documenté et conservé (le changer basculerait les clusters
   existants).
 - `landing-zones/k8s-platform` et exemple `scheduled-shutdown` : clé dérivée,
   `k8s_version` explicite.
@@ -27,6 +28,10 @@ suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   « v ». L'ancien défaut `v1.31.4` ne correspondait à aucun build et l'API
   refuse le « v » à la création : un appelant qui l'omettait échouait déjà,
   mais doit maintenant passer la valeur.
+- **Breaking** : les `k8s_version` de pool (`initial_pool`, `additional_pools`)
+  sont validées au format `X.Y.Z`. `v1.30.4` était accepté jusqu'ici (l'API
+  retire le « v ») et fait maintenant échouer le plan. Migration : retirer le
+  « v » (`1.30.4`) ; aucun changement côté cluster, la version est la même.
 
 ## [0.39.0]
 

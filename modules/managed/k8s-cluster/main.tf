@@ -8,11 +8,9 @@ resource "ccp_k8s_cluster" "this" {
   vnet_id      = var.vnet_id
   k8s_version  = var.k8s_version
   os_image     = var.os_image
-  # Clé dérivée de la version par défaut : c'est la forme que l'API écrit
-  # (`kube-v<X-Y-Z>`, sans OS), et qu'elle RÉÉCRIT à chaque montée de version.
-  # Une clé figée dans la config différerait de l'état après une montée, et
-  # `os_template_key` force le remplacement : le cluster serait recréé (revue
-  # de cetic-cloud-terraform-modules#63).
+  # Clé lue À LA CRÉATION seulement (cf. `lifecycle` plus bas). Par défaut,
+  # dérivée de la version : c'est la forme que l'API écrit (`kube-v<X-Y-Z>`,
+  # sans OS).
   os_template_key = coalesce(var.os_template_key, "kube-v${replace(var.k8s_version, ".", "-")}")
   pod_cidr        = var.pod_cidr
   service_cidr    = var.service_cidr
@@ -53,6 +51,17 @@ resource "ccp_k8s_cluster" "this" {
   apiserver_internal_ip  = var.apiserver_internal_ip
 
   tags = var.tags
+
+  lifecycle {
+    # L'API RÉÉCRIT `os_template_key` à chaque montée de version, et le
+    # provider force le remplacement sur tout écart de cette clé. Sans cette
+    # ligne, changer `k8s_version` changeait aussi la clé dérivée : le plan
+    # détruisait et recréait le cluster au lieu de le monter de version (revue
+    # de cetic-cloud-terraform-modules#63). L'écart est ignoré dans les deux
+    # sens : config qui suit la version, état réécrit par l'API, clé d'un
+    # cluster existant qui n'a pas la forme dérivée.
+    ignore_changes = [os_template_key]
+  }
 }
 
 # ─── Pools additionnels ──────────────────────────────────────────────────────

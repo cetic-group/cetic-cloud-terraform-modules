@@ -78,7 +78,7 @@ output "kubeconfig_url" {
 | `vpc_id` / `vnet_id` | string | required | Réseau cible. |
 | `k8s_version` | string | — (requis) | Version Kubernetes du **plan de contrôle**, format `X.Y.Z` sans « v » (cf. `data.ccp_k8s_templates`). Version par défaut des workers (chaque pool en hérite sauf `k8s_version` propre). |
 | `os_image` | string | `null` | Famille d'OS des nodes : `flatcar` (défaut) / `ubuntu` / `rocky9`. `null` = défaut plateforme. **Immuable** (recrée le cluster). |
-| `os_template_key` | string | `null` | `null` (recommandé) = dérivée de `k8s_version` (`kube-v1-34-8` pour `1.34.8`), forme que l'API réécrit à chaque montée de version. Une clé fixée doit suivre `k8s_version`, sinon le cluster est recréé. |
+| `os_template_key` | string | `null` | Lue **à la création seulement** : `null` = dérivée de `k8s_version` (`kube-v1-34-8` pour `1.34.8`). Le module ignore ensuite tout écart (`ignore_changes`), car l'API réécrit la clé à chaque montée de version : la changer, ou retirer une clé déjà appliquée, n'a aucun effet sur un cluster existant. |
 | `pod_cidr` | string | `"10.244.0.0/16"` | |
 | `service_cidr` | string | `"10.96.0.0/12"` | |
 | `initial_pool` | object({name, plan, replicas, k8s_version?, labels?, taints?, min_size?, max_size?, disk_gb?}) | `{}` | Pool initial. `name`/`plan`/`disk_gb` immutables (recréent le cluster) ; `replicas`/`k8s_version`/`labels`/`taints`/`min_size`/`max_size` mutables. `k8s_version` = version worker du pool (omis = hérite du plan de contrôle, doit rester `<=`). `labels` = map ; `taints` = liste de `{ key, value?, effect }` ; `min_size`+`max_size` (ensemble) activent l'autoscaler. `disk_gb` = taille du disque racine des workers (omis = défaut du plan ; le changer recrée le cluster). |

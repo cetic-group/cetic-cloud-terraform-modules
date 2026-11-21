@@ -469,3 +469,42 @@ run "rejects_pool_version_with_v_prefix" {
 
   expect_failures = [var.initial_pool]
 }
+
+# Montée de version : la clé dérivée change avec `k8s_version`, mais le module
+# l'ignore après la création (`ignore_changes`). Sans cela, le plan de la
+# montée affichait `os_template_key` « forces replacement » et recréait le
+# cluster (revue de cetic-cloud-terraform-modules#63). Les deux exécutions
+# partagent l'état : la première crée, la seconde monte de version.
+run "upgrade_creates_cluster" {
+  command = apply
+
+  variables {
+    name        = "test-montee"
+    region      = "RNN"
+    vpc_id      = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id     = "00000000-0000-0000-0000-0000000000bb"
+    k8s_version = "1.34.8"
+  }
+}
+
+run "upgrade_keeps_template_key" {
+  command = plan
+
+  variables {
+    name        = "test-montee"
+    region      = "RNN"
+    vpc_id      = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id     = "00000000-0000-0000-0000-0000000000bb"
+    k8s_version = "1.35.0"
+  }
+
+  assert {
+    condition     = ccp_k8s_cluster.this.k8s_version == "1.35.0"
+    error_message = "La montée doit planifier la nouvelle version."
+  }
+
+  assert {
+    condition     = ccp_k8s_cluster.this.os_template_key == "kube-v1-34-8"
+    error_message = "La clé du template ne doit pas suivre la montée (sinon le cluster est recréé)."
+  }
+}

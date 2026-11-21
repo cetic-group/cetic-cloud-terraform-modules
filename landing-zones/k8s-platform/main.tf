@@ -50,8 +50,9 @@ module "k8s" {
   tier        = var.k8s_tier
   vpc_id      = module.vpc.vpc_id
   vnet_id     = module.vpc.vnet_ids.workers
-  k8s_version = var.k8s_version
-  os_image    = var.os_image
+  k8s_version     = var.k8s_version
+  os_template_key = var.os_template_key
+  os_image        = var.os_image
 
   initial_pool = {
     name     = "default"

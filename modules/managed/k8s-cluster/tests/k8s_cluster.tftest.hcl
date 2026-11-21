@@ -1,5 +1,11 @@
 # Tests natifs Terraform pour `managed/k8s-cluster`.
 
+# `k8s_version` n'a plus de défaut (cetic-cloud-platform#2004) : valeur
+# commune à toutes les exécutions, surchargée par celles qui la testent.
+variables {
+  k8s_version = "1.34.8"
+}
+
 mock_provider "ccp" {
   mock_resource "ccp_k8s_cluster" {
     defaults = {
@@ -19,7 +25,7 @@ mock_provider "ccp" {
   mock_resource "ccp_k8s_node_pool" {
     defaults = {
       id          = "00000000-0000-0000-0000-000000000020"
-      k8s_version = "v1.31.4"
+      k8s_version = "1.34.8"
     }
   }
 }
@@ -328,7 +334,7 @@ run "initial_pool_k8s_version_passthrough" {
     vpc_id          = "00000000-0000-0000-0000-0000000000aa"
     vnet_id         = "00000000-0000-0000-0000-0000000000bb"
     os_template_key = "ubuntu-22.04"
-    k8s_version     = "v1.31.4"
+    k8s_version     = "1.34.8"
     initial_pool = {
       name        = "default"
       plan        = "small"
@@ -352,7 +358,7 @@ run "additional_pool_k8s_version_passthrough" {
     vpc_id          = "00000000-0000-0000-0000-0000000000aa"
     vnet_id         = "00000000-0000-0000-0000-0000000000bb"
     os_template_key = "ubuntu-22.04"
-    k8s_version     = "v1.31.4"
+    k8s_version     = "1.34.8"
     additional_pools = {
       older = {
         plan        = "medium"
@@ -413,4 +419,20 @@ run "additional_pool_disk_gb_passthrough" {
     condition     = ccp_k8s_node_pool.additional["big_disk"].disk_gb == 200
     error_message = "La taille de disque d'un pool additionnel doit être transmise au node pool."
   }
+}
+
+
+run "rejects_version_with_v_prefix" {
+  command = plan
+
+  variables {
+    name            = "test-v"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    k8s_version     = "v1.34.8"
+  }
+
+  expect_failures = [var.k8s_version]
 }

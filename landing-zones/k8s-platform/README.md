@@ -45,8 +45,9 @@ module "platform" {
   org_prefix = "acme"
   region     = "RNN"
 
-  k8s_version           = "v1.31.4" # version du plan de contrôle
-  os_image              = "ubuntu"  # famille d'OS des nodes (flatcar défaut / ubuntu / rocky9)
+  k8s_version           = "1.34.8"               # version du plan de contrôle (X.Y.Z, sans « v »)
+  os_template_key       = "kube-v1-34-8-ubuntu"  # cf. data.ccp_k8s_templates
+  os_image              = "ubuntu"               # famille d'OS des nodes (flatcar défaut / ubuntu / rocky9)
   initial_pool_replicas = 2
   initial_pool_plan     = "small"
 
@@ -79,7 +80,8 @@ output "ingress_url" {
 |------|------|---------|-------------|
 | `org_prefix` | string | required | Préfixe métier. |
 | `region` | string | required | `RNN`/`PAR`/`ABJ`. |
-| `k8s_version` | string | `"v1.31.4"` | Version du plan de contrôle (workers en héritent). |
+| `k8s_version` | string | required | Version du plan de contrôle, `X.Y.Z` sans « v » (workers en héritent). |
+| `os_template_key` | string | required | Template OS des nodes (cf. `data.ccp_k8s_templates`). |
 | `os_image` | string | `null` | Famille d'OS des nodes : `flatcar` (défaut) / `ubuntu` / `rocky9`. Immuable. |
 | `k8s_tier` | string | `"dev"` | `dev` (single) ou `prod` (HA actif/passif + VIP flottante). Immuable. |
 | `initial_pool_plan` | string | `"small"` | Plan du pool initial. |

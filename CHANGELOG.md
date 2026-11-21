@@ -6,6 +6,25 @@ suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed (cetic-cloud-platform#2004)
+
+- `managed/k8s-cluster` : `os_template_key` est requis (la ressource
+  `ccp_k8s_cluster` l'exige : le défaut `null` échouait au plan) ;
+  `k8s_version` est requis et validé au format `X.Y.Z` sans « v » (l'ancien
+  défaut `v1.31.4` ne correspondait à aucun build et l'API refuse le « v » à
+  la création) ; `disk_gb` documenté tel qu'il est : le changer recrée le pool
+  (ou le cluster pour le pool initial), et non « grow-only » ;
+  `ingress_controller_scope` : l'écart de défaut avec la ressource (`external`
+  dans le module, `internal` dans la ressource) est documenté et conservé pour
+  ne pas basculer les clusters existants.
+- `landing-zones/k8s-platform` : `os_template_key` ajouté (requis) et
+  `k8s_version` requis ; exemple `scheduled-shutdown` complété.
+
+### Changed
+
+- `managed/k8s-cluster` et `landing-zones/k8s-platform` : `k8s_version` et
+  `os_template_key` deviennent requis (ils échouaient sans valeur explicite).
+
 ## [0.39.0]
 
 Aligné sur le provider `cetic-group/ccp` **`>= 7.5.0`** (publié le 15/11), qui

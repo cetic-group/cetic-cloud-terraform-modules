@@ -18,8 +18,12 @@ variable "region" {
 # ─── K8s ──────────────────────────────────────────────────────────────────────
 variable "k8s_version" {
   type        = string
-  default     = "v1.31.4"
-  description = "Version Kubernetes du plan de contrôle du cluster CCKS (les pools workers en héritent sauf override)."
+  description = "Version Kubernetes du plan de contrôle du cluster CCKS, format X.Y.Z sans « v » (cf. `data.ccp_k8s_templates`). Les pools workers en héritent sauf override."
+}
+
+variable "os_template_key" {
+  type        = string
+  description = "Clé du template OS des nodes (cf. `data.ccp_k8s_templates`). Exigée par `ccp_k8s_cluster`."
 }
 
 variable "os_image" {

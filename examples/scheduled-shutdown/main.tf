@@ -114,12 +114,11 @@ module "vmss_schedule" {
 module "k8s" {
   source = "../../modules/managed/k8s-cluster"
 
-  name            = "sched-demo-cluster"
-  region          = "RNN"
-  vpc_id          = module.vpc.vpc_id
-  vnet_id         = module.vpc.vnet_ids.main
-  k8s_version     = "1.34.8"              # cf. data.ccp_k8s_templates
-  os_template_key = "kube-v1-34-8-flatcar" # cf. data.ccp_k8s_templates
+  name        = "sched-demo-cluster"
+  region      = "RNN"
+  vpc_id      = module.vpc.vpc_id
+  vnet_id     = module.vpc.vnet_ids.main
+  k8s_version = "1.34.8" # cf. data.ccp_k8s_templates
 
   additional_pools = {
     ci = {

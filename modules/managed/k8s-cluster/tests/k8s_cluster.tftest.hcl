@@ -339,12 +339,12 @@ run "initial_pool_k8s_version_passthrough" {
       name        = "default"
       plan        = "small"
       replicas    = 2
-      k8s_version = "v1.30.4"
+      k8s_version = "1.30.4"
     }
   }
 
   assert {
-    condition     = ccp_k8s_cluster.this.initial_pool.k8s_version == "v1.30.4"
+    condition     = ccp_k8s_cluster.this.initial_pool.k8s_version == "1.30.4"
     error_message = "La version worker de l'initial_pool doit être transmise au provider."
   }
 }
@@ -363,13 +363,13 @@ run "additional_pool_k8s_version_passthrough" {
       older = {
         plan        = "medium"
         replicas    = 2
-        k8s_version = "v1.30.4"
+        k8s_version = "1.30.4"
       }
     }
   }
 
   assert {
-    condition     = ccp_k8s_node_pool.additional["older"].k8s_version == "v1.30.4"
+    condition     = ccp_k8s_node_pool.additional["older"].k8s_version == "1.30.4"
     error_message = "La version worker d'un pool additionnel doit être transmise au node pool."
   }
 }
@@ -435,4 +435,37 @@ run "rejects_version_with_v_prefix" {
   }
 
   expect_failures = [var.k8s_version]
+}
+
+
+run "derives_template_key_from_version" {
+  command = plan
+
+  variables {
+    name    = "test-cle"
+    region  = "RNN"
+    vpc_id  = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id = "00000000-0000-0000-0000-0000000000bb"
+  }
+
+  assert {
+    condition     = ccp_k8s_cluster.this.os_template_key == "kube-v1-34-8"
+    error_message = "Sans os_template_key, la clé doit être dérivée de k8s_version (forme réécrite par l'API)."
+  }
+}
+
+run "rejects_pool_version_with_v_prefix" {
+  command = plan
+
+  variables {
+    name    = "test-pool-v"
+    region  = "RNN"
+    vpc_id  = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id = "00000000-0000-0000-0000-0000000000bb"
+    initial_pool = {
+      k8s_version = "v1.30.4"
+    }
+  }
+
+  expect_failures = [var.initial_pool]
 }

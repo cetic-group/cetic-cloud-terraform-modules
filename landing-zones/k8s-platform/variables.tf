@@ -23,7 +23,8 @@ variable "k8s_version" {
 
 variable "os_template_key" {
   type        = string
-  description = "Clé du template OS des nodes (cf. `data.ccp_k8s_templates`). Exigée par `ccp_k8s_cluster`."
+  default     = null
+  description = "Clé du template des nodes (cf. `data.ccp_k8s_templates`). `null` (recommandé) = dérivée de `k8s_version` par le module ; une clé fixée doit suivre `k8s_version`."
 }
 
 variable "os_image" {

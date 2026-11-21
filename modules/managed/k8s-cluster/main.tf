@@ -1,14 +1,19 @@
 resource "ccp_k8s_cluster" "this" {
-  provider        = ccp
-  name            = var.name
-  display_name    = coalesce(var.display_name, var.name)
-  region          = var.region
-  tier            = var.tier
-  vpc_id          = var.vpc_id
-  vnet_id         = var.vnet_id
-  k8s_version     = var.k8s_version
-  os_image        = var.os_image
-  os_template_key = var.os_template_key
+  provider     = ccp
+  name         = var.name
+  display_name = coalesce(var.display_name, var.name)
+  region       = var.region
+  tier         = var.tier
+  vpc_id       = var.vpc_id
+  vnet_id      = var.vnet_id
+  k8s_version  = var.k8s_version
+  os_image     = var.os_image
+  # Clé dérivée de la version par défaut : c'est la forme que l'API écrit
+  # (`kube-v<X-Y-Z>`, sans OS), et qu'elle RÉÉCRIT à chaque montée de version.
+  # Une clé figée dans la config différerait de l'état après une montée, et
+  # `os_template_key` force le remplacement : le cluster serait recréé (revue
+  # de cetic-cloud-terraform-modules#63).
+  os_template_key = coalesce(var.os_template_key, "kube-v${replace(var.k8s_version, ".", "-")}")
   pod_cidr        = var.pod_cidr
   service_cidr    = var.service_cidr
 
@@ -28,8 +33,8 @@ resource "ccp_k8s_cluster" "this" {
     # retirés → désactivé (le provider envoie 0/0). Passés tels quels (null = omis).
     min_size = var.initial_pool.min_size
     max_size = var.initial_pool.max_size
-    # Taille du disque racine des workers du pool initial (disk_gb, à venir côté provider).
-    # Omis (null) → défaut du plan. Grow-only côté API.
+    # Taille du disque racine des workers du pool initial. Omis (null) → défaut
+    # du plan. Aucun redimensionnement : la changer recrée le cluster.
     disk_gb = var.initial_pool.disk_gb
   }
 
@@ -66,7 +71,7 @@ resource "ccp_k8s_node_pool" "additional" {
   max_size    = each.value.max_size
   labels      = each.value.labels
   taints      = each.value.taints
-  # Taille du disque racine des workers de ce pool (disk_gb, à venir côté provider). Omis
-  # (null) → défaut du plan. Grow-only côté API.
+  # Taille du disque racine des workers de ce pool. Omis (null) → défaut du
+  # plan. Aucun redimensionnement : la changer recrée le pool.
   disk_gb = each.value.disk_gb
 }

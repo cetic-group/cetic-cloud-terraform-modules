@@ -8,22 +8,25 @@ suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed (cetic-cloud-platform#2004)
 
-- `managed/k8s-cluster` : `os_template_key` est requis (la ressource
-  `ccp_k8s_cluster` l'exige : le défaut `null` échouait au plan) ;
-  `k8s_version` est requis et validé au format `X.Y.Z` sans « v » (l'ancien
-  défaut `v1.31.4` ne correspondait à aucun build et l'API refuse le « v » à
-  la création) ; `disk_gb` documenté tel qu'il est : le changer recrée le pool
-  (ou le cluster pour le pool initial), et non « grow-only » ;
-  `ingress_controller_scope` : l'écart de défaut avec la ressource (`external`
-  dans le module, `internal` dans la ressource) est documenté et conservé pour
-  ne pas basculer les clusters existants.
-- `landing-zones/k8s-platform` : `os_template_key` ajouté (requis) et
-  `k8s_version` requis ; exemple `scheduled-shutdown` complété.
+- `managed/k8s-cluster` : `os_template_key` vaut par défaut la clé dérivée de
+  `k8s_version` (`kube-v1-34-8` pour `1.34.8`), la forme que l'API écrit et
+  réécrit à chaque montée de version (l'ancien défaut `null` faisait échouer
+  le plan ; une clé figée aurait recréé le cluster après une montée) ;
+  `disk_gb` documenté tel qu'il est : le changer recrée le pool (ou le cluster
+  pour le pool initial), et non « grow-only » ; `k8s_version` des pools validé
+  au format `X.Y.Z` ; `ingress_controller_scope` : écart de défaut avec la
+  ressource documenté et conservé (le changer basculerait les clusters
+  existants).
+- `landing-zones/k8s-platform` et exemple `scheduled-shutdown` : clé dérivée,
+  `k8s_version` explicite.
 
 ### Changed
 
-- `managed/k8s-cluster` et `landing-zones/k8s-platform` : `k8s_version` et
-  `os_template_key` deviennent requis (ils échouaient sans valeur explicite).
+- **Breaking** : `k8s_version` devient requis (sans défaut) dans
+  `managed/k8s-cluster` et `landing-zones/k8s-platform`, au format `X.Y.Z` sans
+  « v ». L'ancien défaut `v1.31.4` ne correspondait à aucun build et l'API
+  refuse le « v » à la création : un appelant qui l'omettait échouait déjà,
+  mais doit maintenant passer la valeur.
 
 ## [0.39.0]
 

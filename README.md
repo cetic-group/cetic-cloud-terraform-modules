@@ -197,6 +197,10 @@ Apache 2.0 — voir [LICENSE](LICENSE).
 
 ## Cache HTTP des Application Gateways
 
+La [matrice de compatibilité AppGW #2054](APPGW_2054_COMPATIBILITY.md)
+précise les limites actuelles des modules pour le cache par domaine, le
+Health check facultatif et la rotation des certificats.
+
 Les modules `atomic/application-gateway`, `managed/application-gateway` et
 `exposure/web-app-with-appgw` exposent `cache_enabled`. Le plan détermine
 `cache_size_mb` et `cache_max_object_kb`, disponibles uniquement en outputs.

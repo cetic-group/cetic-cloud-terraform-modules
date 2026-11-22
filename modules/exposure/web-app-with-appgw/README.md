@@ -146,10 +146,22 @@ output "appgw_url" {
 - **Ordre des hostnames stable** : `routes[*].listener_index` est résolu par position dans `hostnames`. Réordonner la liste change la cible des routes — préférer ajouter en queue.
 - **Reuse des target groups** : plusieurs routes peuvent pointer vers le même `target_group_key` (cas typique : routing path-based vers un même backend pool sous conditions différentes).
 - **ACME** : `http01` exige que le hostname résolve vers l'IP publique de la gateway (CNAME/A) **avant** l'apply. `dns01` exige `acme_dns_provider` + `acme_dns_credentials` (pas de pré-requis DNS A/CNAME). `acme_challenge = null` n'émet aucun certificat.
+- **Changement ACME sur une passerelle en service** : les trois inputs ACME sont
+  appliqués à tous les hostnames. Le provider actuel prévoit un remplacement
+  des listeners si la méthode, le fournisseur ou les identifiants changent.
+  Vérifiez `terraform plan` avant l'apply ; la rotation différée du certificat
+  dans l'API ne rend pas encore ce changement sûr depuis Terraform.
+- **Health check** : chaque Target group créé par ce module garde une sonde
+  active par défaut. Le champ de désactivation n'est pas encore transmis par
+  le module. Voir la [matrice de compatibilité #2054](../../../APPGW_2054_COMPATIBILITY.md).
 
 ## Cache HTTP déterminé par le plan (provider 7.3.2+)
 
 Activez `cache_enabled` sur la passerelle et le cache sur les routes souhaitées.
+Le cache par domaine se règle séparément dans la console/API compatible. Ce
+module ne le configure pas encore ; `routes[*].cache_mode = "off"` reste le
+défaut et ne devient pas actif quand le cache global ou celui du domaine est
+activé. Voir la [matrice de compatibilité #2054](../../../APPGW_2054_COMPATIBILITY.md).
 Le plan attribue automatiquement le budget partagé et la taille maximale des
 objets, y compris après un changement de plan. Consultez les outputs
 `cache_size_mb`, `cache_max_object_kb`, `cache_effective_size_mb` et

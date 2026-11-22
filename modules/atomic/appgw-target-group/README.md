@@ -82,6 +82,11 @@ module "tg_legacy" {
 | `healthy_threshold` | number | `2` | 1-10. |
 | `unhealthy_threshold` | number | `3` | 1-10. |
 
+Le Health check reste activé par défaut dans ce module. Le champ
+`hc_enabled` est en cours d'ajout au provider, mais ce module ne le transmet
+pas encore : ne supposez pas qu'un objet `health_check = {}` désactive la
+sonde. Voir la [matrice de compatibilité #2054](../../../APPGW_2054_COMPATIBILITY.md).
+
 ### Schéma `members[*]`
 
 | Field | Type | Default | Description |

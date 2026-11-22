@@ -6,6 +6,12 @@ suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Documentation
+
+- Matrice de compatibilité AppGW #2054 : défauts conservés, limites actuelles
+  des modules pour le Health check facultatif, le cache par domaine et la
+  rotation ACME. Aucun input, output ou contrainte provider ne change.
+
 ## [0.39.0]
 
 Aligné sur le provider `cetic-group/ccp` **`>= 7.5.0`** (publié le 15/11), qui

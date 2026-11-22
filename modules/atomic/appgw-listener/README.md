@@ -83,6 +83,7 @@ module "listener_plain" {
 ## Notes
 
 - **Tout est immutable** : `appgw_id`, `hostname`, `acme_challenge`, `acme_dns_provider`, `acme_dns_credentials`. Toute modification déclenche un destroy + create — donc une coupure brève sur ce hostname et l'émission d'un nouveau cert ACME (~30-90s en HTTP-01, plus long en DNS-01 selon le TTL).
+- La validation ACME différée de [#2054](https://github.com/cetic-group/cetic-cloud-platform/issues/2054) ne change pas encore ce comportement Terraform : l'API la garde désactivée par défaut et le provider conserve `RequiresReplace`. Vérifier `terraform plan` avant de modifier ces champs sur un listener en service. Voir la [matrice de compatibilité](../../../APPGW_2054_COMPATIBILITY.md).
 - **Sans `acme_challenge`** : aucun certificat TLS n'est jamais émis pour le listener.
 - **`http01`** : la gateway doit être joignable sur le port 80 pour ce hostname (CNAME / A record en place avant l'apply).
 - **`dns01`** : fournir `acme_dns_provider` + `acme_dns_credentials`. Découvrir les providers DNS supportés et leurs clés via la data source `ccp_acme_dns_providers`.

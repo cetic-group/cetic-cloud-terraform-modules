@@ -1,4 +1,11 @@
 # Tests natifs Terraform pour `managed/k8s-cluster`.
+#
+# Le provider est mocké : ces tests vérifient le câblage du module (variables
+# → attributs, validations, outputs), pas le comportement du provider. Les
+# valeurs calculées (plan, tier, …) viennent des `defaults` du mock ci-dessous.
+# La compatibilité d'état avec la v7.5 (config sans plan ni tier, ou avec tier
+# seul : ni diff ni remplacement) est garantie et testée côté provider
+# (terraform-provider-ccp, cetic-cloud-platform#2143), pas ici.
 
 mock_provider "ccp" {
   mock_resource "ccp_k8s_cluster" {
@@ -29,7 +36,8 @@ mock_provider "ccp" {
 }
 
 run "creates_dev_tier_by_default" {
-  # apply (provider mocké) : plan/tier/… sont calculés, inconnus au plan.
+  # apply (provider mocké) : plan est calculé, inconnu au plan. Le plan
+  # `starter` vient du mock : seule la dérivation output.tier ← plan est testée.
   command = apply
 
   variables {
@@ -46,8 +54,8 @@ run "creates_dev_tier_by_default" {
   }
 
   assert {
-    condition     = output.tier == "dev" && output.plan == "starter"
-    error_message = "Sans plan ni tier, le cluster doit rester `starter` (tier `dev`, frontal d'exposition unique)."
+    condition     = output.tier == "dev"
+    error_message = "L'output tier (déprécié) doit valoir `dev` pour le plan `starter`."
   }
 }
 
@@ -422,25 +430,29 @@ run "additional_pool_disk_gb_passthrough" {
 
 # ─── plan / tier (cetic-cloud-platform#2143, provider >= 7.6.0) ──────────────
 
-run "tier_not_sent_by_default" {
-  # apply (provider mocké) : plan/tier/… sont calculés, inconnus au plan.
+run "tier_output_derived_from_paid_plan" {
+  # apply (provider mocké) : seule la dérivation output.tier ← plan est testée.
   command = apply
 
+  override_resource {
+    target = ccp_k8s_cluster.this
+    values = {
+      plan = "pro"
+    }
+  }
+
   variables {
-    name            = "tier-not-sent-by-default"
+    name            = "tier-from-paid-plan"
     region          = "RNN"
     vpc_id          = "00000000-0000-0000-0000-0000000000aa"
     vnet_id         = "00000000-0000-0000-0000-0000000000bb"
     os_template_key = "ubuntu-22.04"
+    plan            = "pro"
   }
 
   assert {
-    condition     = var.tier == null && var.plan == null
-    error_message = "Sans tier ni plan, rien n'est transmis : le provider garde le plan courant (starter à la création)."
-  }
-  assert {
-    condition     = output.plan == "starter"
-    error_message = "L'output plan doit refléter le plan effectif du provider."
+    condition     = output.plan == "pro" && output.tier == "prod"
+    error_message = "L'output tier (déprécié) doit valoir `prod` pour un plan payant."
   }
 }
 
@@ -529,7 +541,7 @@ run "rejects_starter_with_tier_prod" {
 }
 
 run "computed_outputs" {
-  # apply (provider mocké) : plan/tier/… sont calculés, inconnus au plan.
+  # apply (provider mocké) : valeurs du mock, seul le câblage des outputs est testé.
   command = apply
 
   variables {
@@ -687,4 +699,145 @@ run "oidc_null_by_default" {
     condition     = ccp_k8s_cluster.this.oidc == null
     error_message = "Sans variable oidc, aucun SSO ne doit être configuré."
   }
+}
+
+run "rejects_fractional_window_duration" {
+  command = plan
+
+  variables {
+    name            = "rejects-fractional-window-dura"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    maintenance = {
+      fenetre = {
+        jours        = [6]
+        heure_debut  = "02:00"
+        duree_heures = 4.5
+        fuseau       = "Europe/Paris"
+      }
+    }
+  }
+
+  expect_failures = [var.maintenance]
+}
+
+run "rejects_too_many_window_days" {
+  command = plan
+
+  variables {
+    name            = "rejects-too-many-window-days"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    maintenance = {
+      fenetre = {
+        jours        = [1, 2, 3, 4, 5, 6, 7, 1]
+        heure_debut  = "02:00"
+        duree_heures = 4
+        fuseau       = "Europe/Paris"
+      }
+    }
+  }
+
+  expect_failures = [var.maintenance]
+}
+
+run "rejects_empty_time_zone" {
+  command = plan
+
+  variables {
+    name            = "rejects-empty-time-zone"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    maintenance = {
+      fenetre = {
+        jours        = [6]
+        heure_debut  = "02:00"
+        duree_heures = 4
+        fuseau       = ""
+      }
+    }
+  }
+
+  expect_failures = [var.maintenance]
+}
+
+run "rejects_empty_oidc_client_id" {
+  command = plan
+
+  variables {
+    name            = "rejects-empty-oidc-client-id"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    oidc = {
+      issuer_url = "https://sso.example.com"
+      client_id  = ""
+    }
+  }
+
+  expect_failures = [var.oidc]
+}
+
+run "rejects_too_short_issuer_url" {
+  command = plan
+
+  variables {
+    name            = "rejects-too-short-issuer-url"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    oidc = {
+      issuer_url = "https://"
+      client_id  = "kubernetes"
+    }
+  }
+
+  expect_failures = [var.oidc]
+}
+
+# ─── timeouts ────────────────────────────────────────────────────────────────
+
+run "timeouts_passthrough" {
+  command = plan
+
+  variables {
+    name            = "timeouts-passthrough"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    timeouts = {
+      update = "2h"
+    }
+  }
+
+  assert {
+    condition     = ccp_k8s_cluster.this.timeouts.update == "2h" && ccp_k8s_cluster.this.timeouts.create == null
+    error_message = "timeouts doit être transmis tel quel (champ omis = défaut du provider)."
+  }
+}
+
+run "rejects_invalid_timeout" {
+  command = plan
+
+  variables {
+    name            = "rejects-invalid-timeout"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    timeouts = {
+      create = "deux heures"
+    }
+  }
+
+  expect_failures = [var.timeouts]
 }

@@ -25,13 +25,13 @@ variable "plan" {
   type        = string
   default     = null
   description = <<-EOT
-    Plan du plan de contrôle du cluster (provider >= 7.6.0) :
+    Plan du control plane du cluster (provider >= 7.6.0) :
 
     - `starter` : gratuit, frontal d'exposition de l'apiserver unique, sans
       haute disponibilité, jusqu'à 10 nodes — dev / staging / éphémère.
     - `standard` : paire de frontaux actif/passif + VIP flottante VNet,
-      2 réplicas du plan de contrôle, jusqu'à 50 nodes.
-    - `pro` : 3 réplicas du plan de contrôle, jusqu'à 150 nodes.
+      2 réplicas du control plane, jusqu'à 50 nodes.
+    - `pro` : 3 réplicas du control plane, jusqu'à 150 nodes.
 
     `standard` ↔ `pro` se change en place ; `starter` ↔ un plan payant
     **recrée le cluster** (le frontal change de topologie).
@@ -77,15 +77,17 @@ variable "k8s_version" {
   type        = string
   default     = "v1.31.4"
   description = <<-EOT
-    Version Kubernetes du **plan de contrôle** du cluster. Sert aussi de version
-    par défaut des workers : chaque pool (initial ou additionnel) qui ne fixe pas
-    sa propre `k8s_version` hérite de celle-ci. La version d'un pool worker doit
-    rester `<=` à celle du plan de contrôle.
+    Version Kubernetes du **control plane** du cluster. Un pool (initial ou
+    additionnel) créé sans sa propre `k8s_version` prend cette version **à la
+    création seulement**. La version d'un pool worker doit rester `<=` à celle
+    du control plane.
 
-    Version **souhaitée** (provider >= 7.6.0) : la monter met à jour le plan de
-    contrôle seul (les pools suivent via leur propre `k8s_version`), et elle
-    n'est jamais redescendue — un patch automatique au-delà ne crée pas de
-    diff. La version effective est l'output `current_k8s_version`.
+    Version **souhaitée** (provider >= 7.6.0) : la monter met à jour le
+    control plane **seul** ; les pools ne suivent pas, il faut monter ensuite
+    la `k8s_version` de chaque pool (possible dans le même apply : le provider
+    monte le control plane puis les pools). Elle n'est jamais redescendue — un
+    patch automatique au-delà ne crée pas de diff. La version effective est
+    l'output `current_k8s_version`.
   EOT
 }
 
@@ -126,9 +128,10 @@ variable "initial_pool" {
     Initial worker pool créé avec le cluster.
     - `name` / `plan` : immutables post-création.
     - `replicas` : mutable.
-    - `k8s_version` : version Kubernetes des workers de ce pool. Omis = hérite
-      de la version du plan de contrôle (`k8s_version` du cluster). Doit rester
-      `<=` à celle du plan de contrôle. Mutable (montée de version rolling).
+    - `k8s_version` : version Kubernetes des workers de ce pool. Omis = prend
+      la version du control plane (`k8s_version` du cluster) à la création
+      seulement ; ensuite, monter la `k8s_version` du pool. Doit rester `<=` à
+      celle du control plane. Mutable (montée de version rolling).
     - `labels` : map de labels Kubernetes propagés aux nodes du pool. Mutable.
     - `taints` : liste de taints Kubernetes (`{ key, value?, effect }`,
       `effect` ∈ `NoSchedule`|`PreferNoSchedule`|`NoExecute`). Mutable.
@@ -183,9 +186,10 @@ variable "additional_pools" {
     Clé = nom du pool. Valeur :
     - `plan` : `nano` … `xlarge`
     - `replicas` : count (Required)
-    - `k8s_version` : version Kubernetes des workers de ce pool. Omis = hérite
-      de la version du plan de contrôle du cluster. Doit rester `<=` à celle du
-      plan de contrôle. Mutable (montée de version rolling).
+    - `k8s_version` : version Kubernetes des workers de ce pool. Omis = prend
+      la version du control plane à la création seulement ; ensuite, monter la
+      `k8s_version` du pool. Doit rester `<=` à celle du control plane.
+      Mutable (montée de version rolling).
     - `min_size` / `max_size` : pour autoscaler. Si tous les deux sont set,
       l'autoscaler du cluster gère ce pool.
     - `labels` : map de labels Kubernetes propagés aux nodes via
@@ -335,13 +339,16 @@ variable "maintenance" {
 
   validation {
     condition = try(var.maintenance.fenetre, null) == null || try(
-      length(var.maintenance.fenetre.jours) > 0
+      length(var.maintenance.fenetre.jours) >= 1 && length(var.maintenance.fenetre.jours) <= 7
       && alltrue([for j in var.maintenance.fenetre.jours : j >= 1 && j <= 7 && floor(j) == j])
       && can(regex("^([01][0-9]|2[0-3]):[0-5][0-9]$", var.maintenance.fenetre.heure_debut))
-      && var.maintenance.fenetre.duree_heures >= 4 && var.maintenance.fenetre.duree_heures <= 24,
+      && var.maintenance.fenetre.duree_heures >= 4 && var.maintenance.fenetre.duree_heures <= 24
+      && floor(var.maintenance.fenetre.duree_heures) == var.maintenance.fenetre.duree_heures
+      && length(var.maintenance.fenetre.fuseau) >= 1 && length(var.maintenance.fenetre.fuseau) <= 64,
       false
     )
-    error_message = "maintenance.fenetre : jours entre 1 et 7 (au moins un), heure_debut au format HH:MM, duree_heures de 4 à 24."
+    # Mêmes bornes que le provider v7.6.0 (maintenance.go).
+    error_message = "maintenance.fenetre : 1 à 7 jours entre 1 et 7, heure_debut au format HH:MM, duree_heures entière de 4 à 24, fuseau de 1 à 64 caractères."
   }
   validation {
     condition = try(var.maintenance.dates_gel, null) == null || try(
@@ -383,12 +390,50 @@ variable "oidc" {
   })
   default = null
 
+  # Mêmes bornes que le provider v7.6.0 (oidc.go).
   validation {
-    condition     = var.oidc == null || can(regex("^https://", try(var.oidc.issuer_url, "")))
-    error_message = "oidc.issuer_url doit commencer par https://."
+    condition = var.oidc == null || try(
+      can(regex("^https://", var.oidc.issuer_url))
+      && length(var.oidc.issuer_url) >= 9 && length(var.oidc.issuer_url) <= 512,
+      false
+    )
+    error_message = "oidc.issuer_url doit commencer par https:// et compter de 9 à 512 caractères."
+  }
+  validation {
+    condition     = var.oidc == null || try(length(var.oidc.client_id) >= 1 && length(var.oidc.client_id) <= 255, false)
+    error_message = "oidc.client_id doit compter de 1 à 255 caractères."
   }
   validation {
     condition     = var.oidc == null || length(coalesce(try(var.oidc.extra_scopes, null), [])) <= 10
     error_message = "oidc.extra_scopes : au plus 10 scopes."
+  }
+}
+
+# ─── Délais d'attente du provider ────────────────────────────────────────────
+variable "timeouts" {
+  description = <<-EOT
+    Délais d'attente du provider (provider >= 7.6.0), durées Go (`30m`,
+    `1h30m`), passés tels quels au bloc `timeouts` du cluster. `null` (défaut)
+    ou champ omis = défaut du provider :
+
+    - `create` : provisionnement jusqu'à `active` (défaut `15m`).
+    - `update` : chaque attente d'une mise à jour — upgrade en cours (`30m`),
+      upgrade du control plane (`45m`), upgrade du pool initial (`90m`),
+      cluster actif avant un changement de SSO ou de plan (`30m`).
+    - `delete` : suppression (défaut `20m`).
+  EOT
+  type = object({
+    create = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
+  default = null
+
+  validation {
+    condition = var.timeouts == null || alltrue([
+      for d in [try(var.timeouts.create, null), try(var.timeouts.update, null), try(var.timeouts.delete, null)] :
+      d == null || can(regex("^([0-9]+(\\.[0-9]+)?(ns|us|µs|ms|s|m|h))+$", d))
+    ])
+    error_message = "timeouts : chaque durée doit être une durée Go (ex. `30m`, `1h30m`)."
   }
 }

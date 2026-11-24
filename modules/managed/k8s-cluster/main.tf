@@ -3,7 +3,7 @@ resource "ccp_k8s_cluster" "this" {
   name         = var.name
   display_name = coalesce(var.display_name, var.name)
   region       = var.region
-  # Plan du plan de contrôle (provider v7.6.0+). null → découle de `tier` à la
+  # Plan du control plane (provider v7.6.0+). null → découle de `tier` à la
   # création (sinon `starter`), plan courant conservé ensuite.
   plan = var.plan
   # Déprécié (provider v7.6.0+) : transmis seulement s'il est fourni (null =
@@ -22,7 +22,9 @@ resource "ccp_k8s_cluster" "this" {
     plan     = var.initial_pool.plan
     replicas = var.initial_pool.replicas
     # Version Kubernetes des workers du pool initial (provider v5.0.0+). Omis
-    # (null) → hérite de la version du plan de contrôle. Doit rester <= control plane.
+    # (null) → version du control plane à la création seulement ; ensuite, la
+    # monter ici (le control plane ne la fait plus suivre depuis v7.6.0).
+    # Doit rester <= control plane.
     k8s_version = var.initial_pool.k8s_version
     # Labels + taints sur l'initial pool (provider v3.2.0+), parité avec
     # additional_pools. `taints`/`labels` sont des attributs (assignés avec `=`),
@@ -60,6 +62,9 @@ resource "ccp_k8s_cluster" "this" {
   # bloc supprime le SSO).
   oidc = var.oidc
 
+  # Délais d'attente du provider (v7.6.0+). null → défauts du provider.
+  timeouts = var.timeouts
+
   tags = var.tags
 
   lifecycle {
@@ -79,7 +84,8 @@ resource "ccp_k8s_node_pool" "additional" {
   name       = each.key
   plan       = each.value.plan
   replicas   = each.value.replicas
-  # Version worker du pool (provider v5.0.0+). Omis → hérite du control plane.
+  # Version worker du pool (provider v5.0.0+). Omis → version du control plane à
+  # la création seulement ; ensuite, la monter ici (depuis v7.6.0).
   # Mutable (montée de version rolling, PAS ForceNew). Doit rester <= control plane.
   k8s_version = each.value.k8s_version
   min_size    = each.value.min_size

@@ -58,6 +58,9 @@ module "k8s" {
     name     = "default"
     plan     = var.initial_pool_plan
     replicas = var.initial_pool_replicas
+    # Monter avec k8s_version : depuis le provider 7.6.0 le control plane ne
+    # fait plus suivre les pools. null → version du control plane à la création.
+    k8s_version = var.initial_pool_k8s_version
   }
 
   additional_pools = var.additional_pools
@@ -70,6 +73,7 @@ module "k8s" {
 
   maintenance = var.k8s_maintenance
   oidc        = var.k8s_oidc
+  timeouts    = var.k8s_timeouts
 
   tags = local.base_tags
 }

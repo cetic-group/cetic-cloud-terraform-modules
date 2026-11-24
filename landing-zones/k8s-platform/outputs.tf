@@ -29,12 +29,12 @@ output "ingress_internal_ip" {
 }
 
 output "cluster_plan" {
-  description = "Plan effectif du plan de contrôle (`starter`, `standard` ou `pro`)."
+  description = "Plan effectif du control plane (`starter`, `standard` ou `pro`)."
   value       = module.k8s.plan
 }
 
 output "cluster_current_k8s_version" {
-  description = "Version Kubernetes réellement exécutée par le plan de contrôle."
+  description = "Version Kubernetes réellement exécutée par le control plane."
   value       = module.k8s.current_k8s_version
 }
 

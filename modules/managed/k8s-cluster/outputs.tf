@@ -14,7 +14,7 @@ output "os_image" {
 }
 
 output "k8s_version" {
-  description = "Version Kubernetes du plan de contrôle du cluster."
+  description = "Version Kubernetes du control plane du cluster."
   value       = ccp_k8s_cluster.this.k8s_version
 }
 
@@ -63,7 +63,7 @@ output "status" {
 }
 
 output "plan" {
-  description = "Plan effectif du plan de contrôle (`starter`, `standard` ou `pro`)."
+  description = "Plan effectif du control plane (`starter`, `standard` ou `pro`)."
   value       = ccp_k8s_cluster.this.plan
 }
 
@@ -78,7 +78,7 @@ output "node_ip_block_size" {
 }
 
 output "current_k8s_version" {
-  description = "Version Kubernetes réellement exécutée par le plan de contrôle (peut dépasser `k8s_version` après un patch automatique)."
+  description = "Version Kubernetes réellement exécutée par le control plane (peut dépasser `k8s_version` après un patch automatique)."
   value       = ccp_k8s_cluster.this.current_k8s_version
 }
 

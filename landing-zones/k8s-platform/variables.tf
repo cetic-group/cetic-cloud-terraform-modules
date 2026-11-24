@@ -19,7 +19,23 @@ variable "region" {
 variable "k8s_version" {
   type        = string
   default     = "v1.31.4"
-  description = "Version Kubernetes du plan de contrôle du cluster CCKS (les pools workers en héritent sauf override)."
+  description = <<-EOT
+    Version Kubernetes souhaitée du control plane du cluster CCKS. Depuis le
+    provider 7.6.0, la monter ne monte que le control plane : les pools gardent
+    leur version (cf. `initial_pool_k8s_version` et `additional_pools[*].k8s_version`).
+  EOT
+}
+
+variable "initial_pool_k8s_version" {
+  type        = string
+  default     = null
+  description = <<-EOT
+    Version Kubernetes des workers du pool initial, passée à
+    `initial_pool.k8s_version`. `null` (défaut) = version du control plane à la
+    création seulement : le pool ne suit pas les montées de `k8s_version`. Pour
+    monter le cluster : monter `k8s_version` (control plane) puis cette
+    variable — possible dans le même apply. Doit rester `<=` à `k8s_version`.
+  EOT
 }
 
 variable "os_image" {
@@ -39,7 +55,7 @@ variable "k8s_plan" {
   type        = string
   default     = null
   description = <<-EOT
-    Plan du plan de contrôle du cluster CCKS — passé tel quel au module
+    Plan du control plane du cluster CCKS — passé tel quel au module
     `managed/k8s-cluster` : `starter` (frontal unique, sans HA), `standard`
     (frontaux actif/passif + VIP flottante VNet) ou `pro` (3 réplicas).
     `standard` ↔ `pro` en place ; `starter` ↔ payant recrée le cluster.
@@ -185,4 +201,14 @@ variable "db_storage_gb" {
 variable "tags_extra" {
   type    = list(string)
   default = []
+}
+
+variable "k8s_timeouts" {
+  description = "Délais d'attente du provider pour le cluster (`create`, `update`, `delete`, durées Go) — cf. la variable `timeouts` de `managed/k8s-cluster`. `null` (défaut) = défauts du provider."
+  type = object({
+    create = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
+  default = null
 }

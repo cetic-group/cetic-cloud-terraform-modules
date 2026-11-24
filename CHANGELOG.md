@@ -6,10 +6,6 @@ suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-> **À publier après le provider `cetic-group/ccp` v7.6.0** (prochaine mineure,
-> cetic-cloud-platform#2143) : tant qu'elle n'est pas sur le Registry,
-> `terraform init` échoue sur `>= 7.6.0` (« no available releases »).
-
 Aligné sur le provider `cetic-group/ccp` **`>= 7.6.0`** : plans CCKS,
 montées de version séparées, maintenance et SSO (cetic-cloud-platform#2143).
 
@@ -28,19 +24,26 @@ montées de version séparées, maintenance et SSO (cetic-cloud-platform#2143).
   SSO.
 - `managed/k8s-cluster` : outputs `plan`, `etcd_volume_gb`,
   `node_ip_block_size` et `current_k8s_version` (version réellement
-  exécutée par le plan de contrôle).
+  exécutée par le control plane).
+- `managed/k8s-cluster` : variable `timeouts` (`create`, `update`,
+  `delete`, optionnelle) passée au bloc `timeouts` du cluster.
 - `landing-zones/k8s-platform` : variables `k8s_plan`, `k8s_maintenance`,
-  `k8s_oidc` et outputs `cluster_plan`, `cluster_current_k8s_version`,
+  `k8s_oidc`, `k8s_timeouts`, `initial_pool_k8s_version` et outputs `cluster_plan`, `cluster_current_k8s_version`,
   `cluster_etcd_volume_gb`, `cluster_node_ip_block_size`.
 
 ### Changed — BREAKING
 
 - **Provider `>= 7.6.0`** (au lieu de `>= 7.5.0`) — cascade sur toutes les
   déclarations du dépôt (`versions.tf` des modules et landing zones,
-  `providers.tf`, exemples, Quick Start du README).
-- `managed/k8s-cluster` : monter `k8s_version` ne met plus à jour que le plan
-  de contrôle (changement plateforme de #2143) ; les pools se montent via
-  leur propre `k8s_version`.
+  `providers.tf`, exemples, Quick Start du README). Un lock file
+  (`.terraform.lock.hcl`) figé en 7.5.x impose `terraform init -upgrade`.
+- `managed/k8s-cluster` : monter `k8s_version` ne met plus à jour que le
+  control plane (changement plateforme de #2143). Un pool sans `k8s_version`
+  propre en prend la version à la création seulement et ne suit plus : monter
+  ensuite `initial_pool.k8s_version` et `additional_pools[*].k8s_version`
+  (possible dans le même apply : control plane puis pools).
+  `landing-zones/k8s-platform` : nouvelle variable `initial_pool_k8s_version`
+  pour monter le pool initial.
 
 ### Changed
 

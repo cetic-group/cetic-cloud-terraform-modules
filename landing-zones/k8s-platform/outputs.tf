@@ -28,8 +28,28 @@ output "ingress_internal_ip" {
   value       = module.k8s.ingress_internal_ip
 }
 
+output "cluster_plan" {
+  description = "Plan effectif du plan de contrôle (`starter`, `standard` ou `pro`)."
+  value       = module.k8s.plan
+}
+
+output "cluster_current_k8s_version" {
+  description = "Version Kubernetes réellement exécutée par le plan de contrôle."
+  value       = module.k8s.current_k8s_version
+}
+
+output "cluster_etcd_volume_gb" {
+  description = "Volume etcd effectif du cluster (GiB)."
+  value       = module.k8s.etcd_volume_gb
+}
+
+output "cluster_node_ip_block_size" {
+  description = "Taille du bloc d'IP des nodes alloué dans le VNet."
+  value       = module.k8s.node_ip_block_size
+}
+
 output "cluster_tier" {
-  description = "Niveau de service effectif du cluster (`dev` ou `prod`)."
+  description = "**Déprécié** — utiliser `cluster_plan`. Niveau de service effectif (`dev` ou `prod`)."
   value       = module.k8s.tier
 }
 

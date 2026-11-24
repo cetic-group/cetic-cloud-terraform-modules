@@ -1,8 +1,13 @@
 resource "ccp_k8s_cluster" "this" {
-  provider        = ccp
-  name            = var.name
-  display_name    = coalesce(var.display_name, var.name)
-  region          = var.region
+  provider     = ccp
+  name         = var.name
+  display_name = coalesce(var.display_name, var.name)
+  region       = var.region
+  # Plan du plan de contrôle (provider v7.6.0+). null → découle de `tier` à la
+  # création (sinon `starter`), plan courant conservé ensuite.
+  plan = var.plan
+  # Déprécié (provider v7.6.0+) : transmis seulement s'il est fourni (null =
+  # attribut omis, le provider le calcule à partir de `plan`).
   tier            = var.tier
   vpc_id          = var.vpc_id
   vnet_id         = var.vnet_id
@@ -47,7 +52,22 @@ resource "ccp_k8s_cluster" "this" {
   apiserver_public_ip_id = var.apiserver_public_ip_id
   apiserver_internal_ip  = var.apiserver_internal_ip
 
+  # Mises à jour automatiques + fenêtre de maintenance (provider v7.6.0+).
+  # null → non géré : les réglages de la plateforme sont relus et laissés tels quels.
+  maintenance = var.maintenance
+
+  # SSO OIDC de l'apiserver (provider v7.6.0+). null → pas de SSO (retirer le
+  # bloc supprime le SSO).
+  oidc = var.oidc
+
   tags = var.tags
+
+  lifecycle {
+    precondition {
+      condition     = var.plan == null || var.tier == null || ((var.plan == "starter") == (var.tier == "dev"))
+      error_message = "plan et tier sont contradictoires : tier `dev` correspond à plan `starter`, tier `prod` à `standard` ou `pro`. Renseigner `plan` seul (tier est déprécié)."
+    }
+  }
 }
 
 # ─── Pools additionnels ──────────────────────────────────────────────────────

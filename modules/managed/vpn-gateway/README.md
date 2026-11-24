@@ -145,5 +145,5 @@ Validations sur `peers` :
 | Composant | Version |
 |---|---|
 | Module | `>= 0.27.0` |
-| Provider `cetic-group/ccp` | `>= 7.5.0` |
+| Provider `cetic-group/ccp` | `>= 7.6.0` |
 | Terraform | `>= 1.7` |

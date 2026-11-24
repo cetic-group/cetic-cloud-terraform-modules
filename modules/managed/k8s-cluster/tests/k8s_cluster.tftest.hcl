@@ -6,6 +6,10 @@ mock_provider "ccp" {
       id                        = "00000000-0000-0000-0000-000000000010"
       status                    = "provisioning"
       tier                      = "dev"
+      plan                      = "starter"
+      etcd_volume_gb            = 10
+      node_ip_block_size        = 16
+      current_k8s_version       = "v1.31.4"
       os_image                  = "flatcar"
       api_endpoint              = "10.20.1.10:6443"
       apiserver_internal_ip     = "10.20.1.10"
@@ -25,7 +29,8 @@ mock_provider "ccp" {
 }
 
 run "creates_dev_tier_by_default" {
-  command = plan
+  # apply (provider mocké) : plan/tier/… sont calculés, inconnus au plan.
+  command = apply
 
   variables {
     name            = "test-dev"
@@ -41,8 +46,8 @@ run "creates_dev_tier_by_default" {
   }
 
   assert {
-    condition     = ccp_k8s_cluster.this.tier == "dev"
-    error_message = "Le tier par défaut doit être `dev` (frontal d'exposition unique)."
+    condition     = output.tier == "dev" && output.plan == "starter"
+    error_message = "Sans plan ni tier, le cluster doit rester `starter` (tier `dev`, frontal d'exposition unique)."
   }
 }
 
@@ -412,5 +417,274 @@ run "additional_pool_disk_gb_passthrough" {
   assert {
     condition     = ccp_k8s_node_pool.additional["big_disk"].disk_gb == 200
     error_message = "La taille de disque d'un pool additionnel doit être transmise au node pool."
+  }
+}
+
+# ─── plan / tier (cetic-cloud-platform#2143, provider >= 7.6.0) ──────────────
+
+run "tier_not_sent_by_default" {
+  # apply (provider mocké) : plan/tier/… sont calculés, inconnus au plan.
+  command = apply
+
+  variables {
+    name            = "tier-not-sent-by-default"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+  }
+
+  assert {
+    condition     = var.tier == null && var.plan == null
+    error_message = "Sans tier ni plan, rien n'est transmis : le provider garde le plan courant (starter à la création)."
+  }
+  assert {
+    condition     = output.plan == "starter"
+    error_message = "L'output plan doit refléter le plan effectif du provider."
+  }
+}
+
+run "plan_passthrough" {
+  command = plan
+
+  variables {
+    name            = "plan-passthrough"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    plan            = "pro"
+  }
+
+  assert {
+    condition     = ccp_k8s_cluster.this.plan == "pro"
+    error_message = "plan doit être transmis à la resource provider."
+  }
+}
+
+run "rejects_invalid_plan" {
+  command = plan
+
+  variables {
+    name            = "rejects-invalid-plan"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    plan            = "enterprise"
+  }
+
+  expect_failures = [var.plan]
+}
+
+run "accepts_plan_and_tier_consistent" {
+  command = plan
+
+  variables {
+    name            = "accepts-plan-and-tier-consiste"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    plan            = "standard"
+    tier            = "prod"
+  }
+
+  assert {
+    condition     = ccp_k8s_cluster.this.plan == "standard" && ccp_k8s_cluster.this.tier == "prod"
+    error_message = "plan et tier cohérents doivent être transmis tels quels."
+  }
+}
+
+run "rejects_paid_plan_with_tier_dev" {
+  command = plan
+
+  variables {
+    name            = "rejects-paid-plan-with-tier-de"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    plan            = "pro"
+    tier            = "dev"
+  }
+
+  expect_failures = [ccp_k8s_cluster.this]
+}
+
+run "rejects_starter_with_tier_prod" {
+  command = plan
+
+  variables {
+    name            = "rejects-starter-with-tier-prod"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    plan            = "starter"
+    tier            = "prod"
+  }
+
+  expect_failures = [ccp_k8s_cluster.this]
+}
+
+run "computed_outputs" {
+  # apply (provider mocké) : plan/tier/… sont calculés, inconnus au plan.
+  command = apply
+
+  variables {
+    name            = "computed-outputs"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+  }
+
+  assert {
+    condition     = output.etcd_volume_gb == 10 && output.node_ip_block_size == 16
+    error_message = "etcd_volume_gb et node_ip_block_size doivent être exposés."
+  }
+  assert {
+    condition     = output.current_k8s_version == "v1.31.4"
+    error_message = "current_k8s_version doit être exposé."
+  }
+}
+
+# ─── maintenance / oidc ──────────────────────────────────────────────────────
+
+run "maintenance_passthrough" {
+  command = plan
+
+  variables {
+    name            = "maintenance-passthrough"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    maintenance = {
+      auto_mineure = true
+      fenetre = {
+        jours        = [6, 7]
+        heure_debut  = "02:00"
+        duree_heures = 6
+        fuseau       = "Europe/Paris"
+      }
+      dates_gel = [{ debut = "2026-12-20", fin = "2027-01-03" }]
+    }
+  }
+
+  assert {
+    condition     = ccp_k8s_cluster.this.maintenance.auto_mineure == true
+    error_message = "maintenance.auto_mineure doit être transmis."
+  }
+  assert {
+    condition     = ccp_k8s_cluster.this.maintenance.fenetre.heure_debut == "02:00"
+    error_message = "maintenance.fenetre doit être transmise."
+  }
+  assert {
+    condition     = ccp_k8s_cluster.this.maintenance.dates_gel[0].fin == "2027-01-03"
+    error_message = "maintenance.dates_gel doit être transmis."
+  }
+}
+
+run "rejects_invalid_maintenance_window" {
+  command = plan
+
+  variables {
+    name            = "rejects-invalid-maintenance-wi"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    maintenance = {
+      fenetre = {
+        jours        = [0]
+        heure_debut  = "25:00"
+        duree_heures = 2
+        fuseau       = "Europe/Paris"
+      }
+    }
+  }
+
+  expect_failures = [var.maintenance]
+}
+
+run "rejects_invalid_freeze_date" {
+  command = plan
+
+  variables {
+    name            = "rejects-invalid-freeze-date"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    maintenance = {
+      dates_gel = [{ debut = "20/12/2026", fin = "2027-01-03" }]
+    }
+  }
+
+  expect_failures = [var.maintenance]
+}
+
+run "oidc_passthrough" {
+  command = plan
+
+  variables {
+    name            = "oidc-passthrough"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    oidc = {
+      issuer_url   = "https://sso.example.com/realms/acme"
+      client_id    = "kubernetes"
+      groups_claim = ""
+    }
+  }
+
+  assert {
+    condition     = ccp_k8s_cluster.this.oidc.client_id == "kubernetes"
+    error_message = "oidc doit être transmis."
+  }
+  assert {
+    # Le provider mocké n'applique pas ses défauts (`email`) : on vérifie que le
+    # module n'impose aucune valeur et laisse le défaut au provider.
+    condition     = ccp_k8s_cluster.this.oidc.username_claim == null && ccp_k8s_cluster.this.oidc.groups_claim == ""
+    error_message = "Un champ oidc omis ne doit pas être forcé par le module ; un champ écrit est transmis tel quel."
+  }
+}
+
+run "rejects_oidc_without_https" {
+  command = plan
+
+  variables {
+    name            = "rejects-oidc-without-https"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+    oidc = {
+      issuer_url = "http://sso.example.com"
+      client_id  = "kubernetes"
+    }
+  }
+
+  expect_failures = [var.oidc]
+}
+
+run "oidc_null_by_default" {
+  command = plan
+
+  variables {
+    name            = "oidc-null-by-default"
+    region          = "RNN"
+    vpc_id          = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id         = "00000000-0000-0000-0000-0000000000bb"
+    os_template_key = "ubuntu-22.04"
+  }
+
+  assert {
+    condition     = ccp_k8s_cluster.this.oidc == null
+    error_message = "Sans variable oidc, aucun SSO ne doit être configuré."
   }
 }

@@ -45,7 +45,8 @@ module "platform" {
   org_prefix = "acme"
   region     = "RNN"
 
-  k8s_version           = "v1.31.4" # version du plan de contrôle
+  k8s_plan              = "standard" # starter / standard / pro
+  k8s_version           = "v1.31.4"  # version du plan de contrôle
   os_image              = "ubuntu"  # famille d'OS des nodes (flatcar défaut / ubuntu / rocky9)
   initial_pool_replicas = 2
   initial_pool_plan     = "small"
@@ -81,7 +82,10 @@ output "ingress_url" {
 | `region` | string | required | `RNN`/`PAR`/`ABJ`. |
 | `k8s_version` | string | `"v1.31.4"` | Version du plan de contrôle (workers en héritent). |
 | `os_image` | string | `null` | Famille d'OS des nodes : `flatcar` (défaut) / `ubuntu` / `rocky9`. Immuable. |
-| `k8s_tier` | string | `"dev"` | `dev` (single) ou `prod` (HA actif/passif + VIP flottante). Immuable. |
+| `k8s_plan` | string | `null` | `starter` (frontal unique) / `standard` (HA actif/passif + VIP flottante) / `pro` (3 réplicas). `starter` ↔ payant recrée le cluster. `null` = découle de `k8s_tier`, sinon `starter` ; plan courant conservé ensuite. |
+| `k8s_tier` | string | `null` | **Déprécié** → `k8s_plan`. `dev` = `starter`, `prod` = `standard`. Transmis seulement s'il est fourni. |
+| `k8s_maintenance` | object | `null` | Mises à jour automatiques + fenêtre de maintenance (cf. `maintenance` de `managed/k8s-cluster`). `null` = non géré. |
+| `k8s_oidc` | object | `null` | SSO OIDC de l'apiserver (cf. `oidc` de `managed/k8s-cluster`). `null` = pas de SSO. |
 | `initial_pool_plan` | string | `"small"` | Plan du pool initial. |
 | `initial_pool_replicas` | number | `2` | |
 | `additional_pools` | map(object) | `{}` | Cf. `managed/k8s-cluster`. |
@@ -99,6 +103,10 @@ output "ingress_url" {
 |------|-------------|
 | `cluster_id` / `cluster_name` | |
 | `cluster_os_image` | Famille d'OS effective des nodes. |
+| `cluster_plan` | Plan effectif (`starter` / `standard` / `pro`). |
+| `cluster_current_k8s_version` | Version réellement exécutée par le plan de contrôle. |
+| `cluster_etcd_volume_gb` / `cluster_node_ip_block_size` | Volume etcd (GiB) et taille du bloc d'IP des nodes. |
+| `cluster_tier` | **Déprécié** → `cluster_plan`. |
 | `api_endpoint` | Récupérer kubeconfig via `cetic k8s kubeconfig <id>`. |
 | `apiserver_public_ip_address` | |
 | `ingress_public_ip_address` / `ingress_internal_ip` | |

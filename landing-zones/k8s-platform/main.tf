@@ -47,6 +47,7 @@ module "k8s" {
 
   name        = local.cluster_name
   region      = var.region
+  plan        = var.k8s_plan
   tier        = var.k8s_tier
   vpc_id      = module.vpc.vpc_id
   vnet_id     = module.vpc.vnet_ids.workers
@@ -66,6 +67,9 @@ module "k8s" {
   ingress_controller_class   = "incluster"
 
   apiserver_public_ip_id = var.expose_apiserver_publicly ? ccp_public_ip.apiserver[0].id : null
+
+  maintenance = var.k8s_maintenance
+  oidc        = var.k8s_oidc
 
   tags = local.base_tags
 }

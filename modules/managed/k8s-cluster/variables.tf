@@ -21,25 +21,51 @@ variable "vpc_id" {
   type = string
 }
 
-variable "tier" {
+variable "plan" {
   type        = string
-  default     = "dev"
+  default     = null
   description = <<-EOT
-    Niveau de service du cluster :
+    Plan du plan de contrôle du cluster (provider >= 7.6.0) :
 
-    - `dev` (défaut) : déploiement single-instance du frontal d'exposition de
-      l'apiserver — adapté aux environnements de dev / staging / éphémères.
-    - `prod` : déploiement actif/passif (deux frontaux + VIP flottante)
-      pour la haute-disponibilité du plan de contrôle. Recommandé pour
-      les clusters de production.
+    - `starter` : gratuit, frontal d'exposition de l'apiserver unique, sans
+      haute disponibilité, jusqu'à 10 nodes — dev / staging / éphémère.
+    - `standard` : paire de frontaux actif/passif + VIP flottante VNet,
+      2 réplicas du plan de contrôle, jusqu'à 50 nodes.
+    - `pro` : 3 réplicas du plan de contrôle, jusqu'à 150 nodes.
 
-    Immuable côté provider (`ForceNew`) — changer la valeur recrée le
-    cluster.
+    `standard` ↔ `pro` se change en place ; `starter` ↔ un plan payant
+    **recrée le cluster** (le frontal change de topologie).
+
+    `null` (défaut) : à la création, le plan découle de `tier` s'il est fourni
+    (`dev` → `starter`, `prod` → `standard`), sinon `starter` ; sur un cluster
+    existant, le plan courant est conservé (y compris un changement fait depuis
+    la console).
   EOT
 
   validation {
-    condition     = can(regex("^(dev|prod)$", var.tier))
-    error_message = "tier doit être `dev` ou `prod`."
+    condition     = var.plan == null || contains(["starter", "standard", "pro"], coalesce(var.plan, "starter"))
+    error_message = "plan doit être `starter`, `standard` ou `pro` (ou null)."
+  }
+}
+
+variable "tier" {
+  type        = string
+  default     = null
+  description = <<-EOT
+    **Déprécié** — utiliser `plan`. Conservé pour les configurations
+    existantes : `dev` équivaut à `plan = "starter"`, `prod` à un plan payant
+    (`standard`, ou `pro` si le cluster l'est déjà). Transmis au provider
+    uniquement s'il est fourni (le provider émet alors un avertissement de
+    dépréciation). Renseigner `plan` et `tier` avec des topologies différentes
+    (`starter` + `prod`, ou `standard`/`pro` + `dev`) est refusé.
+
+    `null` (défaut) : non transmis. Un cluster créé sans `tier` (ancien défaut
+    `dev`) reste `starter` ; changer `starter` ↔ `prod` recrée le cluster.
+  EOT
+
+  validation {
+    condition     = var.tier == null || contains(["dev", "prod"], coalesce(var.tier, "dev"))
+    error_message = "tier doit être `dev` ou `prod` (ou null). Préférer `plan`."
   }
 }
 
@@ -55,6 +81,11 @@ variable "k8s_version" {
     par défaut des workers : chaque pool (initial ou additionnel) qui ne fixe pas
     sa propre `k8s_version` hérite de celle-ci. La version d'un pool worker doit
     rester `<=` à celle du plan de contrôle.
+
+    Version **souhaitée** (provider >= 7.6.0) : la monter met à jour le plan de
+    contrôle seul (les pools suivent via leur propre `k8s_version`), et elle
+    n'est jamais redescendue — un patch automatique au-delà ne crée pas de
+    diff. La version effective est l'output `current_k8s_version`.
   EOT
 }
 
@@ -263,4 +294,101 @@ variable "apiserver_internal_ip" {
 variable "tags" {
   type    = list(string)
   default = []
+}
+
+# ─── Mises à jour automatiques et fenêtre de maintenance ─────────────────────
+variable "maintenance" {
+  description = <<-EOT
+    Mises à jour Kubernetes automatiques du cluster et leur fenêtre de
+    maintenance (provider >= 7.6.0). `null` (défaut) = non géré : les réglages
+    de la plateforme (patchs automatiques activés, mineures et majeures
+    désactivées, ou ce qui a été posé depuis la console) sont relus et laissés
+    tels quels. Renseigné, seuls les champs écrits sont gérés ; repasser à
+    `null` arrête la gestion sans rien réinitialiser.
+
+    - `auto_patch` / `auto_mineure` / `auto_majeure` : appliquer
+      automatiquement, dans la fenêtre, les patchs de la mineure courante, la
+      mineure suivante, la majeure suivante.
+    - `fenetre` : bloc entier `{ jours, heure_debut, duree_heures, fuseau }` —
+      `jours` = jours ISO 1 (lundi) à 7 (dimanche), `heure_debut` = `HH:MM`
+      locale, `duree_heures` de 4 à 24, `fuseau` IANA (ex. `Europe/Paris`).
+    - `dates_gel` : périodes de gel (au plus 12, 31 jours chacune, bornes
+      incluses, `YYYY-MM-DD`) pendant lesquelles aucune mise à jour
+      automatique ne démarre.
+  EOT
+  type = object({
+    auto_patch   = optional(bool)
+    auto_mineure = optional(bool)
+    auto_majeure = optional(bool)
+    fenetre = optional(object({
+      jours        = list(number)
+      heure_debut  = string
+      duree_heures = number
+      fuseau       = string
+    }))
+    dates_gel = optional(list(object({
+      debut = string
+      fin   = string
+    })))
+  })
+  default = null
+
+  validation {
+    condition = try(var.maintenance.fenetre, null) == null || try(
+      length(var.maintenance.fenetre.jours) > 0
+      && alltrue([for j in var.maintenance.fenetre.jours : j >= 1 && j <= 7 && floor(j) == j])
+      && can(regex("^([01][0-9]|2[0-3]):[0-5][0-9]$", var.maintenance.fenetre.heure_debut))
+      && var.maintenance.fenetre.duree_heures >= 4 && var.maintenance.fenetre.duree_heures <= 24,
+      false
+    )
+    error_message = "maintenance.fenetre : jours entre 1 et 7 (au moins un), heure_debut au format HH:MM, duree_heures de 4 à 24."
+  }
+  validation {
+    condition = try(var.maintenance.dates_gel, null) == null || try(
+      length(var.maintenance.dates_gel) <= 12 && alltrue([
+        for g in var.maintenance.dates_gel :
+        can(regex("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", g.debut)) && can(regex("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", g.fin))
+      ]),
+      false
+    )
+    error_message = "maintenance.dates_gel : au plus 12 périodes, debut et fin au format YYYY-MM-DD."
+  }
+}
+
+# ─── SSO OIDC de l'apiserver ─────────────────────────────────────────────────
+variable "oidc" {
+  description = <<-EOT
+    SSO OIDC de l'apiserver (provider >= 7.6.0) : les utilisateurs se
+    connectent avec le fournisseur d'identité de l'organisation (kubelogin).
+    `null` (défaut) = pas de SSO ; **retirer le bloc supprime le SSO**. Un
+    changement redémarre l'apiserver (envoyé seulement si la configuration
+    change réellement).
+
+    - `issuer_url` : `iss` exact des jetons (`https://`, port 443, hôte public).
+    - `client_id` : client PUBLIC du fournisseur (PKCE / device flow, sans secret).
+    - `username_claim` (défaut provider `email`), `username_prefix` (`oidc:`),
+      `groups_claim` (`groups`, `""` = pas de groupes), `groups_prefix`
+      (`oidc:`), `extra_scopes` (au plus 10, aucun par défaut), `ca_pem` (CA du
+      fournisseur si elle n'est pas publique). Omis = défaut du provider.
+  EOT
+  type = object({
+    issuer_url      = string
+    client_id       = string
+    username_claim  = optional(string)
+    username_prefix = optional(string)
+    groups_claim    = optional(string)
+    groups_prefix   = optional(string)
+    extra_scopes    = optional(list(string))
+    ca_pem          = optional(string)
+  })
+  default = null
+
+  validation {
+    condition     = var.oidc == null || can(regex("^https://", try(var.oidc.issuer_url, "")))
+    error_message = "oidc.issuer_url doit commencer par https://."
+  }
+  validation {
+    condition     = var.oidc == null || length(coalesce(try(var.oidc.extra_scopes, null), [])) <= 10
+    error_message = "oidc.extra_scopes : au plus 10 scopes."
+  }
 }

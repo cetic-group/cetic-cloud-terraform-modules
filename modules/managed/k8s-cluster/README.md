@@ -12,8 +12,28 @@ module "platform" {
   region      = "RNN"
   vpc_id      = module.vpc.vpc_id
   vnet_id     = module.vpc.vnet_ids.workers
-  k8s_version = "v1.31.4" # version du plan de contrôle
-  os_image    = "ubuntu"  # famille d'OS des nodes (flatcar défaut / ubuntu / rocky9)
+  plan        = "standard" # starter / standard / pro (provider >= 7.6.0)
+  k8s_version = "v1.31.4"  # version souhaitée du plan de contrôle
+  os_image    = "ubuntu"   # famille d'OS des nodes (flatcar défaut / ubuntu / rocky9)
+
+  # Mises à jour automatiques (optionnel, null = réglages plateforme laissés tels quels).
+  maintenance = {
+    auto_patch   = true
+    auto_mineure = false
+    fenetre = {
+      jours        = [6, 7] # samedi, dimanche
+      heure_debut  = "02:00"
+      duree_heures = 6
+      fuseau       = "Europe/Paris"
+    }
+    dates_gel = [{ debut = "2026-12-20", fin = "2027-01-03" }]
+  }
+
+  # SSO OIDC de l'apiserver (optionnel, null = pas de SSO).
+  oidc = {
+    issuer_url = "https://sso.example.com/realms/acme"
+    client_id  = "kubernetes"
+  }
 
   initial_pool = {
     name     = "default"
@@ -74,7 +94,8 @@ output "kubeconfig_url" {
 | `name` | string | required | Nom (préfixe DNS du kubeconfig FQDN). |
 | `display_name` | string | `name` | Display name. |
 | `region` | string | required | `RNN`/`PAR`/`ABJ`. |
-| `tier` | string | `"dev"` | `dev` (single) ou `prod` (HA actif/passif + VIP flottante). Immuable. |
+| `plan` | string | `null` | Plan du plan de contrôle : `starter` (frontal unique, sans HA, ≤ 10 nodes), `standard` (HA actif/passif + VIP flottante, 2 réplicas, ≤ 50 nodes), `pro` (3 réplicas, ≤ 150 nodes). `standard` ↔ `pro` en place ; `starter` ↔ payant **recrée le cluster**. `null` = découle de `tier` (sinon `starter`) à la création, plan courant conservé ensuite. |
+| `tier` | string | `null` | **Déprécié** → `plan`. `dev` = `starter`, `prod` = `standard` (ou `pro` courant). Transmis seulement s'il est fourni ; contradictoire avec `plan` → refusé. |
 | `vpc_id` / `vnet_id` | string | required | Réseau cible. |
 | `k8s_version` | string | `"v1.31.4"` | Version Kubernetes du **plan de contrôle**. Version par défaut des workers (chaque pool en hérite sauf `k8s_version` propre). |
 | `os_image` | string | `null` | Famille d'OS des nodes : `flatcar` (défaut) / `ubuntu` / `rocky9`. `null` = défaut plateforme. **Immuable** (recrée le cluster). |
@@ -92,6 +113,8 @@ output "kubeconfig_url" {
 | `ingress_internal_ip` | string | `null` | IP privée fixe. |
 | `apiserver_public_ip_id` | string | `null` | IP publique apiserver (kubeconfig public). **Mutable** (provider ≥ 3.0.0) — attach/détach/rotate sans recréer le cluster. |
 | `apiserver_internal_ip` | string | `null` | IP privée fixe apiserver. |
+| `maintenance` | object({auto_patch?, auto_mineure?, auto_majeure?, fenetre?, dates_gel?}) | `null` | Mises à jour automatiques et fenêtre de maintenance. `null` = non géré (réglages plateforme / console relus et laissés). Seuls les champs écrits sont gérés. `fenetre` = `{ jours (1-7), heure_debut "HH:MM", duree_heures (4-24), fuseau IANA }` ; `dates_gel` = liste (≤ 12) de `{ debut, fin }` `YYYY-MM-DD`. |
+| `oidc` | object({issuer_url, client_id, username_claim?, username_prefix?, groups_claim?, groups_prefix?, extra_scopes?, ca_pem?}) | `null` | SSO OIDC de l'apiserver. `null` = pas de SSO ; retirer le bloc supprime le SSO. Un changement redémarre l'apiserver. Champs omis = défauts du provider (`email`, `oidc:`, `groups`, `oidc:`, aucun scope). |
 | `tags` | list(string) | `[]` | |
 
 ## Outputs
@@ -101,7 +124,8 @@ output "kubeconfig_url" {
 | `id` | UUID. |
 | `name` | |
 | `os_image` | Famille d'OS effective des nodes (`flatcar`/`ubuntu`/`rocky9`). |
-| `k8s_version` | Version Kubernetes du plan de contrôle. |
+| `k8s_version` | Version Kubernetes souhaitée du plan de contrôle. |
+| `current_k8s_version` | Version réellement exécutée par le plan de contrôle (peut dépasser `k8s_version` après un patch automatique). |
 | `api_endpoint` | host:port apiserver (kubeconfig). |
 | `apiserver_internal_ip` / `apiserver_public_ip_address` | |
 | `ingress_internal_ip` / `ingress_public_ip_address` | |
@@ -109,17 +133,32 @@ output "kubeconfig_url" {
 | `additional_pool_k8s_versions` | Map nom de pool → version Kubernetes worker effective. |
 | `additional_pool_disk_gb` | Map nom de pool → taille de disque racine effective (GB). |
 | `status` | |
-| `tier` | Niveau de service effectif (`dev` / `prod`). |
-| `proxy_vip_vnet` | VIP flottante VNet partagée par les deux frontaux (tier `prod`, sinon `null`). |
+| `plan` | Plan effectif (`starter` / `standard` / `pro`). |
+| `etcd_volume_gb` | Volume etcd effectif (GiB), jamais réduit. |
+| `node_ip_block_size` | Taille du bloc d'IP des nodes dans le VNet (`null` tant qu'il n'est pas alloué). |
+| `tier` | **Déprécié** → `plan`. `dev` pour `starter`, `prod` pour `standard`/`pro`. |
+| `proxy_vip_vnet` | VIP flottante VNet partagée par les deux frontaux (plans `standard`/`pro`, sinon `null`). |
 
 ## Notes
 
-- **`tier` immutable** : `dev` → `prod` (ou l'inverse) recrée le cluster. Choisir
-  `prod` dès la création pour les charges critiques afin d'activer le frontal
-  d'exposition redondé (deux instances actives/passives + VIP flottante VNet).
+- **Provider `>= 7.6.0`** (cetic-cloud-platform#2143) : `plan`, `maintenance`,
+  `oidc` et les outputs `plan` / `etcd_volume_gb` / `node_ip_block_size` /
+  `current_k8s_version` l'exigent.
+- **`plan`** : `starter` ↔ `standard`/`pro` recrée le cluster (le frontal
+  d'exposition change de topologie) ; `standard` ↔ `pro` se fait en place.
+  Choisir un plan payant dès la création pour les charges critiques.
+- **`tier` déprécié** : une configuration qui ne renseigne que `tier` garde son
+  comportement (`dev` → `starter`, `prod` → `standard`). Migrer en remplaçant
+  `tier = "dev"` par `plan = "starter"` et `tier = "prod"` par
+  `plan = "standard"` (ou `"pro"` si le cluster l'est déjà) : aucun changement
+  planifié. Sans `plan` ni `tier`, un cluster existant garde son plan courant.
+- **Montée de version** (provider `>= 7.6.0`) : monter `k8s_version` met à jour
+  le **plan de contrôle seul** ; les pools se montent ensuite via leur propre
+  `k8s_version` (un node à la fois). `k8s_version` est la version souhaitée,
+  jamais redescendue : un patch automatique ne crée pas de diff.
 - **`initial_pool`** : `name`/`plan` sont immutables (recréer le cluster pour les changer) ; `replicas`, `labels`, `taints`, `min_size`/`max_size` sont mutables in-place (parité avec `additional_pools`). Définir `min_size` **et** `max_size` active l'autoscaler ; les retirer le désactive (pool figé à `replicas`). `labels`/`taints` nécessitent le provider `>= 3.2.0` ; l'autoscaler `>= 3.1.1`.
 - **`os_image` immutable** : la famille d'OS des nodes (`flatcar`/`ubuntu`/`rocky9`) est figée à la création — la changer recrée le cluster. Laisser `null` applique le défaut plateforme (`flatcar`).
-- **Versions Kubernetes par pool** : `k8s_version` au niveau du cluster fixe le **plan de contrôle** et sert de version par défaut des workers. Chaque pool (initial ou additionnel) peut fixer sa propre `k8s_version` (omettre = hériter du plan de contrôle). La version d'un pool worker doit rester `<=` à celle du plan de contrôle ; modifier `k8s_version` d'un pool déclenche une montée de version rolling (pas de recréation du pool). Pratique pour une montée de version progressive : monter d'abord le plan de contrôle, puis les pools un à un.
+- **Versions Kubernetes par pool** : `k8s_version` au niveau du cluster fixe le **plan de contrôle** et sert de version par défaut des workers à la création. Chaque pool (initial ou additionnel) peut fixer sa propre `k8s_version` (omettre = hériter du plan de contrôle). La version d'un pool worker doit rester `<=` à celle du plan de contrôle ; modifier `k8s_version` d'un pool déclenche une montée de version rolling (pas de recréation du pool). Pratique pour une montée de version progressive : monter d'abord le plan de contrôle, puis les pools un à un.
 - **Disque des workers par pool** : `disk_gb` (initial ou additionnel) fixe la taille du disque racine des workers de ce pool, indépendamment du disque par défaut du `plan`. Omis = défaut du plan. **Grow-only** : augmenter la valeur redimensionne le disque en place ; une valeur inférieure à la taille courante est refusée par l'API (422).
 - **Ingress en mode `incluster`** : HA inter-worker via Cilium L2 announce, failover ~22s.
 - **Ingress en mode `managed`** : LB dédié devant l'ingress controller — meilleur pour des bursts de connexions externes mais coûte un LB additionnel.

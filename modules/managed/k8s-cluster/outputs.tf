@@ -14,7 +14,7 @@ output "os_image" {
 }
 
 output "k8s_version" {
-  description = "Version Kubernetes du plan de contrôle du cluster."
+  description = "Version Kubernetes du control plane du cluster."
   value       = ccp_k8s_cluster.this.k8s_version
 }
 
@@ -62,12 +62,34 @@ output "status" {
   value = ccp_k8s_cluster.this.status
 }
 
+output "plan" {
+  description = "Plan effectif du control plane (`starter`, `standard` ou `pro`)."
+  value       = ccp_k8s_cluster.this.plan
+}
+
+output "etcd_volume_gb" {
+  description = "Volume etcd effectif (GiB) : celui du plan à la création, relevé à la montée de plan, jamais réduit."
+  value       = ccp_k8s_cluster.this.etcd_volume_gb
+}
+
+output "node_ip_block_size" {
+  description = "Taille du bloc d'IP des nodes alloué dans le VNet (`null` tant qu'il n'est pas alloué)."
+  value       = ccp_k8s_cluster.this.node_ip_block_size
+}
+
+output "current_k8s_version" {
+  description = "Version Kubernetes réellement exécutée par le control plane (peut dépasser `k8s_version` après un patch automatique)."
+  value       = ccp_k8s_cluster.this.current_k8s_version
+}
+
 output "tier" {
-  description = "Niveau de service effectif du cluster (`dev` ou `prod`)."
-  value       = ccp_k8s_cluster.this.tier
+  description = "**Déprécié** — utiliser `plan`. Niveau de service effectif du cluster (`dev` pour `starter`, `prod` pour `standard`/`pro`)."
+  # Dérivé de `plan` : lire l'attribut `tier` (déprécié) ferait afficher
+  # l'avertissement de dépréciation du provider à chaque utilisateur du module.
+  value = ccp_k8s_cluster.this.plan == null ? null : (ccp_k8s_cluster.this.plan == "starter" ? "dev" : "prod")
 }
 
 output "proxy_vip_vnet" {
-  description = "Adresse de la VIP flottante VNet partagée entre les deux frontaux (tier `prod`). `null` en tier `dev`."
+  description = "Adresse de la VIP flottante VNet partagée entre les deux frontaux (plans `standard` et `pro`). `null` en plan `starter`."
   value       = ccp_k8s_cluster.this.proxy_vip_vnet
 }

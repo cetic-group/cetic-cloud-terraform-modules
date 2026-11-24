@@ -19,7 +19,23 @@ variable "region" {
 variable "k8s_version" {
   type        = string
   default     = "v1.31.4"
-  description = "Version Kubernetes du plan de contrôle du cluster CCKS (les pools workers en héritent sauf override)."
+  description = <<-EOT
+    Version Kubernetes souhaitée du control plane du cluster CCKS. Depuis le
+    provider 7.6.0, la monter ne monte que le control plane : les pools gardent
+    leur version (cf. `initial_pool_k8s_version` et `additional_pools[*].k8s_version`).
+  EOT
+}
+
+variable "initial_pool_k8s_version" {
+  type        = string
+  default     = null
+  description = <<-EOT
+    Version Kubernetes des workers du pool initial, passée à
+    `initial_pool.k8s_version`. `null` (défaut) = version du control plane à la
+    création seulement : le pool ne suit pas les montées de `k8s_version`. Pour
+    monter le cluster : monter `k8s_version` (control plane) puis cette
+    variable — possible dans le même apply. Doit rester `<=` à `k8s_version`.
+  EOT
 }
 
 variable "os_image" {
@@ -35,20 +51,73 @@ variable "os_image" {
   }
 }
 
-variable "k8s_tier" {
+variable "k8s_plan" {
   type        = string
-  default     = "dev"
+  default     = null
   description = <<-EOT
-    Niveau de service du cluster CCKS — passé tel quel au module
-    `managed/k8s-cluster`. `dev` (défaut) provisionne un frontal
-    d'exposition unique. `prod` active la haute-disponibilité du plan
-    de contrôle (frontaux actif/passif + VIP flottante VNet). Immuable.
+    Plan du control plane du cluster CCKS — passé tel quel au module
+    `managed/k8s-cluster` : `starter` (frontal unique, sans HA), `standard`
+    (frontaux actif/passif + VIP flottante VNet) ou `pro` (3 réplicas).
+    `standard` ↔ `pro` en place ; `starter` ↔ payant recrée le cluster.
+    `null` (défaut) : découle de `k8s_tier` s'il est fourni, sinon `starter` à
+    la création ; plan courant conservé ensuite.
   EOT
 
   validation {
-    condition     = can(regex("^(dev|prod)$", var.k8s_tier))
-    error_message = "k8s_tier doit être `dev` ou `prod`."
+    condition     = var.k8s_plan == null || contains(["starter", "standard", "pro"], coalesce(var.k8s_plan, "starter"))
+    error_message = "k8s_plan doit être `starter`, `standard` ou `pro` (ou null)."
   }
+}
+
+variable "k8s_tier" {
+  type        = string
+  default     = null
+  description = <<-EOT
+    **Déprécié** — utiliser `k8s_plan`. `dev` = `starter`, `prod` = plan payant
+    (`standard`). Passé au module seulement s'il est fourni ; contradictoire
+    avec `k8s_plan` → refusé. `null` (défaut) : non transmis (un cluster créé
+    avec l'ancien défaut `dev` reste `starter`).
+  EOT
+
+  validation {
+    condition     = var.k8s_tier == null || contains(["dev", "prod"], coalesce(var.k8s_tier, "dev"))
+    error_message = "k8s_tier doit être `dev` ou `prod` (ou null). Préférer `k8s_plan`."
+  }
+}
+
+variable "k8s_maintenance" {
+  description = "Mises à jour automatiques et fenêtre de maintenance du cluster — cf. la variable `maintenance` de `managed/k8s-cluster`. `null` (défaut) = non géré."
+  type = object({
+    auto_patch   = optional(bool)
+    auto_mineure = optional(bool)
+    auto_majeure = optional(bool)
+    fenetre = optional(object({
+      jours        = list(number)
+      heure_debut  = string
+      duree_heures = number
+      fuseau       = string
+    }))
+    dates_gel = optional(list(object({
+      debut = string
+      fin   = string
+    })))
+  })
+  default = null
+}
+
+variable "k8s_oidc" {
+  description = "SSO OIDC de l'apiserver — cf. la variable `oidc` de `managed/k8s-cluster`. `null` (défaut) = pas de SSO."
+  type = object({
+    issuer_url      = string
+    client_id       = string
+    username_claim  = optional(string)
+    username_prefix = optional(string)
+    groups_claim    = optional(string)
+    groups_prefix   = optional(string)
+    extra_scopes    = optional(list(string))
+    ca_pem          = optional(string)
+  })
+  default = null
 }
 
 variable "initial_pool_replicas" {
@@ -132,4 +201,14 @@ variable "db_storage_gb" {
 variable "tags_extra" {
   type    = list(string)
   default = []
+}
+
+variable "k8s_timeouts" {
+  description = "Délais d'attente du provider pour le cluster (`create`, `update`, `delete`, durées Go) — cf. la variable `timeouts` de `managed/k8s-cluster`. `null` (défaut) = défauts du provider."
+  type = object({
+    create = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
+  default = null
 }

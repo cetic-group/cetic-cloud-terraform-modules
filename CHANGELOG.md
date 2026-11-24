@@ -6,6 +6,65 @@ suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.40.0]
+
+Aligné sur le provider `cetic-group/ccp` **`>= 7.6.0`** (publié le 24/11) : plans CCKS,
+montées de version séparées, maintenance et SSO (cetic-cloud-platform#2143).
+
+### Added
+
+- `managed/k8s-cluster` : variable `plan` (`starter`, `standard` ou `pro`,
+  `null` par défaut). `standard` ↔ `pro` se change en place, `starter` ↔ un
+  plan payant recrée le cluster. `null` : le plan découle de `tier` à la
+  création (sinon `starter`) et le plan courant est conservé ensuite.
+- `managed/k8s-cluster` : variable `maintenance` (`auto_patch`,
+  `auto_mineure`, `auto_majeure`, `fenetre`, `dates_gel`, optionnelle).
+  `null` par défaut : les réglages de la plateforme ne sont pas gérés et un
+  réglage posé depuis la console n'est pas touché.
+- `managed/k8s-cluster` : variable `oidc` (SSO OIDC de l'apiserver,
+  optionnelle). `null` par défaut : pas de SSO ; retirer le bloc supprime le
+  SSO.
+- `managed/k8s-cluster` : outputs `plan`, `etcd_volume_gb`,
+  `node_ip_block_size` et `current_k8s_version` (version réellement
+  exécutée par le control plane).
+- `managed/k8s-cluster` : variable `timeouts` (`create`, `update`,
+  `delete`, optionnelle) passée au bloc `timeouts` du cluster.
+- `landing-zones/k8s-platform` : variables `k8s_plan`, `k8s_maintenance`,
+  `k8s_oidc`, `k8s_timeouts`, `initial_pool_k8s_version` et outputs `cluster_plan`, `cluster_current_k8s_version`,
+  `cluster_etcd_volume_gb`, `cluster_node_ip_block_size`.
+
+### Changed — BREAKING
+
+- **Provider `>= 7.6.0`** (au lieu de `>= 7.5.0`) — cascade sur toutes les
+  déclarations du dépôt (`versions.tf` des modules et landing zones,
+  `providers.tf`, exemples, Quick Start du README). Un lock file
+  (`.terraform.lock.hcl`) figé en 7.5.x impose `terraform init -upgrade`.
+- `managed/k8s-cluster` : monter `k8s_version` ne met plus à jour que le
+  control plane (changement plateforme de #2143). Un pool sans `k8s_version`
+  propre en prend la version à la création seulement et ne suit plus : monter
+  ensuite `initial_pool.k8s_version` et `additional_pools[*].k8s_version`
+  (possible dans le même apply : control plane puis pools).
+  `landing-zones/k8s-platform` : nouvelle variable `initial_pool_k8s_version`
+  pour monter le pool initial.
+
+### Changed
+
+- `managed/k8s-cluster` : `tier` vaut `null` par défaut (au lieu de `dev`) et
+  n'est transmis au provider que s'il est fourni. Aucun changement de
+  comportement : un cluster créé sans `tier` reste `starter` (l'ancien `dev`),
+  une configuration qui ne renseigne que `tier` garde le même plan. Idem pour
+  `k8s_tier` de `landing-zones/k8s-platform`.
+- `managed/k8s-cluster` : l'output `tier` est dérivé de `plan` (même valeur,
+  sans l'avertissement de dépréciation du provider).
+
+### Deprecated
+
+- `managed/k8s-cluster` : variable et output `tier` — utiliser `plan`
+  (`dev` → `starter`, `prod` → `standard`). Renseigner `plan` et `tier` avec
+  des topologies différentes est refusé.
+- `landing-zones/k8s-platform` : variable `k8s_tier` et output `cluster_tier`
+  — utiliser `k8s_plan` et `cluster_plan`.
+
 ## [0.39.0]
 
 Aligné sur le provider `cetic-group/ccp` **`>= 7.5.0`** (publié le 15/11), qui

@@ -6,7 +6,9 @@ suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-Aligné sur le provider `cetic-group/ccp` **`>= 7.6.0`** : plans CCKS,
+## [0.40.0]
+
+Aligné sur le provider `cetic-group/ccp` **`>= 7.6.0`** (publié le 24/11) : plans CCKS,
 montées de version séparées, maintenance et SSO (cetic-cloud-platform#2143).
 
 ### Added

@@ -68,7 +68,7 @@ terraform {
   required_providers {
     ccp = {
       source  = "cetic-group/ccp"
-      version = ">= 7.5.0"
+      version = ">= 7.6.0"
     }
   }
 }
@@ -172,6 +172,7 @@ Suit le provider `cetic-group/ccp`. Tag SemVer :
 - `v0.36.x` : compatible provider `>= 7.0.0` — retrait du module `atomic/ipaas-pool` et des outputs liés aux attributs retirés du provider v7
 - `v0.38.x` : compatible provider `>= 7.3.2` (Terraform `>= 1.9` pour les modules AppGW) — cache AppGW par plan, `replica_count` AppGW/LB, politiques d'accès AppGW typées, CORS bucket, IP de sortie dédiée VPC
 - `v0.39.x` : compatible provider `>= 7.5.0` — versionnage bucket (`storage/bucket`, variable `versioning`), output `egress_ip_type` de `network/vpc` déprécié (toujours `null`)
+- `v0.40.x` : compatible provider `>= 7.6.0` — plans CCKS (`plan` = `starter`/`standard`/`pro`, `tier` déprécié), `maintenance`, `oidc`, `timeouts` et outputs `plan`/`etcd_volume_gb`/`node_ip_block_size`/`current_k8s_version` sur `managed/k8s-cluster` et la landing-zone `k8s-platform`
 - bump majeur (`v1.0.0`) quand le provider stabilise son API
 
 ## Tests

@@ -47,6 +47,7 @@ module "k8s" {
 
   name            = local.cluster_name
   region          = var.region
+  plan            = var.k8s_plan
   tier            = var.k8s_tier
   vpc_id          = module.vpc.vpc_id
   vnet_id         = module.vpc.vnet_ids.workers
@@ -58,6 +59,9 @@ module "k8s" {
     name     = "default"
     plan     = var.initial_pool_plan
     replicas = var.initial_pool_replicas
+    # Monter avec k8s_version : depuis le provider 7.6.0 le control plane ne
+    # fait plus suivre les pools. null → version du control plane à la création.
+    k8s_version = var.initial_pool_k8s_version
   }
 
   additional_pools = var.additional_pools
@@ -67,6 +71,10 @@ module "k8s" {
   ingress_controller_class   = "incluster"
 
   apiserver_public_ip_id = var.expose_apiserver_publicly ? ccp_public_ip.apiserver[0].id : null
+
+  maintenance = var.k8s_maintenance
+  oidc        = var.k8s_oidc
+  timeouts    = var.k8s_timeouts
 
   tags = local.base_tags
 }

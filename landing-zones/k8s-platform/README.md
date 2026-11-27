@@ -46,7 +46,7 @@ module "platform" {
   region     = "RNN"
 
   k8s_plan              = "standard" # starter / standard / pro
-  k8s_version           = "v1.31.4"  # version du control plane
+  k8s_version           = "1.34.8"   # version du control plane (X.Y.Z, sans « v »)
   os_image              = "ubuntu"  # famille d'OS des nodes (flatcar défaut / ubuntu / rocky9)
   initial_pool_replicas = 2
   initial_pool_plan     = "small"
@@ -80,7 +80,8 @@ output "ingress_url" {
 |------|------|---------|-------------|
 | `org_prefix` | string | required | Préfixe métier. |
 | `region` | string | required | `RNN`/`PAR`/`ABJ`. |
-| `k8s_version` | string | `"v1.31.4"` | Version souhaitée du control plane. La monter ne monte **que** le control plane (provider `>= 7.6.0`). |
+| `k8s_version` | string | required | Version souhaitée du control plane, `X.Y.Z` sans « v ». La monter ne monte **que** le control plane (provider `>= 7.6.0`). |
+| `os_template_key` | string | `null` | Lue à la création seulement. `null` = dérivée de `k8s_version` (`kube-v1-34-8`). |
 | `initial_pool_k8s_version` | string | `null` | Version des workers du pool initial. `null` = celle du control plane à la création seulement. Montée : `k8s_version` puis cette variable (et `additional_pools[*].k8s_version`), possible dans le même apply. |
 | `os_image` | string | `null` | Famille d'OS des nodes : `flatcar` (défaut) / `ubuntu` / `rocky9`. Immuable. |
 | `k8s_plan` | string | `null` | `starter` (frontal unique) / `standard` (HA actif/passif + VIP flottante) / `pro` (3 réplicas). `starter` ↔ payant recrée le cluster. `null` = découle de `k8s_tier`, sinon `starter` ; plan courant conservé ensuite. |

@@ -8,12 +8,16 @@ resource "ccp_k8s_cluster" "this" {
   plan = var.plan
   # Déprécié (provider v7.6.0+) : transmis seulement s'il est fourni (null =
   # attribut omis, le provider le calcule à partir de `plan`).
-  tier            = var.tier
-  vpc_id          = var.vpc_id
-  vnet_id         = var.vnet_id
-  k8s_version     = var.k8s_version
-  os_image        = var.os_image
-  os_template_key = var.os_template_key
+  tier        = var.tier
+  vpc_id      = var.vpc_id
+  vnet_id     = var.vnet_id
+  k8s_version = var.k8s_version
+  os_image    = var.os_image
+  # Clé lue À LA CRÉATION seulement (cf. `lifecycle` plus bas). Par défaut,
+  # dérivée de la version : c'est la forme que l'API écrit (`kube-v<X-Y-Z>`,
+  # sans OS). L'attribut est requis par le provider : `null` faisait échouer
+  # le plan (cetic-cloud-platform#2004).
+  os_template_key = coalesce(var.os_template_key, "kube-v${replace(var.k8s_version, ".", "-")}")
   pod_cidr        = var.pod_cidr
   service_cidr    = var.service_cidr
 
@@ -35,8 +39,8 @@ resource "ccp_k8s_cluster" "this" {
     # retirés → désactivé (le provider envoie 0/0). Passés tels quels (null = omis).
     min_size = var.initial_pool.min_size
     max_size = var.initial_pool.max_size
-    # Taille du disque racine des workers du pool initial (disk_gb, à venir côté provider).
-    # Omis (null) → défaut du plan. Grow-only côté API.
+    # Taille du disque racine des workers du pool initial. Omis (null) → défaut
+    # du plan. Aucun redimensionnement : la changer recrée le cluster.
     disk_gb = var.initial_pool.disk_gb
   }
 
@@ -68,6 +72,14 @@ resource "ccp_k8s_cluster" "this" {
   tags = var.tags
 
   lifecycle {
+    # L'API RÉÉCRIT `os_template_key` à chaque montée de version. Depuis la
+    # v7.6.0, le provider ne remplace plus le cluster entre deux clés de la
+    # forme plateforme (`kube-vX-Y-Z`), mais une clé d'une autre forme (par
+    # exemple `kube-v1-34-8-flatcar`, celle des anciens exemples) face à la clé
+    # dérivée en planifie encore un remplacement. L'écart est ignoré dans les
+    # deux sens (revue de cetic-cloud-terraform-modules#63).
+    ignore_changes = [os_template_key]
+
     precondition {
       condition     = var.plan == null || var.tier == null || ((var.plan == "starter") == (var.tier == "dev"))
       error_message = "plan et tier sont contradictoires : tier `dev` correspond à plan `starter`, tier `prod` à `standard` ou `pro`. Renseigner `plan` seul (tier est déprécié)."
@@ -92,7 +104,7 @@ resource "ccp_k8s_node_pool" "additional" {
   max_size    = each.value.max_size
   labels      = each.value.labels
   taints      = each.value.taints
-  # Taille du disque racine des workers de ce pool (disk_gb, à venir côté provider). Omis
-  # (null) → défaut du plan. Grow-only côté API.
+  # Taille du disque racine des workers de ce pool. Omis (null) → défaut du
+  # plan. Aucun redimensionnement : la changer recrée le pool.
   disk_gb = each.value.disk_gb
 }

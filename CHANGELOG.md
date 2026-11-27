@@ -6,6 +6,32 @@ suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed (cetic-cloud-platform#2004)
+
+- `managed/k8s-cluster` : `os_template_key` vaut par défaut la clé dérivée de
+  `k8s_version` (`kube-v1-34-8` pour `1.34.8`) — le défaut `null` était passé
+  tel quel à un attribut requis du provider et faisait échouer le plan — et
+  n'est plus lue qu'à la création (`ignore_changes`) : l'API la réécrit à
+  chaque montée de version, et une clé d'une autre forme que `kube-vX-Y-Z`
+  (celle des anciens exemples, `kube-v1-34-8-flatcar`) face à la clé dérivée
+  planifiait encore le remplacement du cluster ; `ingress_controller_scope` :
+  écart de défaut avec la ressource documenté et conservé (le changer
+  basculerait les clusters existants).
+- `landing-zones/k8s-platform` et exemple `scheduled-shutdown` : clé dérivée,
+  `k8s_version` explicite.
+
+### Changed
+
+- **Breaking** : `k8s_version` devient requis (sans défaut) dans
+  `managed/k8s-cluster` et `landing-zones/k8s-platform`, au format `X.Y.Z` sans
+  « v ». L'ancien défaut `v1.31.4` ne correspondait à aucun build et l'API
+  refuse le « v » à la création : un appelant qui l'omettait échouait déjà,
+  mais doit maintenant passer la valeur.
+- Les `k8s_version` de pool (`initial_pool`, `additional_pools`) sont
+  validées au format `X.Y.Z`, avec un « v » initial toléré (`v1.30.4` reste
+  accepté, comme par le provider : l'API le retire sur les pools sans diff
+  d'état).
+
 ## [0.40.0]
 
 Aligné sur le provider `cetic-group/ccp` **`>= 7.6.0`** (publié le 24/11) : plans CCKS,

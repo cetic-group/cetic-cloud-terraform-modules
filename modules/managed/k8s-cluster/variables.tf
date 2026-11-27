@@ -74,13 +74,15 @@ variable "vnet_id" {
 }
 
 variable "k8s_version" {
-  type        = string
-  default     = "v1.31.4"
+  type = string
+  # Plus de défaut : `v1.31.4` ne correspondait à aucun build et l'API refuse
+  # le préfixe « v » à la création d'un cluster (cetic-cloud-platform#2004).
   description = <<-EOT
     Version Kubernetes du **control plane** du cluster. Un pool (initial ou
     additionnel) créé sans sa propre `k8s_version` prend cette version **à la
     création seulement**. La version d'un pool worker doit rester `<=` à celle
-    du control plane.
+    du control plane. Format `X.Y.Z` sans « v » (ex. `1.34.8`) : versions
+    disponibles via `data.ccp_k8s_templates`.
 
     Version **souhaitée** (provider >= 7.6.0) : la monter met à jour le
     control plane **seul** ; les pools ne suivent pas, il faut monter ensuite
@@ -89,6 +91,10 @@ variable "k8s_version" {
     patch automatique au-delà ne crée pas de diff. La version effective est
     l'output `current_k8s_version`.
   EOT
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+$", var.k8s_version))
+    error_message = "k8s_version : format X.Y.Z sans « v » (ex. 1.34.8), refusé sinon par l'API à la création du cluster."
+  }
 }
 
 variable "os_image" {
@@ -107,9 +113,17 @@ variable "os_image" {
 }
 
 variable "os_template_key" {
-  type        = string
-  default     = null
-  description = "Clé du template OS pour les nodes workers (cf. `data.ccp_k8s_templates`). `null` = template par défaut de la région."
+  type    = string
+  default = null
+  # `null` → dérivée de `k8s_version` (`kube-v1-34-8` pour `1.34.8`). L'ancien
+  # défaut `null` était passé tel quel et faisait échouer le plan (#2004).
+  description = <<-EOT
+    Clé du template des nodes (cf. `data.ccp_k8s_templates`, attribut `os_key`),
+    lue À LA CRÉATION seulement : le module ignore ensuite tout écart
+    (`ignore_changes`), car l'API la réécrit à chaque montée de version.
+    `null` = dérivée de `k8s_version` : `kube-v1-34-8` pour `1.34.8`. La changer
+    sur un cluster existant n'a aucun effet.
+  EOT
 }
 
 variable "pod_cidr" {
@@ -139,7 +153,8 @@ variable "initial_pool" {
       l'autoscaler du cluster gère ce pool (min_size ≥ 0, max_size > min_size).
       Retirer les deux désactive l'autoscaler (pool figé à `replicas`).
     - `disk_gb` : taille du disque racine des workers de ce pool, en GB. Omis
-      (`null`) = taille par défaut du plan (`plan`). Grow-only.
+      (`null`) = taille par défaut du plan (`plan`). Aucun redimensionnement :
+      le changer recrée le cluster (pool initial) ou le pool.
   EOT
   type = object({
     name        = optional(string, "default")
@@ -157,6 +172,11 @@ variable "initial_pool" {
     disk_gb  = optional(number)
   })
   default = {}
+
+  validation {
+    condition     = var.initial_pool.k8s_version == null || can(regex("^[vV]?[0-9]+\\.[0-9]+\\.[0-9]+$", var.initial_pool.k8s_version))
+    error_message = "initial_pool.k8s_version : format X.Y.Z (ex. 1.34.8 ; un « v » initial est toléré pour un pool)."
+  }
 
   validation {
     condition     = (var.initial_pool.min_size == null) == (var.initial_pool.max_size == null)
@@ -197,7 +217,8 @@ variable "additional_pools" {
     - `taints` : liste de taints Kubernetes. Chaque entrée : `{ key, value?, effect }`.
       `effect` ∈ `NoSchedule` | `PreferNoSchedule` | `NoExecute`.
     - `disk_gb` : taille du disque racine des workers de ce pool, en GB. Omis
-      (`null`) = taille par défaut du plan. Grow-only.
+      (`null`) = taille par défaut du plan. Aucun redimensionnement : le
+      changer recrée le pool.
   EOT
   type = map(object({
     plan        = string
@@ -225,6 +246,14 @@ variable "additional_pools" {
     ])
     error_message = "Chaque taint.effect doit être l'un de : NoSchedule, PreferNoSchedule, NoExecute."
   }
+
+  validation {
+    condition = alltrue([
+      for pool in values(var.additional_pools) :
+      pool.k8s_version == null || can(regex("^[vV]?[0-9]+\\.[0-9]+\\.[0-9]+$", pool.k8s_version))
+    ])
+    error_message = "additional_pools[*].k8s_version : format X.Y.Z (ex. 1.34.8 ; un « v » initial est toléré pour un pool)."
+  }
 }
 
 # ─── Autoscaler global ───────────────────────────────────────────────────────
@@ -247,7 +276,7 @@ variable "ingress_controller_enabled" {
 variable "ingress_controller_scope" {
   type        = string
   default     = "external"
-  description = "`external` (IP publique) ou `internal` (VIP privée VNet)."
+  description = "`external` (IP publique) ou `internal` (VIP privée VNet). ⚠️ Défaut du module `external`, celui de la ressource `ccp_k8s_cluster` est `internal` : le module garde `external` pour ne pas basculer les clusters existants (le changement s'applique sans recréation)."
   validation {
     condition     = contains(["external", "internal"], var.ingress_controller_scope)
     error_message = "ingress_controller_scope doit être external ou internal."

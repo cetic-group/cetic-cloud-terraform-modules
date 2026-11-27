@@ -7,6 +7,12 @@
 # seul : ni diff ni remplacement) est garantie et testée côté provider
 # (terraform-provider-ccp, cetic-cloud-platform#2143), pas ici.
 
+# `k8s_version` n'a plus de défaut (cetic-cloud-platform#2004) : valeur
+# commune à toutes les exécutions, surchargée par celles qui la testent.
+variables {
+  k8s_version = "1.34.8"
+}
+
 mock_provider "ccp" {
   mock_resource "ccp_k8s_cluster" {
     defaults = {
@@ -30,7 +36,7 @@ mock_provider "ccp" {
   mock_resource "ccp_k8s_node_pool" {
     defaults = {
       id          = "00000000-0000-0000-0000-000000000020"
-      k8s_version = "v1.31.4"
+      k8s_version = "1.34.8"
     }
   }
 }
@@ -341,17 +347,17 @@ run "initial_pool_k8s_version_passthrough" {
     vpc_id          = "00000000-0000-0000-0000-0000000000aa"
     vnet_id         = "00000000-0000-0000-0000-0000000000bb"
     os_template_key = "ubuntu-22.04"
-    k8s_version     = "v1.31.4"
+    k8s_version     = "1.34.8"
     initial_pool = {
       name        = "default"
       plan        = "small"
       replicas    = 2
-      k8s_version = "v1.30.4"
+      k8s_version = "1.30.4"
     }
   }
 
   assert {
-    condition     = ccp_k8s_cluster.this.initial_pool.k8s_version == "v1.30.4"
+    condition     = ccp_k8s_cluster.this.initial_pool.k8s_version == "1.30.4"
     error_message = "La version worker de l'initial_pool doit être transmise au provider."
   }
 }
@@ -365,18 +371,18 @@ run "additional_pool_k8s_version_passthrough" {
     vpc_id          = "00000000-0000-0000-0000-0000000000aa"
     vnet_id         = "00000000-0000-0000-0000-0000000000bb"
     os_template_key = "ubuntu-22.04"
-    k8s_version     = "v1.31.4"
+    k8s_version     = "1.34.8"
     additional_pools = {
       older = {
         plan        = "medium"
         replicas    = 2
-        k8s_version = "v1.30.4"
+        k8s_version = "1.30.4"
       }
     }
   }
 
   assert {
-    condition     = ccp_k8s_node_pool.additional["older"].k8s_version == "v1.30.4"
+    condition     = ccp_k8s_node_pool.additional["older"].k8s_version == "1.30.4"
     error_message = "La version worker d'un pool additionnel doit être transmise au node pool."
   }
 }

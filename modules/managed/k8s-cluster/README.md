@@ -13,7 +13,7 @@ module "platform" {
   vpc_id      = module.vpc.vpc_id
   vnet_id     = module.vpc.vnet_ids.workers
   plan        = "standard" # starter / standard / pro (provider >= 7.6.0)
-  k8s_version = "v1.31.4"  # version souhaitée du control plane
+  k8s_version = "1.34.8"   # version souhaitée du control plane (X.Y.Z, sans « v »)
   os_image    = "ubuntu"   # famille d'OS des nodes (flatcar défaut / ubuntu / rocky9)
 
   # Mises à jour automatiques (optionnel, null = réglages plateforme laissés tels quels).
@@ -55,8 +55,8 @@ module "platform" {
       max_size = 10
       labels   = { workload = "cpu" }
       # Workers à une version antérieure au control plane (montée progressive).
-      k8s_version = "v1.30.4"
-      disk_gb     = 150 # grow-only : montée ultérieure acceptée, baisse refusée
+      k8s_version = "1.33.2"
+      disk_gb     = 150 # non redimensionnable : le changer recrée le pool
     }
     gpu_pool = {
       plan     = "xlarge"
@@ -97,13 +97,13 @@ output "kubeconfig_url" {
 | `plan` | string | `null` | Plan du control plane : `starter` (frontal unique, sans HA, ≤ 10 nodes), `standard` (HA actif/passif + VIP flottante, 2 réplicas, ≤ 50 nodes), `pro` (3 réplicas, ≤ 150 nodes). `standard` ↔ `pro` en place ; `starter` ↔ payant **recrée le cluster**. `null` = découle de `tier` (sinon `starter`) à la création, plan courant conservé ensuite. |
 | `tier` | string | `null` | **Déprécié** → `plan`. `dev` = `starter`, `prod` = `standard` (ou `pro` courant). Transmis seulement s'il est fourni ; contradictoire avec `plan` → refusé. |
 | `vpc_id` / `vnet_id` | string | required | Réseau cible. |
-| `k8s_version` | string | `"v1.31.4"` | Version Kubernetes souhaitée du **control plane**. La monter ne monte que le control plane ; un pool sans `k8s_version` propre en prend la version à la création seulement. |
+| `k8s_version` | string | — (requis) | Version Kubernetes souhaitée du **control plane**, format `X.Y.Z` sans « v » (cf. `data.ccp_k8s_templates`). La monter ne monte que le control plane ; un pool sans `k8s_version` propre en prend la version à la création seulement. |
 | `os_image` | string | `null` | Famille d'OS des nodes : `flatcar` (défaut) / `ubuntu` / `rocky9`. `null` = défaut plateforme. **Immuable** (recrée le cluster). |
-| `os_template_key` | string | `null` | Cf. `data.ccp_k8s_templates`. |
+| `os_template_key` | string | `null` | Lue **à la création seulement** : `null` = dérivée de `k8s_version` (`kube-v1-34-8` pour `1.34.8`). Le module ignore ensuite tout écart (`ignore_changes`), car l'API réécrit la clé à chaque montée de version : la changer, ou retirer une clé déjà appliquée, n'a aucun effet sur un cluster existant. |
 | `pod_cidr` | string | `"10.244.0.0/16"` | |
 | `service_cidr` | string | `"10.96.0.0/12"` | |
-| `initial_pool` | object({name, plan, replicas, k8s_version?, labels?, taints?, min_size?, max_size?, disk_gb?}) | `{}` | Pool initial. `name`/`plan` immutables ; `replicas`/`k8s_version`/`labels`/`taints`/`min_size`/`max_size`/`disk_gb` mutables. `k8s_version` = version worker du pool (omis = version du control plane à la création seulement, ensuite la monter ici ; doit rester `<=`). `labels` = map ; `taints` = liste de `{ key, value?, effect }` ; `min_size`+`max_size` (ensemble) activent l'autoscaler. `disk_gb` = taille du disque racine des workers (omis = défaut du plan, grow-only). |
-| `additional_pools` | map(object) | `{}` | Pools additionnels via for_each. Chaque objet : `plan`, `replicas`, `k8s_version?`, `min_size?`, `max_size?`, `labels?`, `taints?`, `disk_gb?`. `k8s_version` = version worker (omis = version du control plane à la création seulement, ensuite la monter ici ; doit rester `<=` ; mutable, montée rolling). `disk_gb` = taille du disque racine des workers (omis = défaut du plan, grow-only). |
+| `initial_pool` | object({name, plan, replicas, k8s_version?, labels?, taints?, min_size?, max_size?, disk_gb?}) | `{}` | Pool initial. `name`/`plan`/`disk_gb` immutables (les changer recrée le cluster) ; `replicas`/`k8s_version`/`labels`/`taints`/`min_size`/`max_size` mutables. `k8s_version` = version worker du pool (omis = version du control plane à la création seulement, ensuite la monter ici ; doit rester `<=`). `labels` = map ; `taints` = liste de `{ key, value?, effect }` ; `min_size`+`max_size` (ensemble) activent l'autoscaler. `disk_gb` = taille du disque racine des workers (omis = défaut du plan ; non redimensionnable : la changer **recrée le cluster**). |
+| `additional_pools` | map(object) | `{}` | Pools additionnels via for_each. Chaque objet : `plan`, `replicas`, `k8s_version?`, `min_size?`, `max_size?`, `labels?`, `taints?`, `disk_gb?`. `k8s_version` = version worker (omis = version du control plane à la création seulement, ensuite la monter ici ; doit rester `<=` ; mutable, montée rolling). `disk_gb` = taille du disque racine des workers (omis = défaut du plan ; non redimensionnable : la changer **recrée le pool**). |
 | `autoscaler_scale_down_delay_after_add` | string | `"10m"` | |
 | `autoscaler_scale_down_unneeded_time` | string | `"10m"` | |
 | `ingress_controller_enabled` | bool | `true` | |
@@ -157,10 +157,10 @@ output "kubeconfig_url" {
   le **control plane seul** ; les pools se montent ensuite via leur propre
   `k8s_version` (un node à la fois). `k8s_version` est la version souhaitée,
   jamais redescendue : un patch automatique ne crée pas de diff.
-- **`initial_pool`** : `name`/`plan` sont immutables (recréer le cluster pour les changer) ; `replicas`, `labels`, `taints`, `min_size`/`max_size` sont mutables in-place (parité avec `additional_pools`). Définir `min_size` **et** `max_size` active l'autoscaler ; les retirer le désactive (pool figé à `replicas`). `labels`/`taints` nécessitent le provider `>= 3.2.0` ; l'autoscaler `>= 3.1.1`.
+- **`initial_pool`** : `name`/`plan`/`disk_gb` sont immutables (les changer recrée le cluster) ; `replicas`, `labels`, `taints`, `min_size`/`max_size` sont mutables in-place (parité avec `additional_pools`). Définir `min_size` **et** `max_size` active l'autoscaler ; les retirer le désactive (pool figé à `replicas`). `labels`/`taints` nécessitent le provider `>= 3.2.0` ; l'autoscaler `>= 3.1.1`.
 - **`os_image` immutable** : la famille d'OS des nodes (`flatcar`/`ubuntu`/`rocky9`) est figée à la création — la changer recrée le cluster. Laisser `null` applique le défaut plateforme (`flatcar`).
 - **Versions Kubernetes par pool** : `k8s_version` au niveau du cluster fixe le **control plane** et sert de version des workers **à la création seulement**. Chaque pool (initial ou additionnel) peut fixer sa propre `k8s_version` ; un pool qui l'omet ne suit **pas** les montées du control plane (provider `>= 7.6.0`). La version d'un pool worker doit rester `<=` à celle du control plane ; modifier `k8s_version` d'un pool déclenche une montée de version rolling (un node à la fois, pas de recréation du pool). Montée : control plane puis pools — possible dans le même apply (le provider monte le control plane, attend, puis les pools), ou en plusieurs fois pour une montée progressive.
-- **Disque des workers par pool** : `disk_gb` (initial ou additionnel) fixe la taille du disque racine des workers de ce pool, indépendamment du disque par défaut du `plan`. Omis = défaut du plan. **Grow-only** : augmenter la valeur redimensionne le disque en place ; une valeur inférieure à la taille courante est refusée par l'API (422).
+- **Disque des workers par pool** : `disk_gb` (initial ou additionnel) fixe la taille du disque racine des workers de ce pool, indépendamment du disque par défaut du `plan`. Omis = défaut du plan. **Non redimensionnable** : la plateforme n'expose aucun redimensionnement du disque d'un pool ; changer la valeur, à la hausse comme à la baisse, **recrée le pool** (pool additionnel) ou **le cluster** (`initial_pool`).
 - **Ingress en mode `incluster`** : HA inter-worker via Cilium L2 announce, failover ~22s.
 - **Ingress en mode `managed`** : LB dédié devant l'ingress controller — meilleur pour des bursts de connexions externes mais coûte un LB additionnel.
 - Le **kubeconfig** est récupérable via `cetic k8s kubeconfig <id>` (CLI) ou `GET /v1/k8s/clusters/{id}/kubeconfig`. Pas exposé par le provider TF (matière à être ajouté en datasource v0.9+).

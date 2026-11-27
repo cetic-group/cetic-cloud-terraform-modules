@@ -18,12 +18,18 @@ variable "region" {
 # ─── K8s ──────────────────────────────────────────────────────────────────────
 variable "k8s_version" {
   type        = string
-  default     = "v1.31.4"
   description = <<-EOT
-    Version Kubernetes souhaitée du control plane du cluster CCKS. Depuis le
-    provider 7.6.0, la monter ne monte que le control plane : les pools gardent
-    leur version (cf. `initial_pool_k8s_version` et `additional_pools[*].k8s_version`).
+    Version Kubernetes souhaitée du control plane du cluster CCKS, format
+    X.Y.Z sans « v » (cf. `data.ccp_k8s_templates`). Depuis le provider 7.6.0,
+    la monter ne monte que le control plane : les pools gardent leur version
+    (cf. `initial_pool_k8s_version` et `additional_pools[*].k8s_version`).
   EOT
+}
+
+variable "os_template_key" {
+  type        = string
+  default     = null
+  description = "Clé du template des nodes (cf. `data.ccp_k8s_templates`). Lue à la création seulement (le module ignore ensuite tout écart). `null` = dérivée de `k8s_version` par le module."
 }
 
 variable "initial_pool_k8s_version" {

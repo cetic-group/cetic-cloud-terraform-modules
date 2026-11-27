@@ -27,10 +27,10 @@ suit [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   « v ». L'ancien défaut `v1.31.4` ne correspondait à aucun build et l'API
   refuse le « v » à la création : un appelant qui l'omettait échouait déjà,
   mais doit maintenant passer la valeur.
-- **Breaking** : les `k8s_version` de pool (`initial_pool`, `additional_pools`)
-  sont validées au format `X.Y.Z`. `v1.30.4` était accepté jusqu'ici (l'API
-  retire le « v ») et fait maintenant échouer le plan. Migration : retirer le
-  « v » (`1.30.4`) ; aucun changement côté cluster, la version est la même.
+- Les `k8s_version` de pool (`initial_pool`, `additional_pools`) sont
+  validées au format `X.Y.Z`, avec un « v » initial toléré (`v1.30.4` reste
+  accepté, comme par le provider : l'API le retire sur les pools sans diff
+  d'état).
 
 ## [0.40.0]
 

@@ -174,8 +174,8 @@ variable "initial_pool" {
   default = {}
 
   validation {
-    condition     = var.initial_pool.k8s_version == null || can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+$", var.initial_pool.k8s_version))
-    error_message = "initial_pool.k8s_version : format X.Y.Z sans « v » (l'API retire le « v » et l'état divergerait)."
+    condition     = var.initial_pool.k8s_version == null || can(regex("^[vV]?[0-9]+\\.[0-9]+\\.[0-9]+$", var.initial_pool.k8s_version))
+    error_message = "initial_pool.k8s_version : format X.Y.Z (ex. 1.34.8 ; un « v » initial est toléré pour un pool)."
   }
 
   validation {
@@ -250,9 +250,9 @@ variable "additional_pools" {
   validation {
     condition = alltrue([
       for pool in values(var.additional_pools) :
-      pool.k8s_version == null || can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+$", pool.k8s_version))
+      pool.k8s_version == null || can(regex("^[vV]?[0-9]+\\.[0-9]+\\.[0-9]+$", pool.k8s_version))
     ])
-    error_message = "additional_pools[*].k8s_version : format X.Y.Z sans « v » (l'API retire le « v » et l'état divergerait)."
+    error_message = "additional_pools[*].k8s_version : format X.Y.Z (ex. 1.34.8 ; un « v » initial est toléré pour un pool)."
   }
 }
 

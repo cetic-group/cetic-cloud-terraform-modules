@@ -68,7 +68,9 @@ run "derives_template_key_from_version" {
   }
 }
 
-run "rejects_pool_version_with_v_prefix" {
+# Un pool épinglé avec un « v » reste accepté (le provider le tolère et ne
+# produit pas de diff : `ccks.Floor` garde la valeur écrite par l'utilisateur).
+run "accepts_pool_version_with_v_prefix" {
   command = plan
 
   variables {
@@ -81,14 +83,37 @@ run "rejects_pool_version_with_v_prefix" {
     }
   }
 
+  assert {
+    condition     = ccp_k8s_cluster.this.initial_pool.k8s_version == "v1.30.4"
+    error_message = "La version du pool doit être transmise telle quelle."
+  }
+}
+
+run "rejects_malformed_pool_version" {
+  command = plan
+
+  variables {
+    name    = "test-pool-mal"
+    region  = "RNN"
+    vpc_id  = "00000000-0000-0000-0000-0000000000aa"
+    vnet_id = "00000000-0000-0000-0000-0000000000bb"
+    initial_pool = {
+      k8s_version = "1.30"
+    }
+  }
+
   expect_failures = [var.initial_pool]
 }
 
-# Montée de version : la clé dérivée change avec `k8s_version`, mais le module
-# l'ignore après la création (`ignore_changes`). Sans cela, le plan de la
-# montée affichait `os_template_key` « forces replacement » et recréait le
-# cluster (revue de cetic-cloud-terraform-modules#63). Les deux exécutions
-# partagent l'état : la première crée, la seconde monte de version.
+# Montée de version : la clé dérivée change avec `k8s_version`, et le module
+# garde celle de la création (`ignore_changes`). Avec le provider >= 7.6.0,
+# passer de `kube-v1-34-8` à `kube-v1-35-0` ne force de toute façon pas de
+# remplacement (`templateKeyRequiresReplace` : deux clés `kube-vX-Y-Z`, no-op) ;
+# `ignore_changes` protège les clés d'une autre forme (`ccks-capi-…`,
+# `kube-v1-34-8-flatcar`). Le `mock_provider` n'exécute pas les plan
+# modifiers : ce test vérifie seulement que la valeur planifiée reste celle de
+# la création. Les deux exécutions partagent l'état : la première crée, la
+# seconde monte de version.
 run "upgrade_creates_cluster" {
   command = apply
 
